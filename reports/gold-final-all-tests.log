@@ -1,0 +1,463 @@
+
+> tidebound-gold@1.2.0 test:all
+> npm test && npm run test:browser && npm run test:standalone
+
+
+> tidebound-gold@1.2.0 test
+> node --test tests/systems.test.js tests/upgrade.test.js tests/world.test.js tests/islands.test.js
+
+TAP version 13
+# Subtest: Six biome plans have distinct land/water silhouettes, layered geometry and finite routes
+ok 1 - Six biome plans have distinct land/water silhouettes, layered geometry and finite routes
+  ---
+  duration_ms: 706.359787
+  ...
+# Subtest: Near rendered triangle height and walking sampler agree, including coves and cliffs
+ok 2 - Near rendered triangle height and walking sampler agree, including coves and cliffs
+  ---
+  duration_ms: 272.978484
+  ...
+# Subtest: 54 seeded biome layouts keep all legacy resources, separated pickups and reachable interactions
+ok 3 - 54 seeded biome layouts keep all legacy resources, separated pickups and reachable interactions
+  ---
+  duration_ms: 2049.139226
+  ...
+# Subtest: Ordered waystones require the journal, persist prefixes, gate one-time treasure and retain architecture
+ok 4 - Ordered waystones require the journal, persist prefixes, gate one-time treasure and retain architecture
+  ---
+  duration_ms: 588.348265
+  ...
+# Subtest: Height, reach and solid walls prevent through-ground and through-cave collection; camera stops before a roof
+ok 5 - Height, reach and solid walls prevent through-ground and through-cave collection; camera stops before a roof
+  ---
+  duration_ms: 32.403017
+  ...
+# Subtest: Coastal atlas is bounded, 16-bit precise, reused across frames, and encodes actual irregular terrain
+ok 6 - Coastal atlas is bounded, 16-bit precise, reused across frames, and encodes actual irregular terrain
+  ---
+  duration_ms: 225.181226
+  ...
+# Subtest: Low LOD keeps every nearby solid tree/rock visible; instance buffers dispose without destroying shared assets
+ok 7 - Low LOD keeps every nearby solid tree/rock visible; instance buffers dispose without destroying shared assets
+  ---
+  duration_ms: 34.628365
+  ...
+# Subtest: Bounded sea routes go around irregular land and end in a navigable sheltered approach
+ok 8 - Bounded sea routes go around irregular land and end in a navigable sheltered approach
+  ---
+  duration_ms: 128.670001
+  ...
+# Subtest: Generation-3 save progress roundtrips; old IDs/inventory survive and malformed puzzle prefixes are rejected
+ok 9 - Generation-3 save progress roundtrips; old IDs/inventory survive and malformed puzzle prefixes are rejected
+  ---
+  duration_ms: 4.814119
+  ...
+# Subtest: Collected-state restoration cannot move uncollected island resources or vegetation
+ok 10 - Collected-state restoration cannot move uncollected island resources or vegetation
+  ---
+  duration_ms: 628.132787
+  ...
+# Subtest: Spatially accelerated navigation exactly matches brute-force rotated collider clearance
+ok 11 - Spatially accelerated navigation exactly matches brute-force rotated collider clearance
+  ---
+  duration_ms: 228.192966
+  ...
+# Subtest: Large atoll wrecks have a physically boardable stern and an accessible landmark center
+ok 12 - Large atoll wrecks have a physically boardable stern and an accessible landmark center
+  ---
+  duration_ms: 135.384269
+  ...
+# Subtest: Inventory atomically validates and spends a recipe; rejects negative removal
+ok 13 - Inventory atomically validates and spends a recipe; rejects negative removal
+  ---
+  duration_ms: 1.401633
+  ...
+# Subtest: Survival rates exactly match the specification
+ok 14 - Survival rates exactly match the specification
+  ---
+  duration_ms: 0.255265
+  ...
+# Subtest: Starvation and dehydration damage stack; regeneration requires both above 80
+ok 15 - Starvation and dehydration damage stack; regeneration requires both above 80
+  ---
+  duration_ms: 0.218409
+  ...
+# Subtest: Raw fish, grilled fish, water apply their exact effects and clamp at 100
+ok 16 - Raw fish, grilled fish, water apply their exact effects and clamp at 100
+  ---
+  duration_ms: 0.202922
+  ...
+# Subtest: Death fires once, sting applies 5 damage and ten second movement debuff
+ok 17 - Death fires once, sting applies 5 damage and ten second movement debuff
+  ---
+  duration_ms: 0.177028
+  ...
+# Subtest: Building rejects overlap, detached foundation, elevated foundations, unsupported stations
+ok 18 - Building rejects overlap, detached foundation, elevated foundations, unsupported stations
+  ---
+  duration_ms: 0.435617
+  ...
+# Subtest: Destroying a bridge detaches all blocks with no path to a surviving core
+ok 19 - Destroying a bridge detaches all blocks with no path to a surviving core
+  ---
+  duration_ms: 0.372824
+  ...
+# Subtest: Any one of the four original core cells can root a connected component
+ok 20 - Any one of the four original core cells can root a connected component
+  ---
+  duration_ms: 0.276389
+  ...
+# Subtest: Wall supports upper floor; research locks advanced structures
+ok 21 - Wall supports upper floor; research locks advanced structures
+  ---
+  duration_ms: 0.249321
+  ...
+# Subtest: Damage removes zero-HP blocks and checks integrity
+ok 22 - Damage removes zero-HP blocks and checks integrity
+  ---
+  duration_ms: 0.261129
+  ...
+# Subtest: Crafting reserves ingredients once, completes once, refunds on cancellation
+ok 23 - Crafting reserves ingredients once, completes once, refunds on cancellation
+  ---
+  duration_ms: 0.463888
+  ...
+# Subtest: Crafting enforces proximity, inventory, research; researching preserves the discovery
+ok 24 - Crafting enforces proximity, inventory, research; researching preserves the discovery
+  ---
+  duration_ms: 0.182089
+  ...
+# Subtest: Object pool reuses released instances and ignores duplicate release
+ok 25 - Object pool reuses released instances and ignores duplicate release
+  ---
+  duration_ms: 0.326594
+  ...
+# Subtest: Day/night is 20 minutes; weather and day state serialize
+ok 26 - Day/night is 20 minutes; weather and day state serialize
+  ---
+  duration_ms: 1.340599
+  ...
+# Subtest: World generation hashes and random streams are deterministic
+ok 27 - World generation hashes and random streams are deterministic
+  ---
+  duration_ms: 0.286875
+  ...
+# Subtest: Every recipe has valid item requirements and every block has a health and cost definition
+ok 28 - Every recipe has valid item requirements and every block has a health and cost definition
+  ---
+  duration_ms: 0.392599
+  ...
+# Subtest: Inventory rejects unknown IDs, NaN, infinities, fractional and negative transactions atomically
+ok 29 - Inventory rejects unknown IDs, NaN, infinities, fractional and negative transactions atomically
+  ---
+  duration_ms: 1.506449
+  ...
+# Subtest: Directed support prevents stations from holding up unsupported structures sideways
+ok 30 - Directed support prevents stations from holding up unsupported structures sideways
+  ---
+  duration_ms: 1.018086
+  ...
+# Subtest: Dismantle preview exactly matches cascaded removal; vertical decks retain a core path
+ok 31 - Dismantle preview exactly matches cascaded removal; vertical decks retain a core path
+  ---
+  duration_ms: 0.326792
+  ...
+# Subtest: Grid rejects fractional placement and accidental overwrites
+ok 32 - Grid rejects fractional placement and accidental overwrites
+  ---
+  duration_ms: 1.148489
+  ...
+# Subtest: Craft cancellation settles before callbacks; reentrancy cannot duplicate a refund
+ok 33 - Craft cancellation settles before callbacks; reentrancy cannot duplicate a refund
+  ---
+  duration_ms: 0.442709
+  ...
+# Subtest: Craft completion clears reservations before output events or save callbacks
+ok 34 - Craft completion clears reservations before output events or save callbacks
+  ---
+  duration_ms: 0.196016
+  ...
+# Subtest: V1 migration preserves inventory/progress, changes quality safely, does not replay old quest rewards
+ok 35 - V1 migration preserves inventory/progress, changes quality safely, does not replay old quest rewards
+  ---
+  duration_ms: 2.198409
+  ...
+# Subtest: V2 roundtrip preserves motion, anchor, sail, player debuffs, camera and fires
+ok 36 - V2 roundtrip preserves motion, anchor, sail, player debuffs, camera and fires
+  ---
+  duration_ms: 1.426896
+  ...
+# Subtest: Saving/restoring an active reservation repeatedly neither refunds nor spends twice
+ok 37 - Saving/restoring an active reservation repeatedly neither refunds nor spends twice
+  ---
+  duration_ms: 4.418986
+  ...
+# Subtest: A restored reservation cancels exactly once and returns its exact ingredients
+ok 38 - A restored reservation cancels exactly once and returns its exact ingredients
+  ---
+  duration_ms: 0.828866
+  ...
+# Subtest: Rainwater variants reserve no wood; a forged variant/output is rejected
+ok 39 - Rainwater variants reserve no wood; a forged variant/output is rejected
+  ---
+  duration_ms: 1.349164
+  ...
+# Subtest: Import boundary rejects invalid versions, nonfinite stats, quantities, unknown IDs, duplicates and bad structures
+ok 40 - Import boundary rejects invalid versions, nonfinite stats, quantities, unknown IDs, duplicates and bad structures
+  ---
+  duration_ms: 6.46949
+  ...
+# Subtest: Import boundary rejects missing stations, completed jobs, double reservations and missing prerequisites
+ok 41 - Import boundary rejects missing stations, completed jobs, double reservations and missing prerequisites
+  ---
+  duration_ms: 2.230671
+  ...
+# Subtest: Storage migration prefers v2 and retains the original legacy save
+ok 42 - Storage migration prefers v2 and retains the original legacy save
+  ---
+  duration_ms: 1.113764
+  ...
+# Subtest: Invalid imports and storage failure leave the current voyage untouched
+ok 43 - Invalid imports and storage failure leave the current voyage untouched
+  ---
+  duration_ms: 1.047897
+  ...
+# Subtest: Rotating and pre-import backups are valid and independent
+ok 44 - Rotating and pre-import backups are valid and independent
+  ---
+  duration_ms: 1.988748
+  ...
+# Subtest: Fixed timestep is deterministic at 60, 15 and 5 FPS without catch-up drift
+ok 45 - Fixed timestep is deterministic at 60, 15 and 5 FPS without catch-up drift
+  ---
+  duration_ms: 1.509069
+  ...
+# Subtest: Low FPS and hidden-tab stalls cap work, discard backlog and reset safely
+ok 46 - Low FPS and hidden-tab stalls cap work, discard backlog and reset safely
+  ---
+  duration_ms: 0.368842
+  ...
+# Subtest: Quest rewards are exactly once across save/reload and reentrant callbacks
+ok 47 - Quest rewards are exactly once across save/reload and reentrant callbacks
+  ---
+  duration_ms: 0.950684
+  ...
+# Subtest: Research branches enforce discovery/prerequisites and preserve their materials
+ok 48 - Research branches enforce discovery/prerequisites and preserve their materials
+  ---
+  duration_ms: 0.332397
+  ...
+# Subtest: All data-driven research, quest rewards and biome loot reference real content
+ok 49 - All data-driven research, quest rewards and biome loot reference real content
+  ---
+  duration_ms: 0.231337
+  ...
+# Subtest: Multi-item grants/refunds are atomic to inventory callbacks and reject partial malformed grants
+ok 50 - Multi-item grants/refunds are atomic to inventory callbacks and reject partial malformed grants
+  ---
+  duration_ms: 0.208056
+  ...
+# Subtest: A legitimate V1 side-supported station migrates into a full-cost refund exactly once
+ok 51 - A legitimate V1 side-supported station migrates into a full-cost refund exactly once
+  ---
+  duration_ms: 1.517298
+  ...
+# Subtest: Truly detached V1 components are rejected safely, not converted into free materials
+ok 52 - Truly detached V1 components are rejected safely, not converted into free materials
+  ---
+  duration_ms: 0.280049
+  ...
+# Subtest: Very small positive HP from fractional simulation damage is still a valid living snapshot
+ok 53 - Very small positive HP from fractional simulation damage is still a valid living snapshot
+  ---
+  duration_ms: 0.505752
+  ...
+# Subtest: Islands, terrain, resource coordinates and biome POIs are deterministic across regeneration
+ok 54 - Islands, terrain, resource coordinates and biome POIs are deterministic across regeneration
+  ---
+  duration_ms: 1573.721904
+  ...
+# Subtest: Each biome has a meaningful finite landmark and its own research resource
+ok 55 - Each biome has a meaningful finite landmark and its own research resource
+  ---
+  duration_ms: 114.097411
+  ...
+# Subtest: Double collection and stale chunk resources cannot duplicate island loot
+ok 56 - Double collection and stale chunk resources cannot duplicate island loot
+  ---
+  duration_ms: 557.546483
+  ...
+# Subtest: Chunk cleanup disposes all owned buffers but never shared geometry or cached materials
+ok 57 - Chunk cleanup disposes all owned buffers but never shared geometry or cached materials
+  ---
+  duration_ms: 397.289986
+  ...
+# Subtest: Long sailing stress: 120 deterministic chunk crossings keep only nine chunks and bounded shared caches
+ok 58 - Long sailing stress: 120 deterministic chunk crossings keep only nine chunks and bounded shared caches
+  ---
+  duration_ms: 11530.097744
+  ...
+# Subtest: Budgeted streaming does at most one chunk decision per frame and discards obsolete queues
+ok 59 - Budgeted streaming does at most one chunk decision per frame and discards obsolete queues
+  ---
+  duration_ms: 434.5249
+  ...
+# Subtest: Shared unit primitives preserve their dimensions; static batching preserves world bounds
+ok 60 - Shared unit primitives preserve their dimensions; static batching preserves world bounds
+  ---
+  duration_ms: 0.958219
+  ...
+# Subtest: Block model templates share merged buffers without sharing mutable transforms
+ok 61 - Block model templates share merged buffers without sharing mutable transforms
+  ---
+  duration_ms: 2.459375
+  ...
+# Subtest: Sharks stop an existing charge immediately in calm-seas mode and respawn with a correct position alias
+ok 62 - Sharks stop an existing charge immediately in calm-seas mode and respawn with a correct position alias
+  ---
+  duration_ms: 1.291309
+  ...
+# Subtest: Raft plating halves a shark bite; repeated hits during initial stun cannot spam loot
+ok 63 - Raft plating halves a shark bite; repeated hits during initial stun cannot spam loot
+  ---
+  duration_ms: 0.539537
+  ...
+# Subtest: Storm waves retain exactly four times the calm analytical height
+ok 64 - Storm waves retain exactly four times the calm analytical height
+  ---
+  duration_ms: 0.141148
+  ...
+# Subtest: Adaptive quality steps down under sustained load, recovers with hysteresis, never exceeds the requested preset
+ok 65 - Adaptive quality steps down under sustained load, recovers with hysteresis, never exceeds the requested preset
+  ---
+  duration_ms: 2.575717
+  ...
+# Subtest: Manual quality and pixel limits are respected; paused frames do not influence adaptive decisions
+ok 66 - Manual quality and pixel limits are respected; paused frames do not influence adaptive decisions
+  ---
+  duration_ms: 0.305737
+  ...
+# Subtest: F3 monitor computes rolling rates correctly, paints at most four times per second, and does no hidden DOM work
+ok 67 - F3 monitor computes rolling rates correctly, paints at most four times per second, and does no hidden DOM work
+  ---
+  duration_ms: 0.507643
+  ...
+# Subtest: F3 excludes missing, zero, negative, nonfinite and paused frame intervals instead of inventing FPS
+ok 68 - F3 excludes missing, zero, negative, nonfinite and paused frame intervals instead of inventing FPS
+  ---
+  duration_ms: 0.30142
+  ...
+1..68
+# tests 68
+# suites 0
+# pass 68
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 20155.425584
+
+> tidebound-gold@1.2.0 test:browser
+> node tests/gameplay.mjs && node tests/endgame.mjs && node tests/regressions.mjs && node tests/islands.mjs
+
+PASS Begin voyage
+PASS Consumption
+PASS Ballistic hook catches pooled salvage
+PASS Crafting ingredients + timed output
+BUILD GHOST { valid: true, cell: { x: 3, y: 0, z: 0 }, reason: 'Ready to build' }
+PASS Grid-snapped foundation and atomic building cost
+PASS Purifier workstation and fresh water output
+PASS Sailing, island arrival, and automatic anchor
+PASS Finite island cache, research discoveries, and lore journal
+PASS Research unlocks collection net and rescue beacon
+PASS Shark damages foundation; spear interrupts charge
+PASS Weather settings, storm waves, and calm-seas accessibility
+PASS Local save/reload restores raft, discoveries, inventory, and research
+ALL GAMEPLAY CHECKS PASSED
+PASS Fishing float, bite window, and catch
+PASS Camera-relative movement and grounded jumping
+PASS Falling off the raft transitions into swimming
+PASS Jellyfish damage and ten-second stung debuff
+PASS Fresh water extinguishes lightning fires
+PASS Collection nets gather real pooled debris
+PASS Chunk loading/unloading and deterministic island regeneration
+PASS Three distinct outpost caches yield all rescue fragments
+BEACON GHOST {
+  cell: { x: 3, y: 1, z: 1 },
+  valid: true,
+  reason: 'Ready to build',
+  signal: 3,
+  scrap: 9
+}
+PASS Beacon ingredient spending, activation, and rescue ending
+PASS Death, supply loss, revival, and continued play
+PASS Touch controls, portrait camera, mobile inventory, and no page overflow
+ALL ADDITIONAL CHECKS PASSED
+PASS Brand, legacy inspector alias, hidden F3 default, input/contenteditable shortcut protection
+PASS F3 browser DOM updates are bounded to ~4 Hz and stop while hidden; memory is API-gated
+PASS Low / Medium / High presets scale shadows, ocean tessellation, particles and rain with a pixel cap
+PASS V2 snapshot reserves active workshop/station ingredients once and saves player/raft motion
+PASS Actual reload restores reservations, raft velocity/anchor/sail, swimming/debuffs, inventory and selected tool
+PASS Destroying a bound workbench cancels synchronously and refunds exactly once
+PASS Destroying an active grill refunds both inputs; no output or duplicate cancellation
+PASS Rainwater reservation snapshots/cancellation never manufacture or refund fuel
+PASS Dismantling protects cores, requires a hammer and reach, and previews cascading support loss
+PASS Real X tap cancels; a continuous highlighted hold dismantles once and settles a detached station job
+GPU CHURN { before: 54, after: 54, repair: 54, shared: true }
+PASS Tool/ghost churn and repeated damage/repair do not grow GPU geometry allocation after warmup
+GPU STREAMING { coldBefore: 54, before: 80, after: 80, maximum: 96, chunks: 9 }
+PASS Rendered long-sailing/chunk roundtrip returns to a bounded GPU allocation and nine loaded chunks
+PASS Biome landmarks grant their distinct loot once, persist collection IDs, and unlock all three optional research branches
+PASS New raft upgrades build through the existing grid/ingredient path; rain collector output is finite and saveable
+PASS Windcatcher sailing bonus, armored shark bite, and spear cooldown work in the integrated game
+PASS Visibility/focus handlers clear keyboard, mouse, touch, gamepad and charging state; paused time does not advance
+PASS A simulated 120-second stall caps catch-up at eight steps; exact-center reef collisions stay finite
+PASS Native WEBGL_lose_context loss/restoration pauses, saves, restores graphics, and does not restart another loop
+PASS Invalid imports leave storage and live inventory unchanged; valid imports require explicit confirmation
+PASS Confirmed import reloads exact inventory and keeps a separate pre-import backup
+PASS New-voyage reset cannot be undone by the old page unload autosave
+PASS F3 ignores incomplete startup/resume intervals instead of showing a fabricated 10,000 FPS maximum
+PASS A real legacy-key V1 reload migrates progress without changing inventory or replaying old quest rewards
+PASS A corrupt local save is quarantined instead of silently overwritten by a temporary new voyage
+ALL 24 UPGRADE REGRESSION GROUPS PASSED
+PASS Actual sailing controller rounds the cove and anchors in navigable water
+PASS Actual swimming/shore movement reaches the landing and collects the finite cache with F logic
+PASS Six distinct biomes are present in the ordinary deterministic chunk stream
+  volcano: journal + grotto reward, real walking controller
+  palm: journal + ordered waystones + grotto reward, real walking controller
+  pirate: journal + ordered waystones + grotto reward, real walking controller
+  ruins: journal + grotto reward, real walking controller
+  outpost: journal + grotto reward, real walking controller
+  reef: journal + grotto reward, real walking controller
+PASS Every biome: actual trail walking, readable clue, reachable grotto, one-time useful rewards
+PASS Generation-3 save/reload preserves journals, puzzle prefixes, hidden loot, inventory and exact player position
+PASS Partial ordered-puzzle checkpoint reloads with one visible activated waystone, then finishes for exactly one reward
+PASS Old V2 shore save reprojects stranded raft/player safely without changing inventory or respawning old loot
+PASS Four real GPU render/unload/return cycles retain nine chunks and stable warmed geometry/texture counts
+PASS Precise hull/shore collision blocks beaching and still applies reef-scrape foundation damage
+PASS All six biomes, shoreline atlas, wind, cascades, night and storm shaders render without WebGL/page errors
+
+> tidebound-gold@1.2.0 test:standalone
+> npm run build:standalone && node tests/standalone.mjs
+
+
+> tidebound-gold@1.2.0 build:standalone
+> npm run build && node scripts/package-standalone.mjs
+
+
+> tidebound-gold@1.2.0 build
+> vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 23 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   1.66 kB │ gzip:   0.91 kB
+dist/assets/index-Bclfw-U9.css   75.40 kB │ gzip:  15.73 kB
+dist/assets/index-CZ-TWt3f.js   749.96 kB │ gzip: 213.25 kB
+✓ built in 2.26s
+Standalone game: /home/user/tidebreak/Tidebound-Gold.html (1.35 MB). No external requests or installation required.
+PASS Standalone HTML boots, plays, crafts UI, and saves while network is offline
+PASS Self-contained game works in an opaque-origin allow-scripts sandbox with no network
+ALL STANDALONE CHECKS PASSED

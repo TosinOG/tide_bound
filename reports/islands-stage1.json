@@ -1,0 +1,436 @@
+{
+  "stage": "single representative island, BEFORE general biome rollout",
+  "errors": [],
+  "islands": [
+    {
+      "id": "-1,0",
+      "upgraded": false
+    },
+    {
+      "id": "0,-1",
+      "upgraded": true
+    },
+    {
+      "id": "0,1",
+      "upgraded": false
+    },
+    {
+      "id": "-1,-1",
+      "upgraded": false
+    },
+    {
+      "id": "-1,1",
+      "upgraded": false
+    },
+    {
+      "id": "1,-1",
+      "upgraded": false
+    },
+    {
+      "id": "1,1",
+      "upgraded": false
+    }
+  ],
+  "generation": {
+    "trees": 46,
+    "undergrowth": 220,
+    "reachableCells": 1024,
+    "repairs": 1,
+    "colliders": 122,
+    "pickups": 14,
+    "waterfall": true
+  },
+  "walk": {
+    "waypoints": 49,
+    "reached": 49,
+    "ticks": 933,
+    "stuck": 0,
+    "distanceToJournal": 0.5039426955056111,
+    "feet": [
+      26.359659228190612,
+      6.003375713462666,
+      -71.3803040892575
+    ],
+    "ground": 6.003375713462666,
+    "swimming": false
+  },
+  "interactions": {
+    "locked": false,
+    "read": true,
+    "wrong": false,
+    "activation": [
+      true,
+      true,
+      true
+    ],
+    "opened": true,
+    "duplicate": false,
+    "scrapReward": 3,
+    "notebook": 2,
+    "structureVisible": true,
+    "waystonesVisible": true,
+    "snapshot": {
+      "version": 2,
+      "game": "tosins-tidebound",
+      "savedAt": 1792665316054,
+      "simTime": 0.23329999999999998,
+      "inventory": {
+        "wood": 12,
+        "plastic": 8,
+        "leaf": 10,
+        "scrap": 8,
+        "rope": 4,
+        "hook": 1,
+        "hammer": 1,
+        "spear": 1,
+        "fishingRod": 1,
+        "paddle": 1,
+        "rawFish": 2,
+        "cookedFish": 4,
+        "water": 3,
+        "resin": 1
+      },
+      "stats": {
+        "health": 100,
+        "hunger": 92,
+        "thirst": 88,
+        "stung": 0,
+        "alive": true
+      },
+      "blocks": [
+        {
+          "type": "foundation",
+          "x": -1,
+          "y": 0,
+          "z": -1,
+          "hp": 100,
+          "core": false,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "foundation",
+          "x": -1,
+          "y": 0,
+          "z": 0,
+          "hp": 100,
+          "core": false,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "foundation",
+          "x": -1,
+          "y": 0,
+          "z": 1,
+          "hp": 100,
+          "core": false,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "foundation",
+          "x": -1,
+          "y": 0,
+          "z": 2,
+          "hp": 100,
+          "core": false,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "foundation",
+          "x": 0,
+          "y": 0,
+          "z": -1,
+          "hp": 100,
+          "core": false,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "foundation",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "hp": 100,
+          "core": true,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "foundation",
+          "x": 0,
+          "y": 0,
+          "z": 1,
+          "hp": 100,
+          "core": true,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "foundation",
+          "x": 0,
+          "y": 0,
+          "z": 2,
+          "hp": 100,
+          "core": false,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "foundation",
+          "x": 1,
+          "y": 0,
+          "z": -1,
+          "hp": 100,
+          "core": false,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "foundation",
+          "x": 1,
+          "y": 0,
+          "z": 0,
+          "hp": 100,
+          "core": true,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "foundation",
+          "x": 1,
+          "y": 0,
+          "z": 1,
+          "hp": 100,
+          "core": true,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "foundation",
+          "x": 1,
+          "y": 0,
+          "z": 2,
+          "hp": 100,
+          "core": false,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "foundation",
+          "x": 2,
+          "y": 0,
+          "z": -1,
+          "hp": 100,
+          "core": false,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "foundation",
+          "x": 2,
+          "y": 0,
+          "z": 0,
+          "hp": 100,
+          "core": false,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "foundation",
+          "x": 2,
+          "y": 0,
+          "z": 1,
+          "hp": 100,
+          "core": false,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "foundation",
+          "x": 2,
+          "y": 0,
+          "z": 2,
+          "hp": 100,
+          "core": false,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "sail",
+          "x": -1,
+          "y": 1,
+          "z": -1,
+          "hp": 100,
+          "core": false,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "workbench",
+          "x": 2,
+          "y": 1,
+          "z": -1,
+          "hp": 120,
+          "core": false,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "purifier",
+          "x": -1,
+          "y": 1,
+          "z": 2,
+          "hp": 100,
+          "core": false,
+          "rotation": 0,
+          "production": 0
+        },
+        {
+          "type": "grill",
+          "x": 2,
+          "y": 1,
+          "z": 2,
+          "hp": 100,
+          "core": false,
+          "rotation": 0,
+          "production": 0
+        }
+      ],
+      "research": [],
+      "time": {
+        "elapsed": 360,
+        "weather": "clear",
+        "weatherTime": 0
+      },
+      "settings": {
+        "volume": 0.35,
+        "quality": "high",
+        "adaptiveQuality": false,
+        "pixelRatio": 1.25,
+        "relaxed": true,
+        "dynamicWeather": true,
+        "showHints": true
+      },
+      "progress": {
+        "salvaged": 0,
+        "built": 0,
+        "crafted": 0,
+        "water": 0,
+        "islands": 0,
+        "caches": 0,
+        "poi": 0,
+        "secrets": 1,
+        "journals": 1,
+        "puzzles": 1,
+        "sharks": 0,
+        "rescued": false
+      },
+      "world": {
+        "generationVersion": 2,
+        "collected": [
+          "0,-1:explore:journal",
+          "0,-1:explore:rune2",
+          "0,-1:explore:rune0",
+          "0,-1:explore:rune1",
+          "0,-1:explore:treasure"
+        ],
+        "discovered": []
+      },
+      "notebook": [
+        {
+          "title": "Keeper’s trail journal",
+          "text": "Follow the worn path past the overlook. A sheltered opening lies beyond the last bend. The latch answers three carved stones: star, then sun, then tide. Read them in that order. Their light will lead you back to the grotto. Three signal fragments still carry the rescue frequency: 104.8.",
+          "island": "Pelican Cay"
+        },
+        {
+          "title": "Sealed keeper’s chest",
+          "text": "A dry parcel, carefully wrapped. Someone planned for another traveler. You leave the old shelter a little more certain of the next horizon.",
+          "island": "Pelican Cay"
+        }
+      ],
+      "quickbar": [
+        "hook",
+        "hammer",
+        "spear",
+        "cookedFish",
+        "water",
+        "fishingRod",
+        "paddle",
+        null
+      ],
+      "raft": {
+        "position": [
+          0,
+          0.004693315246493471,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "velocity": [
+          0,
+          0,
+          -0.12
+        ],
+        "verticalVelocity": 0,
+        "anchored": false,
+        "sailOpen": true,
+        "helming": false,
+        "autopilot": null
+      },
+      "player": {
+        "position": [
+          26.359659228190612,
+          6.003375713462666,
+          -71.3803040892575
+        ],
+        "velocity": [
+          0.1543618877928994,
+          0,
+          -2.6011457910227285
+        ],
+        "heading": 3.091452957052358,
+        "grounded": true,
+        "onRaft": false,
+        "swimming": false,
+        "jumpCooldown": 0,
+        "stingCooldown": 0,
+        "attackCooldown": 0
+      },
+      "camera": {
+        "yaw": 0,
+        "pitch": 0.3,
+        "distance": 10.5,
+        "selectedSlot": 0,
+        "buildType": "foundation",
+        "buildRotation": 0
+      },
+      "crafting": null,
+      "stationJobs": [],
+      "fires": [],
+      "salvage": [],
+      "quests": {
+        "completed": []
+      },
+      "shark": {
+        "state": "circling",
+        "position": [
+          11.440524726791251,
+          0.026079794957991488,
+          12.022291472788396
+        ],
+        "health": 100,
+        "timer": 0.23329999999999998,
+        "angle": 1.8256629999999998,
+        "attackCooldown": 65,
+        "biteCooldown": 0,
+        "targetKey": null
+      }
+    }
+  }
+}

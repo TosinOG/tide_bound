@@ -1,0 +1,10 @@
+{
+  "layouts": 360,
+  "biomes": 6,
+  "perBiome": 60,
+  "maxSecretOffset": 0.4000000000000011,
+  "repairs": 25,
+  "failures": [],
+  "environment": "Node deterministic generation and physical-clearance sweep; not 360 real-controller playthroughs",
+  "ms": 12060.773792
+}

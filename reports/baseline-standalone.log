@@ -1,0 +1,3 @@
+PASS Standalone HTML boots, plays, crafts UI, and saves while network is offline
+PASS Self-contained game works in an opaque-origin allow-scripts sandbox with no network
+ALL STANDALONE CHECKS PASSED

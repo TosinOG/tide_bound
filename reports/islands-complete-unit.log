@@ -1,0 +1,344 @@
+
+> tidebound-gold@1.2.0 test
+> node --test tests/systems.test.js tests/upgrade.test.js tests/world.test.js tests/islands.test.js
+
+TAP version 13
+# Subtest: Six biome plans have distinct land/water silhouettes, layered geometry and finite routes
+ok 1 - Six biome plans have distinct land/water silhouettes, layered geometry and finite routes
+  ---
+  duration_ms: 1035.804672
+  ...
+# Subtest: Near rendered triangle height and walking sampler agree, including coves and cliffs
+ok 2 - Near rendered triangle height and walking sampler agree, including coves and cliffs
+  ---
+  duration_ms: 381.519404
+  ...
+# Subtest: 54 seeded biome layouts keep all legacy resources, separated pickups and reachable interactions
+ok 3 - 54 seeded biome layouts keep all legacy resources, separated pickups and reachable interactions
+  ---
+  duration_ms: 4465.215835
+  ...
+# Subtest: Ordered waystones require the journal, persist prefixes, gate one-time treasure and retain architecture
+ok 4 - Ordered waystones require the journal, persist prefixes, gate one-time treasure and retain architecture
+  ---
+  duration_ms: 1527.022304
+  ...
+# Subtest: Height, reach and solid walls prevent through-ground and through-cave collection; camera stops before a roof
+ok 5 - Height, reach and solid walls prevent through-ground and through-cave collection; camera stops before a roof
+  ---
+  duration_ms: 72.086946
+  ...
+# Subtest: Coastal atlas is bounded, 16-bit precise, reused across frames, and encodes actual irregular terrain
+ok 6 - Coastal atlas is bounded, 16-bit precise, reused across frames, and encodes actual irregular terrain
+  ---
+  duration_ms: 527.680699
+  ...
+# Subtest: Low LOD keeps every nearby solid tree/rock visible; instance buffers dispose without destroying shared assets
+ok 7 - Low LOD keeps every nearby solid tree/rock visible; instance buffers dispose without destroying shared assets
+  ---
+  duration_ms: 85.413359
+  ...
+# Subtest: Bounded sea routes go around irregular land and end in a navigable sheltered approach
+ok 8 - Bounded sea routes go around irregular land and end in a navigable sheltered approach
+  ---
+  duration_ms: 301.024046
+  ...
+# Subtest: Generation-3 save progress roundtrips; old IDs/inventory survive and malformed puzzle prefixes are rejected
+ok 9 - Generation-3 save progress roundtrips; old IDs/inventory survive and malformed puzzle prefixes are rejected
+  ---
+  duration_ms: 4.689549
+  ...
+# Subtest: Collected-state restoration cannot move uncollected island resources or vegetation
+ok 10 - Collected-state restoration cannot move uncollected island resources or vegetation
+  ---
+  duration_ms: 1869.638838
+  ...
+# Subtest: Inventory atomically validates and spends a recipe; rejects negative removal
+ok 11 - Inventory atomically validates and spends a recipe; rejects negative removal
+  ---
+  duration_ms: 1.482349
+  ...
+# Subtest: Survival rates exactly match the specification
+ok 12 - Survival rates exactly match the specification
+  ---
+  duration_ms: 0.227587
+  ...
+# Subtest: Starvation and dehydration damage stack; regeneration requires both above 80
+ok 13 - Starvation and dehydration damage stack; regeneration requires both above 80
+  ---
+  duration_ms: 0.275446
+  ...
+# Subtest: Raw fish, grilled fish, water apply their exact effects and clamp at 100
+ok 14 - Raw fish, grilled fish, water apply their exact effects and clamp at 100
+  ---
+  duration_ms: 0.216942
+  ...
+# Subtest: Death fires once, sting applies 5 damage and ten second movement debuff
+ok 15 - Death fires once, sting applies 5 damage and ten second movement debuff
+  ---
+  duration_ms: 0.184621
+  ...
+# Subtest: Building rejects overlap, detached foundation, elevated foundations, unsupported stations
+ok 16 - Building rejects overlap, detached foundation, elevated foundations, unsupported stations
+  ---
+  duration_ms: 0.476852
+  ...
+# Subtest: Destroying a bridge detaches all blocks with no path to a surviving core
+ok 17 - Destroying a bridge detaches all blocks with no path to a surviving core
+  ---
+  duration_ms: 0.390944
+  ...
+# Subtest: Any one of the four original core cells can root a connected component
+ok 18 - Any one of the four original core cells can root a connected component
+  ---
+  duration_ms: 0.225007
+  ...
+# Subtest: Wall supports upper floor; research locks advanced structures
+ok 19 - Wall supports upper floor; research locks advanced structures
+  ---
+  duration_ms: 0.263108
+  ...
+# Subtest: Damage removes zero-HP blocks and checks integrity
+ok 20 - Damage removes zero-HP blocks and checks integrity
+  ---
+  duration_ms: 0.253817
+  ...
+# Subtest: Crafting reserves ingredients once, completes once, refunds on cancellation
+ok 21 - Crafting reserves ingredients once, completes once, refunds on cancellation
+  ---
+  duration_ms: 0.47303
+  ...
+# Subtest: Crafting enforces proximity, inventory, research; researching preserves the discovery
+ok 22 - Crafting enforces proximity, inventory, research; researching preserves the discovery
+  ---
+  duration_ms: 0.193228
+  ...
+# Subtest: Object pool reuses released instances and ignores duplicate release
+ok 23 - Object pool reuses released instances and ignores duplicate release
+  ---
+  duration_ms: 0.287703
+  ...
+# Subtest: Day/night is 20 minutes; weather and day state serialize
+ok 24 - Day/night is 20 minutes; weather and day state serialize
+  ---
+  duration_ms: 1.372643
+  ...
+# Subtest: World generation hashes and random streams are deterministic
+ok 25 - World generation hashes and random streams are deterministic
+  ---
+  duration_ms: 0.292512
+  ...
+# Subtest: Every recipe has valid item requirements and every block has a health and cost definition
+ok 26 - Every recipe has valid item requirements and every block has a health and cost definition
+  ---
+  duration_ms: 0.348971
+  ...
+# Subtest: Inventory rejects unknown IDs, NaN, infinities, fractional and negative transactions atomically
+ok 27 - Inventory rejects unknown IDs, NaN, infinities, fractional and negative transactions atomically
+  ---
+  duration_ms: 1.74144
+  ...
+# Subtest: Directed support prevents stations from holding up unsupported structures sideways
+ok 28 - Directed support prevents stations from holding up unsupported structures sideways
+  ---
+  duration_ms: 1.267887
+  ...
+# Subtest: Dismantle preview exactly matches cascaded removal; vertical decks retain a core path
+ok 29 - Dismantle preview exactly matches cascaded removal; vertical decks retain a core path
+  ---
+  duration_ms: 0.470906
+  ...
+# Subtest: Grid rejects fractional placement and accidental overwrites
+ok 30 - Grid rejects fractional placement and accidental overwrites
+  ---
+  duration_ms: 1.523915
+  ...
+# Subtest: Craft cancellation settles before callbacks; reentrancy cannot duplicate a refund
+ok 31 - Craft cancellation settles before callbacks; reentrancy cannot duplicate a refund
+  ---
+  duration_ms: 0.527971
+  ...
+# Subtest: Craft completion clears reservations before output events or save callbacks
+ok 32 - Craft completion clears reservations before output events or save callbacks
+  ---
+  duration_ms: 0.233405
+  ...
+# Subtest: V1 migration preserves inventory/progress, changes quality safely, does not replay old quest rewards
+ok 33 - V1 migration preserves inventory/progress, changes quality safely, does not replay old quest rewards
+  ---
+  duration_ms: 2.103956
+  ...
+# Subtest: V2 roundtrip preserves motion, anchor, sail, player debuffs, camera and fires
+ok 34 - V2 roundtrip preserves motion, anchor, sail, player debuffs, camera and fires
+  ---
+  duration_ms: 1.473767
+  ...
+# Subtest: Saving/restoring an active reservation repeatedly neither refunds nor spends twice
+ok 35 - Saving/restoring an active reservation repeatedly neither refunds nor spends twice
+  ---
+  duration_ms: 4.479067
+  ...
+# Subtest: A restored reservation cancels exactly once and returns its exact ingredients
+ok 36 - A restored reservation cancels exactly once and returns its exact ingredients
+  ---
+  duration_ms: 0.759682
+  ...
+# Subtest: Rainwater variants reserve no wood; a forged variant/output is rejected
+ok 37 - Rainwater variants reserve no wood; a forged variant/output is rejected
+  ---
+  duration_ms: 0.88434
+  ...
+# Subtest: Import boundary rejects invalid versions, nonfinite stats, quantities, unknown IDs, duplicates and bad structures
+ok 38 - Import boundary rejects invalid versions, nonfinite stats, quantities, unknown IDs, duplicates and bad structures
+  ---
+  duration_ms: 6.262663
+  ...
+# Subtest: Import boundary rejects missing stations, completed jobs, double reservations and missing prerequisites
+ok 39 - Import boundary rejects missing stations, completed jobs, double reservations and missing prerequisites
+  ---
+  duration_ms: 1.900385
+  ...
+# Subtest: Storage migration prefers v2 and retains the original legacy save
+ok 40 - Storage migration prefers v2 and retains the original legacy save
+  ---
+  duration_ms: 0.979018
+  ...
+# Subtest: Invalid imports and storage failure leave the current voyage untouched
+ok 41 - Invalid imports and storage failure leave the current voyage untouched
+  ---
+  duration_ms: 0.780947
+  ...
+# Subtest: Rotating and pre-import backups are valid and independent
+ok 42 - Rotating and pre-import backups are valid and independent
+  ---
+  duration_ms: 1.828208
+  ...
+# Subtest: Fixed timestep is deterministic at 60, 15 and 5 FPS without catch-up drift
+ok 43 - Fixed timestep is deterministic at 60, 15 and 5 FPS without catch-up drift
+  ---
+  duration_ms: 1.783662
+  ...
+# Subtest: Low FPS and hidden-tab stalls cap work, discard backlog and reset safely
+ok 44 - Low FPS and hidden-tab stalls cap work, discard backlog and reset safely
+  ---
+  duration_ms: 0.335926
+  ...
+# Subtest: Quest rewards are exactly once across save/reload and reentrant callbacks
+ok 45 - Quest rewards are exactly once across save/reload and reentrant callbacks
+  ---
+  duration_ms: 0.520019
+  ...
+# Subtest: Research branches enforce discovery/prerequisites and preserve their materials
+ok 46 - Research branches enforce discovery/prerequisites and preserve their materials
+  ---
+  duration_ms: 0.23563
+  ...
+# Subtest: All data-driven research, quest rewards and biome loot reference real content
+ok 47 - All data-driven research, quest rewards and biome loot reference real content
+  ---
+  duration_ms: 0.216422
+  ...
+# Subtest: Multi-item grants/refunds are atomic to inventory callbacks and reject partial malformed grants
+ok 48 - Multi-item grants/refunds are atomic to inventory callbacks and reject partial malformed grants
+  ---
+  duration_ms: 0.21493
+  ...
+# Subtest: A legitimate V1 side-supported station migrates into a full-cost refund exactly once
+ok 49 - A legitimate V1 side-supported station migrates into a full-cost refund exactly once
+  ---
+  duration_ms: 1.504459
+  ...
+# Subtest: Truly detached V1 components are rejected safely, not converted into free materials
+ok 50 - Truly detached V1 components are rejected safely, not converted into free materials
+  ---
+  duration_ms: 0.291188
+  ...
+# Subtest: Very small positive HP from fractional simulation damage is still a valid living snapshot
+ok 51 - Very small positive HP from fractional simulation damage is still a valid living snapshot
+  ---
+  duration_ms: 0.369645
+  ...
+# Subtest: Islands, terrain, resource coordinates and biome POIs are deterministic across regeneration
+ok 52 - Islands, terrain, resource coordinates and biome POIs are deterministic across regeneration
+  ---
+  duration_ms: 2700.266421
+  ...
+# Subtest: Each biome has a meaningful finite landmark and its own research resource
+ok 53 - Each biome has a meaningful finite landmark and its own research resource
+  ---
+  duration_ms: 288.947975
+  ...
+# Subtest: Double collection and stale chunk resources cannot duplicate island loot
+ok 54 - Double collection and stale chunk resources cannot duplicate island loot
+  ---
+  duration_ms: 1322.001908
+  ...
+# Subtest: Chunk cleanup disposes all owned buffers but never shared geometry or cached materials
+ok 55 - Chunk cleanup disposes all owned buffers but never shared geometry or cached materials
+  ---
+  duration_ms: 928.234829
+  ...
+# Subtest: Long sailing stress: 120 deterministic chunk crossings keep only nine chunks and bounded shared caches
+ok 56 - Long sailing stress: 120 deterministic chunk crossings keep only nine chunks and bounded shared caches
+  ---
+  duration_ms: 28745.124383
+  ...
+# Subtest: Budgeted streaming does at most one chunk decision per frame and discards obsolete queues
+ok 57 - Budgeted streaming does at most one chunk decision per frame and discards obsolete queues
+  ---
+  duration_ms: 1188.838551
+  ...
+# Subtest: Shared unit primitives preserve their dimensions; static batching preserves world bounds
+ok 58 - Shared unit primitives preserve their dimensions; static batching preserves world bounds
+  ---
+  duration_ms: 1.51834
+  ...
+# Subtest: Block model templates share merged buffers without sharing mutable transforms
+ok 59 - Block model templates share merged buffers without sharing mutable transforms
+  ---
+  duration_ms: 2.42531
+  ...
+# Subtest: Sharks stop an existing charge immediately in calm-seas mode and respawn with a correct position alias
+ok 60 - Sharks stop an existing charge immediately in calm-seas mode and respawn with a correct position alias
+  ---
+  duration_ms: 1.333945
+  ...
+# Subtest: Raft plating halves a shark bite; repeated hits during initial stun cannot spam loot
+ok 61 - Raft plating halves a shark bite; repeated hits during initial stun cannot spam loot
+  ---
+  duration_ms: 0.552115
+  ...
+# Subtest: Storm waves retain exactly four times the calm analytical height
+ok 62 - Storm waves retain exactly four times the calm analytical height
+  ---
+  duration_ms: 0.136471
+  ...
+# Subtest: Adaptive quality steps down under sustained load, recovers with hysteresis, never exceeds the requested preset
+ok 63 - Adaptive quality steps down under sustained load, recovers with hysteresis, never exceeds the requested preset
+  ---
+  duration_ms: 2.442549
+  ...
+# Subtest: Manual quality and pixel limits are respected; paused frames do not influence adaptive decisions
+ok 64 - Manual quality and pixel limits are respected; paused frames do not influence adaptive decisions
+  ---
+  duration_ms: 0.307068
+  ...
+# Subtest: F3 monitor computes rolling rates correctly, paints at most four times per second, and does no hidden DOM work
+ok 65 - F3 monitor computes rolling rates correctly, paints at most four times per second, and does no hidden DOM work
+  ---
+  duration_ms: 0.528181
+  ...
+# Subtest: F3 excludes missing, zero, negative, nonfinite and paused frame intervals instead of inventing FPS
+ok 66 - F3 excludes missing, zero, negative, nonfinite and paused frame intervals instead of inventing FPS
+  ---
+  duration_ms: 0.255199
+  ...
+1..66
+# tests 66
+# suites 0
+# pass 66
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 45973.123807

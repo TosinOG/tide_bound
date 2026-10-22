@@ -1,0 +1,26 @@
+PASS Brand, legacy inspector alias, hidden F3 default, input/contenteditable shortcut protection
+PASS F3 browser DOM updates are bounded to ~4 Hz and stop while hidden; memory is API-gated
+PASS Low / Medium / High presets scale shadows, ocean tessellation, particles and rain with a pixel cap
+PASS V2 snapshot reserves active workshop/station ingredients once and saves player/raft motion
+PASS Actual reload restores reservations, raft velocity/anchor/sail, swimming/debuffs, inventory and selected tool
+PASS Destroying a bound workbench cancels synchronously and refunds exactly once
+PASS Destroying an active grill refunds both inputs; no output or duplicate cancellation
+PASS Rainwater reservation snapshots/cancellation never manufacture or refund fuel
+PASS Dismantling protects cores, requires a hammer and reach, and previews cascading support loss
+PASS Real X tap cancels; a continuous highlighted hold dismantles once and settles a detached station job
+GPU CHURN { before: 55, after: 55, repair: 55, shared: true }
+PASS Tool/ghost churn and repeated damage/repair do not grow GPU geometry allocation after warmup
+GPU STREAMING { before: 55, after: 55, maximum: 60, chunks: 9 }
+PASS Rendered long-sailing/chunk roundtrip returns to a bounded GPU allocation and nine loaded chunks
+PASS Biome landmarks grant their distinct loot once, persist collection IDs, and unlock all three optional research branches
+PASS New raft upgrades build through the existing grid/ingredient path; rain collector output is finite and saveable
+PASS Windcatcher sailing bonus, armored shark bite, and spear cooldown work in the integrated game
+PASS Visibility/focus handlers clear keyboard, mouse, touch, gamepad and charging state; paused time does not advance
+PASS A simulated 120-second stall caps catch-up at eight steps; exact-center reef collisions stay finite
+PASS Native WEBGL_lose_context loss/restoration pauses, saves, restores graphics, and does not restart another loop
+PASS Invalid imports leave storage and live inventory unchanged; valid imports require explicit confirmation
+PASS Confirmed import reloads exact inventory and keeps a separate pre-import backup
+PASS New-voyage reset cannot be undone by the old page unload autosave
+PASS A real legacy-key V1 reload migrates progress without changing inventory or replaying old quest rewards
+PASS A corrupt local save is quarantined instead of silently overwritten by a temporary new voyage
+ALL 23 UPGRADE REGRESSION GROUPS PASSED

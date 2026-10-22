@@ -1,0 +1,14 @@
+PASS Begin voyage
+PASS Consumption
+PASS Ballistic hook catches pooled salvage
+PASS Crafting ingredients + timed output
+BUILD GHOST { valid: true, cell: { x: 3, y: 0, z: 0 }, reason: 'Ready to build' }
+PASS Grid-snapped foundation and atomic building cost
+PASS Purifier workstation and fresh water output
+PASS Sailing, island arrival, and automatic anchor
+PASS Finite island cache, research discoveries, and lore journal
+PASS Research unlocks collection net and rescue beacon
+PASS Shark damages foundation; spear interrupts charge
+PASS Weather settings, storm waves, and calm-seas accessibility
+PASS Local save/reload restores raft, discoveries, inventory, and research
+ALL GAMEPLAY CHECKS PASSED

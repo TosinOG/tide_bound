@@ -1,0 +1,17 @@
+{
+  "environment": "Local static production build / Chromium SwiftShader",
+  "checks": [
+    "Production bundle boots Gold, schema 2 / world generation 3, with the legacy inspector alias",
+    "Actual begin-voyage button starts the production game and renders the normal HUD",
+    "Field guide documents real journal/waystone/grotto controls and the unchanged rescue route",
+    "Portrait field-guide layout has no page overflow",
+    "Static build saves successfully, with no page errors or remote game asset requests"
+  ],
+  "errors": [],
+  "remoteRequests": [],
+  "version": {
+    "schema": 2,
+    "generation": 3,
+    "alias": true
+  }
+}

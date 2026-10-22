@@ -1,0 +1,615 @@
+{
+  "environment": "Headless Chromium / SwiftShader; software integration checks, not a GT710 benchmark",
+  "groups": [
+    "Actual sailing controller rounds the cove and anchors in navigable water",
+    "Actual swimming/shore movement reaches the landing and collects the finite cache with F logic",
+    "Six distinct biomes are present in the ordinary deterministic chunk stream",
+    "Every biome: actual trail walking, readable clue, reachable grotto, one-time useful rewards",
+    "Generation-3 save/reload preserves journals, puzzle prefixes, hidden loot, inventory and exact player position",
+    "Partial ordered-puzzle checkpoint reloads with one visible activated waystone, then finishes for exactly one reward",
+    "Old V2 shore save reprojects stranded raft/player safely without changing inventory or respawning old loot",
+    "Four real GPU render/unload/return cycles retain nine chunks and stable warmed geometry/texture counts",
+    "Precise hull/shore collision blocks beaching and still applies reef-scrape foundation damage",
+    "All six biomes, shoreline atlas, wind, cascades, night and storm shaders render without WebGL/page errors"
+  ],
+  "biomes": [
+    {
+      "id": "-1,0",
+      "biome": "volcano",
+      "seed": 882343,
+      "trees": 20,
+      "plants": 100,
+      "repairs": 0,
+      "journal": "-1,0:explore:journal",
+      "treasure": "-1,0:explore:treasure",
+      "puzzle": false,
+      "sequence": [
+        1,
+        2,
+        0
+      ],
+      "runes": [],
+      "journalWalk": {
+        "complete": true,
+        "ticks": 836,
+        "stuck": 0,
+        "distance": 0.6753456505225346,
+        "waypoints": 44,
+        "feet": [
+          -51.47507567531068,
+          5.116935534511696,
+          62.11481533461027
+        ]
+      },
+      "treasureWalk": {
+        "complete": true,
+        "ticks": 387,
+        "stuck": 0,
+        "distance": 0.8215200858605731,
+        "waypoints": 21,
+        "feet": [
+          -42.50657722998084,
+          2.8990209102630615,
+          55.12028964941638
+        ]
+      },
+      "treasureUse": {
+        "collected": true,
+        "tries": 1
+      },
+      "integrity": {
+        "duplicate": false,
+        "shelterDistance": 0.4000000000000006,
+        "architectureVisible": true,
+        "playerFeet": [
+          -42.50657722998084,
+          2.8990209102630615,
+          55.12028964941638
+        ],
+        "terrain": 2.8990209102630615
+      }
+    },
+    {
+      "id": "0,-1",
+      "biome": "palm",
+      "seed": 4281,
+      "trees": 46,
+      "plants": 220,
+      "repairs": 0,
+      "journal": "0,-1:explore:journal",
+      "treasure": "0,-1:explore:treasure",
+      "puzzle": true,
+      "sequence": [
+        2,
+        0,
+        1
+      ],
+      "runes": [
+        {
+          "id": "0,-1:explore:rune0",
+          "index": 0
+        },
+        {
+          "id": "0,-1:explore:rune1",
+          "index": 1
+        },
+        {
+          "id": "0,-1:explore:rune2",
+          "index": 2
+        }
+      ],
+      "journalWalk": {
+        "complete": true,
+        "ticks": 796,
+        "stuck": 0,
+        "distance": 0.526416595825065,
+        "waypoints": 42,
+        "feet": [
+          26.38074850898724,
+          6.003411769866943,
+          -71.34705048202653
+        ]
+      },
+      "treasureWalk": {
+        "complete": true,
+        "ticks": 487,
+        "stuck": 0,
+        "distance": 1.003078630057539,
+        "waypoints": 26,
+        "feet": [
+          16.00066896609541,
+          1.2590006589889526,
+          -65.83751330001355
+        ]
+      },
+      "treasureUse": {
+        "collected": true,
+        "tries": 1
+      },
+      "integrity": {
+        "duplicate": false,
+        "shelterDistance": 0.4000000000000001,
+        "architectureVisible": true,
+        "playerFeet": [
+          16.00066896609541,
+          1.2590006589889526,
+          -65.83751330001355
+        ],
+        "terrain": 1.2590006589889526
+      }
+    },
+    {
+      "id": "-1,-1",
+      "biome": "pirate",
+      "seed": 196956,
+      "trees": 40,
+      "plants": 185,
+      "repairs": 0,
+      "journal": "-1,-1:explore:journal",
+      "treasure": "-1,-1:explore:treasure",
+      "puzzle": true,
+      "sequence": [
+        0,
+        2,
+        1
+      ],
+      "runes": [
+        {
+          "id": "-1,-1:explore:rune0",
+          "index": 0
+        },
+        {
+          "id": "-1,-1:explore:rune1",
+          "index": 1
+        },
+        {
+          "id": "-1,-1:explore:rune2",
+          "index": 2
+        }
+      ],
+      "journalWalk": {
+        "complete": true,
+        "ticks": 875,
+        "stuck": 0,
+        "distance": 0.6301984176613401,
+        "waypoints": 45,
+        "feet": [
+          -56.09807823888477,
+          5.252539157867432,
+          -58.397643669333775
+        ]
+      },
+      "treasureWalk": {
+        "complete": true,
+        "ticks": 1330,
+        "stuck": 0,
+        "distance": 0.6928866665449668,
+        "waypoints": 68,
+        "feet": [
+          -68.60232709967373,
+          1.0353074073791504,
+          -63.38652030755926
+        ]
+      },
+      "treasureUse": {
+        "collected": true,
+        "tries": 1
+      },
+      "integrity": {
+        "duplicate": false,
+        "shelterDistance": 0.3999999999999997,
+        "architectureVisible": true,
+        "playerFeet": [
+          -68.60232709967373,
+          1.0353074073791504,
+          -63.38652030755926
+        ],
+        "terrain": 1.0353074073791504
+      }
+    },
+    {
+      "id": "-1,1",
+      "biome": "ruins",
+      "seed": 789472,
+      "trees": 66,
+      "plants": 290,
+      "repairs": 0,
+      "journal": "-1,1:explore:journal",
+      "treasure": "-1,1:explore:treasure",
+      "puzzle": false,
+      "sequence": [
+        2,
+        0,
+        1
+      ],
+      "runes": [],
+      "journalWalk": {
+        "complete": true,
+        "ticks": 859,
+        "stuck": 0,
+        "distance": 0.2556623972007171,
+        "waypoints": 43,
+        "feet": [
+          -69.79468669027501,
+          5.296616077423096,
+          133.37047972130662
+        ]
+      },
+      "treasureWalk": {
+        "complete": true,
+        "ticks": 1592,
+        "stuck": 0,
+        "distance": 1.6709225599613509,
+        "waypoints": 79,
+        "feet": [
+          -67.20736999266555,
+          2.0757116991433717,
+          144.43226718237938
+        ]
+      },
+      "treasureUse": {
+        "collected": true,
+        "tries": 1
+      },
+      "integrity": {
+        "duplicate": false,
+        "shelterDistance": 0.40000000000000074,
+        "architectureVisible": true,
+        "playerFeet": [
+          -67.20736999266555,
+          2.0757116991433717,
+          144.43226718237938
+        ],
+        "terrain": 2.0757116991433717
+      }
+    },
+    {
+      "id": "1,1",
+      "biome": "outpost",
+      "seed": 852374,
+      "trees": 47,
+      "plants": 230,
+      "repairs": 0,
+      "journal": "1,1:explore:journal",
+      "treasure": "1,1:explore:treasure",
+      "puzzle": false,
+      "sequence": [
+        1,
+        2,
+        0
+      ],
+      "runes": [],
+      "journalWalk": {
+        "complete": true,
+        "ticks": 1018,
+        "stuck": 0,
+        "distance": 0.3292418275881448,
+        "waypoints": 46,
+        "feet": [
+          153.97423977251455,
+          5.840529441768181,
+          151.98882483322825
+        ]
+      },
+      "treasureWalk": {
+        "complete": true,
+        "ticks": 1218,
+        "stuck": 0,
+        "distance": 1.597144633672269,
+        "waypoints": 55,
+        "feet": [
+          145.41569233581325,
+          2.7289179832613373,
+          162.12968425948085
+        ]
+      },
+      "treasureUse": {
+        "collected": true,
+        "tries": 1
+      },
+      "integrity": {
+        "duplicate": false,
+        "shelterDistance": 0.39999999999999986,
+        "architectureVisible": true,
+        "playerFeet": [
+          145.41569233581325,
+          2.7289179832613373,
+          162.12968425948085
+        ],
+        "terrain": 2.7289179832613373
+      }
+    },
+    {
+      "id": "-2,-2",
+      "biome": "reef",
+      "seed": 952874,
+      "trees": 22,
+      "plants": 105,
+      "repairs": 0,
+      "journal": "-2,-2:explore:journal",
+      "treasure": "-2,-2:explore:treasure",
+      "puzzle": false,
+      "sequence": [
+        2,
+        1,
+        0
+      ],
+      "runes": [],
+      "journalWalk": {
+        "complete": true,
+        "ticks": 1016,
+        "stuck": 0,
+        "distance": 0.35993829546702055,
+        "waypoints": 49,
+        "feet": [
+          -120.99916101075448,
+          1.7212183475494385,
+          -165.05653926299846
+        ]
+      },
+      "treasureWalk": {
+        "complete": true,
+        "ticks": 1500,
+        "stuck": 0,
+        "distance": 0.8770500456938717,
+        "waypoints": 72,
+        "feet": [
+          -139.50838103406932,
+          1.3123412132263184,
+          -174.12333083718207
+        ]
+      },
+      "treasureUse": {
+        "collected": true,
+        "tries": 1
+      },
+      "integrity": {
+        "duplicate": false,
+        "shelterDistance": 0.40000000000000013,
+        "architectureVisible": true,
+        "playerFeet": [
+          -139.50838103406932,
+          1.3123412132263184,
+          -174.12333083718207
+        ],
+        "terrain": 1.3123412132263184
+      },
+      "wreckWalk": {
+        "complete": true,
+        "ticks": 1243,
+        "stuck": 0,
+        "distance": 0.5561991071810228,
+        "waypoints": 60,
+        "feet": [
+          -124.55786297886885,
+          2.090153441429138,
+          -145.48566795908297
+        ]
+      }
+    }
+  ],
+  "errors": [],
+  "sailing": {
+    "steps": 581,
+    "anchored": true,
+    "arrived": true,
+    "penetrations": 0,
+    "position": [
+      42.0199441957447,
+      -0.030298867166188893,
+      -40.21743206673925
+    ],
+    "distanceToLanding": 9.098376784086613
+  },
+  "shore": {
+    "ticks": 171,
+    "grounded": true,
+    "swimming": false,
+    "distance": 0.18128228250275655,
+    "cacheCollected": true
+  },
+  "partial": {
+    "prefix": [
+      2
+    ],
+    "sequence": [
+      2,
+      0,
+      1
+    ],
+    "treasure": false,
+    "runesVisible": true,
+    "inventory": {
+      "wood": 16,
+      "plastic": 8,
+      "leaf": 10,
+      "scrap": 8,
+      "rope": 4,
+      "hook": 1,
+      "hammer": 1,
+      "spear": 1,
+      "fishingRod": 1,
+      "paddle": 1,
+      "rawFish": 2,
+      "cookedFish": 4,
+      "water": 3,
+      "signal": 1,
+      "copper": 2,
+      "vine": 3,
+      "coconut": 2,
+      "coral": 1
+    },
+    "remaining": [
+      "0,-1:explore:rune0",
+      "0,-1:explore:rune1"
+    ],
+    "treasureId": "0,-1:explore:treasure",
+    "result": {
+      "prefix": [
+        2,
+        0,
+        1
+      ],
+      "treasure": true,
+      "duplicate": false,
+      "loot": {
+        "resin": 1,
+        "scrap": 3,
+        "cookedFish": 2,
+        "rope": 1
+      },
+      "inventory": {
+        "wood": 16,
+        "plastic": 8,
+        "leaf": 10,
+        "scrap": 11,
+        "rope": 5,
+        "hook": 1,
+        "hammer": 1,
+        "spear": 1,
+        "fishingRod": 1,
+        "paddle": 1,
+        "rawFish": 2,
+        "cookedFish": 6,
+        "water": 3,
+        "signal": 1,
+        "copper": 2,
+        "vine": 3,
+        "coconut": 2,
+        "coral": 1,
+        "resin": 1
+      }
+    }
+  },
+  "migration": {
+    "inventory": {
+      "wood": 16,
+      "plastic": 8,
+      "leaf": 10,
+      "scrap": 11,
+      "rope": 5,
+      "hook": 1,
+      "hammer": 1,
+      "spear": 1,
+      "fishingRod": 1,
+      "paddle": 1,
+      "rawFish": 2,
+      "cookedFish": 6,
+      "water": 3,
+      "signal": 1,
+      "copper": 2,
+      "vine": 3,
+      "coconut": 2,
+      "coral": 1,
+      "resin": 1
+    },
+    "collected": [
+      "0,-1:cache",
+      "0,-1:resource1",
+      "0,-1:poi:spring"
+    ],
+    "oldRaft": [
+      41.94817334894499,
+      0,
+      -54.20151917868554
+    ],
+    "oldPlayer": [
+      25,
+      3.2,
+      -65
+    ],
+    "result": {
+      "recovery": {
+        "raft": true,
+        "player": true
+      },
+      "inventory": {
+        "wood": 16,
+        "plastic": 8,
+        "leaf": 10,
+        "scrap": 11,
+        "rope": 5,
+        "hook": 1,
+        "hammer": 1,
+        "spear": 1,
+        "fishingRod": 1,
+        "paddle": 1,
+        "rawFish": 2,
+        "cookedFish": 6,
+        "water": 3,
+        "signal": 1,
+        "copper": 2,
+        "vine": 3,
+        "coconut": 2,
+        "coral": 1,
+        "resin": 1
+      },
+      "world": {
+        "generationVersion": 3,
+        "collected": [
+          "0,-1:cache",
+          "0,-1:resource1",
+          "0,-1:poi:spring"
+        ],
+        "discovered": [
+          "0,-1"
+        ]
+      },
+      "raftSafe": true,
+      "position": [
+        24.760625,
+        2.229160785675049,
+        -65.04921875
+      ],
+      "ground": 2.22916078567504,
+      "autopilot": {
+        "dock": true,
+        "radius": 1
+      },
+      "oldLoot": [
+        true,
+        true,
+        true
+      ]
+    }
+  },
+  "streaming": [
+    {
+      "geometries": 58,
+      "textures": 2,
+      "chunks": 9,
+      "islands": 7,
+      "calls": 111,
+      "triangles": 26755
+    },
+    {
+      "geometries": 58,
+      "textures": 2,
+      "chunks": 9,
+      "islands": 7,
+      "calls": 111,
+      "triangles": 26755
+    },
+    {
+      "geometries": 60,
+      "textures": 2,
+      "chunks": 9,
+      "islands": 7,
+      "calls": 111,
+      "triangles": 26755
+    },
+    {
+      "geometries": 60,
+      "textures": 2,
+      "chunks": 9,
+      "islands": 7,
+      "calls": 111,
+      "triangles": 26755
+    }
+  ],
+  "collision": {
+    "penetrating": false,
+    "damage": 55,
+    "travel": 2.643377293474114
+  }
+}

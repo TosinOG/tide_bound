@@ -1,0 +1,52 @@
+{
+  "label": "islands-before",
+  "date": "2026-10-22T10:17:49.752Z",
+  "viewport": "960×600, DPR 1",
+  "environment": "Headless Chromium / forced SwiftShader software renderer; not a hardware-GPU benchmark",
+  "scenarios": [
+    {
+      "quality": "high",
+      "samples": 19,
+      "actualPixelRatio": 1,
+      "fps": 1.9658358423606515,
+      "frameMsMean": 508.6894736842124,
+      "frameMsP95": 892.6000000000349,
+      "renderCpuMsMean": 3.415789473679309,
+      "drawCallsMean": 139,
+      "trianglesMean": 54773,
+      "geometries": 46,
+      "textures": 3,
+      "loadedChunks": 9,
+      "loadedIslands": 7
+    },
+    {
+      "quality": "low",
+      "samples": 17,
+      "actualPixelRatio": 0.75,
+      "fps": 1.749187142445561,
+      "frameMsMean": 571.6941176470616,
+      "frameMsP95": 938,
+      "renderCpuMsMean": 1.7411764705868658,
+      "drawCallsMean": 129,
+      "trianglesMean": 26505,
+      "geometries": 47,
+      "textures": 2,
+      "loadedChunks": 9,
+      "loadedIslands": 7
+    }
+  ],
+  "errors": [],
+  "browser": "156.0.8078.4",
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "churn": {
+    "operation": "24 tool swaps + ghost rebuilds, real render after each",
+    "before": {
+      "geometries": 47,
+      "textures": 2
+    },
+    "after": {
+      "geometries": 51,
+      "textures": 2
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "environment": "960x600 Chromium SwiftShader, Low, pixel ratio .75; short diagnostic, not hardware FPS evidence",
+  "data": [
+    {
+      "mode": "original",
+      "samples": 17,
+      "fps": 2.8888473499072953,
+      "meanFrameMs": 346.1588235294227
+    },
+    {
+      "mode": "no-hud",
+      "samples": 8,
+      "fps": 1.4411038855763998,
+      "meanFrameMs": 693.9124999999767
+    },
+    {
+      "mode": "simple-hud",
+      "samples": 6,
+      "fps": 1.080205238995409,
+      "meanFrameMs": 925.75
+    },
+    {
+      "mode": "original-again",
+      "samples": 18,
+      "fps": 3.3249593616080313,
+      "meanFrameMs": 300.75555555553484
+    }
+  ]
+}

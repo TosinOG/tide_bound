@@ -1,0 +1,59 @@
+{
+  "title": "Tidebound Gold",
+  "version": "1.2.0",
+  "releaseDate": "2026-10-22",
+  "saveSchema": 2,
+  "islandGeneration": 3,
+  "dependenciesAdded": [],
+  "deployment": "Not performed; remains paused",
+  "verification": {
+    "units": 68,
+    "browserGroups": 57,
+    "offlineChecks": 2,
+    "additionalSeedLayouts": 360,
+    "staticProductionSmokeChecks": 5,
+    "hardwareGPU": "Not available; GT710 frame-rate claims are not verified"
+  },
+  "standalone": {
+    "bytes": 1414530,
+    "sha256": "17381d78a8c11e5a9484c52d87238b8b011eaf3b3791629e0375a7a355623402"
+  },
+  "sourceSha256": {
+    "src/assets.js": "5c098447af3a8aa0132ec14e1cce84e7ad200f9e91444583e1f8c4178ef099da",
+    "src/audio.js": "d0a44dd84e2392bb4c88ad736f63c7e5b3f6ae51e872f9fdd1b34f923a052d22",
+    "src/coastal-navigation.js": "9349ecd3afc71f50786503b8e596224af91b8f1bdb136ba684ee740dd47156c6",
+    "src/data.js": "4b8c5c55a30e04ae474bb630aca27698963c744af0348ee14cf23bae7dc8a723",
+    "src/exploration.js": "f1f1a3d0b8cdb2364c0ad45026ad3b3d868850fa1083183f52cf273f6200af67",
+    "src/game.js": "dad763a947a2dd848e3efb81fbe689fb79ff6b5ece2e5ee3e9195f57265219d3",
+    "src/icons.js": "a807dbd50342f183dd1013e92ba6e215bec4efa315c4b285f472ad2e8d87c8ef",
+    "src/island-assets.js": "b9bbb623a43af5997340fc65cc890986964e8cce5d901feb208ac4f15c3569dc",
+    "src/island-generation.js": "376680761cc884d3d2ce991146c82d8793c4aa828da7e09161b18e0531e8a7d0",
+    "src/island-terrain.js": "76ad1412a20a34b0176aa166558b7c4db8cd6c9f1f44b2ef51e836cec66ca9ff",
+    "src/main.js": "492e6e5170c3f3115c5b6a498e6efe33ef6da49d8d3803839b5f69c7140c282d",
+    "src/performance.js": "c1f39d1844f8dddada478e452d160b53e3c31c02c47d2a5152808180b44bf380",
+    "src/persistence.js": "d8539df0cccbb6c574b4e9fad20a616cb1042d518b11c19949d410865dc428ed",
+    "src/progression.js": "4530443a267d7353589a870f63e5584cd8f02d59d9f0e3a2d4cbd7ee57bd21e6",
+    "src/style.css": "86d7b5547636f752846a1aa4546b7694aeb1fdf6ac6895a18a764d859affbcbc",
+    "src/systems.js": "122c6ef64ba48ef2cb7901cac7991e5049dc4e244bdaa0d95d846ca0de24c6fd",
+    "src/ui.js": "4dcff184996878cce9ed8863d6674728edeeef06ad5a61c1c63acc2d652e9bbc",
+    "src/world.js": "5340adfb1b1c8d1841355319c2ea272d65e6c7ad9b44683a3919b2c4d6919a61"
+  },
+  "productionAssets": {
+    "assets/index-Bclfw-U9.css": "8a439af2df16ac5ee8f6385bf344450ff277172301303b0d60ff98814ff5c841",
+    "assets/index-CZ-TWt3f.js": "d682a182c3d074245dc5d33b2bf0e89ad20337c4532cb188208e54b3a2dceb74",
+    "fonts/fraunces-400.ttf": "3eb6cf0a14feb1876cc464fa093af4e0c5b05dc46dec65619c1d95f2a1ab5aa7",
+    "fonts/fraunces-500.ttf": "0c2fad18ed36cc400041f1e281ee79954a329b345caffc38dfaa3bb8bcef57de",
+    "fonts/mono-400.ttf": "c97fcd822f825e9e731867b650a39ee678b609bead29385e320171b573ec0910",
+    "fonts/mono-500.ttf": "dd60d0861a3efd540efc3f2f85e7a7fd69a7ece7eadf44aaffa5fc5c86adda0e",
+    "fonts/outfit-400.ttf": "6a8c9be856a6b9e09c66615634904616152c9de5e44db343a3ced240479c586a",
+    "fonts/outfit-500.ttf": "9a9f465776e653cd6175661d844555e08684d432518f1d2c621bcb3006598f9c",
+    "fonts/outfit-600.ttf": "8900df5726b5a6f23e723594f11d5ea27e695bd85c884f18d88ed080544fe205",
+    "fonts/outfit-700.ttf": "49dcdf653a004a2575b3de649f5e4c549d774fecddf317812330edd0ad70685a",
+    "fonts/outfit-800.ttf": "27147c0353ecafbb8e69fe02da56680f7d12bdc2764c8346012ec031374036d6",
+    "index.html": "7117e093e16e03ef20fabe9d694216f7482cf6e10f5065f8f3678fb5e58a9a6e",
+    "licenses/dmmono-OFL.txt": "2bada5ea45c3c63b7f1ea1f88ce9672c9e4f0c42b2c3b7378949084fe55a3066",
+    "licenses/fraunces-OFL.txt": "bdf4c22802eaf804f998195871c6b8938aac2ac14b2d78a8bd66a6f1eced833b",
+    "licenses/outfit-OFL.txt": "c676351bf8576b9aba743cd5eaa8c0e7ee0d51f805d720447b4df4ddb6a2e416",
+    "licenses/three-MIT.txt": "4c40a1ef62450b857c3b2aaf294936304cd552d965fbcd9d32d4c5bcf4ba4454"
+  }
+}

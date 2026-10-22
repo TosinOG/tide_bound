@@ -1,0 +1,38 @@
+{
+  "environment": "Headless Chromium / SwiftShader software rendering, 960×600, Low at 0.75 pixel ratio; no pre-island shoreline baseline and no GT710 benchmark",
+  "scenarios": [
+    {
+      "id": "0,-1",
+      "x": 28,
+      "z": -61,
+      "biome": "palm",
+      "samples": 18,
+      "fps": 2.405516651520881,
+      "frameMsMean": 415.71111111110076,
+      "drawCallsMean": 59,
+      "trianglesMean": 86318,
+      "memory": {
+        "geometries": 66,
+        "textures": 2
+      },
+      "chunks": 9
+    },
+    {
+      "id": "-1,1",
+      "x": -57.84697850048542,
+      "z": 136.08153107762337,
+      "biome": "ruins",
+      "samples": 12,
+      "fps": 1.617076326002628,
+      "frameMsMean": 618.3999999999845,
+      "drawCallsMean": 67.66666666666667,
+      "trianglesMean": 114018.58333333333,
+      "memory": {
+        "geometries": 71,
+        "textures": 2
+      },
+      "chunks": 9
+    }
+  ],
+  "errors": []
+}

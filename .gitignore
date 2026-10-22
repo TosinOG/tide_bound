@@ -1,0 +1,34 @@
+# Dependencies and generated build output
+node_modules/
+dist/
+build/
+coverage/
+test-results/
+playwright-report/
+
+# Local configuration, credentials, and tool caches
+.env
+.env.*
+!.env.example
+.vercel/
+.cache/
+.arena/
+.vite/
+.npm/
+__pycache__/
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Download archives and OS/editor files
+*.zip
+.DS_Store
+Thumbs.db
+*.tsbuildinfo
+
+# Common credential files
+.git-credentials
+.netrc
+.ssh/
+.config/gh/

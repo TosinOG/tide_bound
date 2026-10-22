@@ -1,0 +1,36 @@
+{
+  "passed": 24,
+  "groups": [
+    "Brand, legacy inspector alias, hidden F3 default, input/contenteditable shortcut protection",
+    "F3 browser DOM updates are bounded to ~4 Hz and stop while hidden; memory is API-gated",
+    "Low / Medium / High presets scale shadows, ocean tessellation, particles and rain with a pixel cap",
+    "V2 snapshot reserves active workshop/station ingredients once and saves player/raft motion",
+    "Actual reload restores reservations, raft velocity/anchor/sail, swimming/debuffs, inventory and selected tool",
+    "Destroying a bound workbench cancels synchronously and refunds exactly once",
+    "Destroying an active grill refunds both inputs; no output or duplicate cancellation",
+    "Rainwater reservation snapshots/cancellation never manufacture or refund fuel",
+    "Dismantling protects cores, requires a hammer and reach, and previews cascading support loss",
+    "Real X tap cancels; a continuous highlighted hold dismantles once and settles a detached station job",
+    "Tool/ghost churn and repeated damage/repair do not grow GPU geometry allocation after warmup",
+    "Rendered long-sailing/chunk roundtrip returns to a bounded GPU allocation and nine loaded chunks",
+    "Biome landmarks grant their distinct loot once, persist collection IDs, and unlock all three optional research branches",
+    "New raft upgrades build through the existing grid/ingredient path; rain collector output is finite and saveable",
+    "Windcatcher sailing bonus, armored shark bite, and spear cooldown work in the integrated game",
+    "Visibility/focus handlers clear keyboard, mouse, touch, gamepad and charging state; paused time does not advance",
+    "A simulated 120-second stall caps catch-up at eight steps; exact-center reef collisions stay finite",
+    "Native WEBGL_lose_context loss/restoration pauses, saves, restores graphics, and does not restart another loop",
+    "Invalid imports leave storage and live inventory unchanged; valid imports require explicit confirmation",
+    "Confirmed import reloads exact inventory and keeps a separate pre-import backup",
+    "New-voyage reset cannot be undone by the old page unload autosave",
+    "F3 ignores incomplete startup/resume intervals instead of showing a fabricated 10,000 FPS maximum",
+    "A real legacy-key V1 reload migrates progress without changing inventory or replaying old quest rewards",
+    "A corrupt local save is quarantined instead of silently overwritten by a temporary new voyage"
+  ],
+  "errors": [],
+  "failed": false,
+  "notes": [
+    "Visibility/focus events and the 120-second stall are deliberately simulated.",
+    "GPU allocation checks cover geometry/resource lifecycle, not all possible browser or driver leaks.",
+    "Native WebGL context loss/restoration and real save reload/import are exercised."
+  ]
+}

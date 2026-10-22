@@ -1,0 +1,16 @@
+PASS Actual sailing controller rounds the cove and anchors in navigable water
+PASS Actual swimming/shore movement reaches the landing and collects the finite cache with F logic
+PASS Six distinct biomes are present in the ordinary deterministic chunk stream
+  volcano: journal + grotto reward, real walking controller
+  palm: journal + ordered waystones + grotto reward, real walking controller
+  pirate: journal + ordered waystones + grotto reward, real walking controller
+  ruins: journal + grotto reward, real walking controller
+  outpost: journal + grotto reward, real walking controller
+  reef: journal + grotto reward, real walking controller
+PASS Every biome: actual trail walking, readable clue, reachable grotto, one-time useful rewards
+PASS Generation-3 save/reload preserves journals, puzzle prefixes, hidden loot, inventory and exact player position
+PASS Partial ordered-puzzle checkpoint reloads with one visible activated waystone, then finishes for exactly one reward
+PASS Old V2 shore save reprojects stranded raft/player safely without changing inventory or respawning old loot
+PASS Four real GPU render/unload/return cycles retain nine chunks and stable warmed geometry/texture counts
+PASS Precise hull/shore collision blocks beaching and still applies reef-scrape foundation damage
+PASS All six biomes, shoreline atlas, wind, cascades, night and storm shaders render without WebGL/page errors

@@ -1,0 +1,70 @@
+TAP version 13
+# Subtest: Six biome plans have distinct land/water silhouettes, layered geometry and finite routes
+ok 1 - Six biome plans have distinct land/water silhouettes, layered geometry and finite routes
+  ---
+  duration_ms: 723.018657
+  ...
+# Subtest: Near rendered triangle height and walking sampler agree, including coves and cliffs
+ok 2 - Near rendered triangle height and walking sampler agree, including coves and cliffs
+  ---
+  duration_ms: 272.747511
+  ...
+# Subtest: 54 seeded biome layouts keep all legacy resources, separated pickups and reachable interactions
+ok 3 - 54 seeded biome layouts keep all legacy resources, separated pickups and reachable interactions
+  ---
+  duration_ms: 1920.177174
+  ...
+# Subtest: Ordered waystones require the journal, persist prefixes, gate one-time treasure and retain architecture
+ok 4 - Ordered waystones require the journal, persist prefixes, gate one-time treasure and retain architecture
+  ---
+  duration_ms: 615.424009
+  ...
+# Subtest: Height, reach and solid walls prevent through-ground and through-cave collection; camera stops before a roof
+ok 5 - Height, reach and solid walls prevent through-ground and through-cave collection; camera stops before a roof
+  ---
+  duration_ms: 32.754547
+  ...
+# Subtest: Coastal atlas is bounded, 16-bit precise, reused across frames, and encodes actual irregular terrain
+ok 6 - Coastal atlas is bounded, 16-bit precise, reused across frames, and encodes actual irregular terrain
+  ---
+  duration_ms: 212.313281
+  ...
+# Subtest: Low LOD keeps every nearby solid tree/rock visible; instance buffers dispose without destroying shared assets
+ok 7 - Low LOD keeps every nearby solid tree/rock visible; instance buffers dispose without destroying shared assets
+  ---
+  duration_ms: 76.074993
+  ...
+# Subtest: Bounded sea routes go around irregular land and end in a navigable sheltered approach
+ok 8 - Bounded sea routes go around irregular land and end in a navigable sheltered approach
+  ---
+  duration_ms: 157.720721
+  ...
+# Subtest: Generation-3 save progress roundtrips; old IDs/inventory survive and malformed puzzle prefixes are rejected
+ok 9 - Generation-3 save progress roundtrips; old IDs/inventory survive and malformed puzzle prefixes are rejected
+  ---
+  duration_ms: 4.8059
+  ...
+# Subtest: Collected-state restoration cannot move uncollected island resources or vegetation
+ok 10 - Collected-state restoration cannot move uncollected island resources or vegetation
+  ---
+  duration_ms: 662.873051
+  ...
+# Subtest: Spatially accelerated navigation exactly matches brute-force rotated collider clearance
+ok 11 - Spatially accelerated navigation exactly matches brute-force rotated collider clearance
+  ---
+  duration_ms: 254.60525
+  ...
+# Subtest: Large atoll wrecks have a physically boardable stern and an accessible landmark center
+ok 12 - Large atoll wrecks have a physically boardable stern and an accessible landmark center
+  ---
+  duration_ms: 143.884504
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5219.271619

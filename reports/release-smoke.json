@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-21T11:24:22.934Z",
+  "anchor": {
+    "anchored": true,
+    "helming": false,
+    "autopilot": null,
+    "speed": 0
+  },
+  "export": {
+    "file": "tosins-tidebound-voyage-v2.json",
+    "version": 2,
+    "blocks": 20,
+    "inventoryItems": 13
+  },
+  "monitor": {
+    "currentFPS": 0.8218953235239644,
+    "averageFPS": 1.966310542090507,
+    "minFPS": 0.4316670801368435,
+    "maxFPS": 60.240962471078106,
+    "frameMs": 1216.699951171875,
+    "averageFrameMs": 508.5666676723596,
+    "samples": 33,
+    "minMs": 16.600000381469727,
+    "maxMs": 2316.60009765625
+  },
+  "errors": []
+}

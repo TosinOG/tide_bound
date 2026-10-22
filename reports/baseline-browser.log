@@ -1,0 +1,37 @@
+
+> tidebreak@1.0.0 test:browser
+> node tests/gameplay.mjs && node tests/endgame.mjs
+
+PASS Begin voyage
+PASS Consumption
+PASS Ballistic hook catches pooled salvage
+PASS Crafting ingredients + timed output
+BUILD GHOST { valid: true, cell: { x: 3, y: 0, z: -0 }, reason: 'Ready to build' }
+PASS Grid-snapped foundation and atomic building cost
+PASS Purifier workstation and fresh water output
+PASS Sailing, island arrival, and automatic anchor
+PASS Finite island cache, research discoveries, and lore journal
+PASS Research unlocks collection net and rescue beacon
+PASS Shark damages foundation; spear interrupts charge
+PASS Weather settings, storm waves, and calm-seas accessibility
+PASS Local save/reload restores raft, discoveries, inventory, and research
+ALL GAMEPLAY CHECKS PASSED
+PASS Fishing float, bite window, and catch
+PASS Camera-relative movement and grounded jumping
+PASS Falling off the raft transitions into swimming
+PASS Jellyfish damage and ten-second stung debuff
+PASS Fresh water extinguishes lightning fires
+PASS Collection nets gather real pooled debris
+PASS Chunk loading/unloading and deterministic island regeneration
+PASS Three distinct outpost caches yield all rescue fragments
+BEACON GHOST {
+  cell: { x: 3, y: 1, z: 1 },
+  valid: true,
+  reason: 'Ready to build',
+  signal: 3,
+  scrap: 9
+}
+PASS Beacon ingredient spending, activation, and rescue ending
+PASS Death, supply loss, revival, and continued play
+PASS Touch controls, portrait camera, mobile inventory, and no page overflow
+ALL ADDITIONAL CHECKS PASSED

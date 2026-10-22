@@ -1,0 +1,68 @@
+{
+  "label": "after",
+  "environment": "Sandbox Node / blocking complete 3×3 streaming batches; not the budgeted browser frame loop or a hardware-GPU benchmark",
+  "initialMs": 775.2778069999999,
+  "warmedBatchMeanMs": 123.21936000000005,
+  "timings": [
+    {
+      "crossing": 0,
+      "ms": 775.2778069999999,
+      "newChunks": 9,
+      "islands": 7
+    },
+    {
+      "crossing": 1,
+      "ms": 133.20517600000005,
+      "newChunks": 5,
+      "islands": 6
+    },
+    {
+      "crossing": 2,
+      "ms": 97.83314800000005,
+      "newChunks": 5,
+      "islands": 5
+    },
+    {
+      "crossing": 3,
+      "ms": 193.65727200000015,
+      "newChunks": 5,
+      "islands": 5
+    },
+    {
+      "crossing": 4,
+      "ms": 142.52453000000014,
+      "newChunks": 5,
+      "islands": 6
+    },
+    {
+      "crossing": 5,
+      "ms": 131.847438,
+      "newChunks": 5,
+      "islands": 7
+    },
+    {
+      "crossing": 6,
+      "ms": 117.39876100000015,
+      "newChunks": 5,
+      "islands": 7
+    },
+    {
+      "crossing": 7,
+      "ms": 121.28559100000007,
+      "newChunks": 5,
+      "islands": 6
+    },
+    {
+      "crossing": 8,
+      "ms": 81.06351999999993,
+      "newChunks": 5,
+      "islands": 6
+    },
+    {
+      "crossing": 9,
+      "ms": 90.15880399999992,
+      "newChunks": 5,
+      "islands": 4
+    }
+  ]
+}
