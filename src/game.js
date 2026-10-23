@@ -9,20 +9,25 @@ import { UI } from './ui.js';
 import { SAVE_KEY, LEGACY_SAVE_KEY, PREVIOUS_SAVE_KEY, IMPORT_BACKUP_KEY, MAX_SAVE_BYTES, normalizeSave, reservedRecipe, readStoredSave, writeStoredSave, readBackup } from './persistence.js';
 import { QualityController, PerformanceMonitor, QUALITY_PRESETS } from './performance.js';
 import { QuestManager } from './progression.js';
+import { normalizePreferences, readPreferences, writePreferences } from './config.js';
 const V3=THREE.Vector3;
 export class Game {
-  constructor(){
-    this.bus=new EventBus();this.saved=this.readSave();this.started=false;this.paused=false;this.ready=false;this.simTime=this.saved?.simTime||0;this.lastFrame=null;this.performanceWindow=0;this.performanceFrames=0;this.autoLow=false;this.accumulator=0;this.clock=new FixedStepClock();this.contextLost=false;this.renderNeeded=true;this.savingBlocked=!!this.loadStatus?.error&&!this.loadStatus?.unavailable;this.storageAvailable=!this.loadStatus?.unavailable;this.frameCount=0;this.fps=60;this.saveTimer=0;this.statsTimer=0;this.weatherNotice=0;
-    this.settings={volume:.35,quality:'medium',adaptiveQuality:true,pixelRatio:1.25,relaxed:false,dynamicWeather:true,showHints:true,...this.saved?.settings};
+  constructor(options={}){
+    this.bus=new EventBus();
+    if(Object.hasOwn(options,'saved')){this.saved=options.saved;this.loadStatus=options.loadStatus||{data:this.saved};}else this.saved=this.readSave();
+    this.onMainMenu=options.onMainMenu||null;this.lifecycle=new AbortController();this.disposed=false;
+    let preferences={};try{preferences=readPreferences(localStorage,this.saved?.settings||{});}catch{preferences=normalizePreferences(this.saved?.settings||{});}
+    this.started=false;this.paused=false;this.ready=false;this.simTime=this.saved?.simTime||0;this.lastFrame=null;this.performanceWindow=0;this.performanceFrames=0;this.autoLow=false;this.accumulator=0;this.clock=new FixedStepClock();this.contextLost=false;this.renderNeeded=true;this.savingBlocked=!!this.loadStatus?.error&&!this.loadStatus?.unavailable;this.storageAvailable=!this.loadStatus?.unavailable;this.frameCount=0;this.fps=60;this.saveTimer=0;this.statsTimer=0;this.weatherNotice=0;
+    this.settings=normalizePreferences({...this.saved?.settings,...preferences,...options.settings});
     this.scene=new THREE.Scene();this.renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});this.renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));this.renderer.setSize(innerWidth,innerHeight);this.renderer.shadowMap.enabled=this.settings.quality!=='low';this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.14;this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.domElement.id='ocean-canvas';this.renderer.domElement.setAttribute('aria-label',META.title+' 3D survival game. Use WASD to move and click to use your equipped tool.');this.renderer.domElement.tabIndex=0;document.getElementById('stage').appendChild(this.renderer.domElement);
     this.camera=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,.08,1200);this.cameraYaw=this.saved?.camera.yaw??-.35;this.cameraPitch=this.saved?.camera.pitch??.30;this.cameraDistance=this.saved?.camera.distance??10.5;this.cameraTarget=new V3(.5,.7,.5);this.camera.position.set(7,6,10);
     this.raycaster=new THREE.Raycaster();this.pointer=new THREE.Vector2(.12,.05);this.pointerScreen={x:innerWidth*.56,y:innerHeight*.52};this.aimPoint=new V3(3,0,6);this.oceanPlane=new THREE.Plane(new V3(0,1,0),0);this.keys=new Set();this.mouse={down:false,right:false,dragged:false,startX:0,startY:0};this.touchMove={x:0,y:0};this.gamepadButtons={};this.gamepadMove={x:0,y:0};
     this.inventory=new Inventory(this.bus,this.saved?.inventory||STARTER_ITEMS);this.stats=new SurvivalStats(this.bus,this.saved?.stats);this.grid=new GridManager(this.bus);this.crafting=new CraftingManager(this.inventory,this.bus);this.crafting.research=new Set(this.saved?.research||[]);this.time=new TimeAndWeather(this.bus,this.saved?.time);this.time.dynamic=this.settings.dynamicWeather;
     this.quickbar=[...this.saved?.quickbar||QUICKBAR];this.selectedSlot=this.saved?.camera.selectedSlot??0;this.buildType=this.saved?.camera.buildType??'foundation';this.buildRotation=this.saved?.camera.buildRotation??0;this.toolVisuals=new Map();this.dismantle=null;this.dismantleTarget=null;this.ghost=null;this.ghostCell=null;this.ghostValid=false;this.helming=this.saved?.raft.helming??false;this.anchored=this.saved?.raft.anchored??false;this.autopilot=this.saved?.raft.autopilot??null;this.sailOpen=this.saved?.raft.sailOpen??true;this.raftVelocity=new V3().fromArray(this.saved?.raft.velocity??[0,0,-.12]);this.raftVerticalVelocity=this.saved?.raft.verticalVelocity??0;this.jobs=[];this.fires=new Map();this.reefDamageTimer=0;this.lightningCooldown=0;
-    this.progress={salvaged:0,built:0,crafted:0,water:0,islands:0,caches:0,poi:0,secrets:0,journals:0,puzzles:0,sharks:0,rescued:false,...this.saved?.progress};this.notebook=[...this.saved?.notebook||[]];this.quests=new QuestManager(this.bus,this.inventory,this.saved?.quests);
-    this.ocean=new Ocean(this.scene);this.atmosphere=new Atmosphere(this.scene);this.world=new WorldGenerator(this.scene,this.bus,this.saved?.world);this.debris=new DebrisSpawner(this.scene);this.particles=new ParticlePool(this.scene);this.shark=new SharkAI(this.scene,this.bus);this.audio=new SeaAudio();this.audio.volume=this.settings.volume;
+    this.progress={salvaged:0,built:0,crafted:0,water:0,islands:0,caches:0,poi:0,secrets:0,journals:0,puzzles:0,sharks:0,reefs:0,rescued:false,...this.saved?.progress};this.notebook=[...this.saved?.notebook||[]];this.quests=new QuestManager(this.bus,this.inventory,this.saved?.quests);
+    this.ocean=new Ocean(this.scene);this.atmosphere=new Atmosphere(this.scene);this.world=new WorldGenerator(this.scene,this.bus,this.saved?.world);this.debris=new DebrisSpawner(this.scene);this.particles=new ParticlePool(this.scene);this.shark=new SharkAI(this.scene,this.bus);this.audio=options.audio||new SeaAudio(this.settings);this.audio.applySettings(this.settings);this.audio.setScene('game');
     this.raft=new THREE.Group();this.raft.position.fromArray(this.saved?.raft.position||[0,0,0]);if(this.saved)this.raft.rotation.set(...this.saved.raft.rotation);this.scene.add(this.raft);this.blockMeshes=new Map();this.setupEvents();this.createRaft();
-    this.player={position:new V3().fromArray(this.saved?.player.position||[.5,.3,.8]),velocity:new V3().fromArray(this.saved?.player.velocity||[0,0,0]),grounded:this.saved?.player.grounded??true,onRaft:this.saved?.player.onRaft??true,swimming:this.saved?.player.swimming??false,heading:this.saved?.player.heading??2.8,anim:0,action:0,jumpCooldown:this.saved?.player.jumpCooldown??0,stingCooldown:this.saved?.player.stingCooldown??0,attackCooldown:this.saved?.player.attackCooldown??0};this.avatar=createAvatar();this.avatar.position.copy(this.player.position);this.avatar.rotation.y=this.player.heading;this.scene.add(this.avatar);this.crafting.resolveStation=recipe=>{const b=this.nearStation(recipe.station||'workbench',4);return b&&!this.jobs.some(j=>j.blockId===b.id)?gridKey(b.x,b.y,b.z):null;};this.equipVisual();
+    this.player={position:new V3().fromArray(this.saved?.player.position||[.5,.3,.8]),velocity:new V3().fromArray(this.saved?.player.velocity||[0,0,0]),grounded:this.saved?.player.grounded??true,onRaft:this.saved?.player.onRaft??true,swimming:this.saved?.player.swimming??false,diving:this.saved?.player.diving??false,heading:this.saved?.player.heading??2.8,anim:0,action:0,jumpCooldown:this.saved?.player.jumpCooldown??0,stingCooldown:this.saved?.player.stingCooldown??0,attackCooldown:this.saved?.player.attackCooldown??0};this.avatar=createAvatar();this.avatar.position.copy(this.player.position);this.avatar.rotation.y=this.player.heading;this.scene.add(this.avatar);this.crafting.resolveStation=recipe=>{const b=this.nearStation(recipe.station||'workbench',4);return b&&!this.jobs.some(j=>j.blockId===b.id)?gridKey(b.x,b.y,b.z):null;};this.equipVisual();
     this.hook={mesh:createHook(),state:'idle',velocity:new V3(),time:0,charge:0,caught:null,origin:new V3(),target:new V3()};this.scene.add(this.hook.mesh);this.hook.mesh.visible=false;
     const ropeGeo=new THREE.BufferGeometry();ropeGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(33*3),3));this.rope=new THREE.Line(ropeGeo,new THREE.LineBasicMaterial({color:0xd8c9a4,transparent:true,opacity:.9}));this.rope.frustumCulled=false;this.rope.visible=false;this.scene.add(this.rope);
     this.fishing={state:'idle',time:0,biteAt:0,position:new V3(),float:new THREE.Group()};this.fishing.float.add(sphere(.06,0xc66c4b,0,.02,0,8),sphere(.065,0xe9e3c8,0,-.04,0,8));this.fishing.float.visible=false;this.scene.add(this.fishing.float);
@@ -32,7 +37,7 @@ export class Game {
     this.threatRing=new THREE.Mesh(new THREE.RingGeometry(.58,.66,24),new THREE.MeshBasicMaterial({color:0xd48361,transparent:true,opacity:.9,depthWrite:false,side:THREE.DoubleSide}));this.threatRing.rotation.x=-Math.PI/2;this.threatRing.visible=false;this.scene.add(this.threatRing);
     this.world.update(this.raft.position);this.reconcileIslandUpgrade();this.debris.seed(this.raft.position);this.restoreReservations();this.shark.restore(this.saved?.shark,this.grid);
     for(const d of this.saved?.salvage||[]){const drop=this.debris.spawn(d.type,d.x,d.z);drop.loot={...d.loot};}
-    this.ui=new UI(this);this.monitor=new PerformanceMonitor(this);this.quality=new QualityController(this);this.bindInput();this.resize();this.ready=true;this.renderCamera(1);this.ui.update(true);this.frame=this.frame.bind(this);requestAnimationFrame(this.frame);
+    this.ui=new UI(this);this.monitor=new PerformanceMonitor(this);this.quality=new QualityController(this);this.bindInput();this.resize();this.ready=true;this.renderCamera(1);this.ui.update(true);this.frame=this.frame.bind(this);this.animationFrameId=requestAnimationFrame(this.frame);
     // Expose a read-only-friendly inspector for local development and automated tests.
     window.tidebound=this;window.tidebreak=this; // legacy inspector/test alias
   }
@@ -69,10 +74,10 @@ export class Game {
       } else if(type==='rune') {
         const activated=island.puzzle.sequence.filter(k=>this.world.collected.has(`${island.id}:explore:rune${k}`)).length;
         this.ui.toast(`${resource.name} answered · ${activated} / 3`, 'sun','success');if(activated===3){this.progress.puzzles++;this.ui.toast('The grotto latch opens. Return beyond the overlook.','backpack','success',7000);}
-      } else if(type==='journal'||type==='treasure') {
+      } else if(type==='journal'||type==='treasure'||type==='reefCache') {
         if(resource.loot)this.inventory.grant(resource.loot);
-        if(type==='journal')this.progress.journals++;else this.progress.secrets++;
-        const note={title:resource.name,text:resource.story};this.notebook.push({...note,island:island.name});this.ui.toast(type==='journal'?'Trail journal recorded':'Hidden provisions recovered',type==='journal'?'book':'backpack','success');this.ui.showLore(note,island.name);
+        if(type==='journal')this.progress.journals++;else if(type==='treasure')this.progress.secrets++;else this.progress.reefs++;
+        const note={title:resource.name,text:resource.story};this.notebook.push({...note,island:island.name});this.ui.toast(type==='journal'?'Trail journal recorded':type==='treasure'?'Hidden provisions recovered':'Sunken cache recovered · sea glass, scrap, and rope',type==='journal'?'book':type==='treasure'?'backpack':'compass','success');this.ui.showLore(note,island.name);
       } else if(type==='poi') {
         this.inventory.grant(resource.loot);
         this.progress.poi++;const note={title:resource.name,text:resource.story};this.notebook.push({...note,island:island.name});this.ui.toast(`${resource.name} · a finite discovery`,'compass','success');this.ui.showLore(note,island.name);
@@ -107,7 +112,7 @@ export class Game {
     };
     return normalizeSave({version:META.saveVersion,game:'tosins-tidebound',savedAt:Date.now(),simTime:this.simTime,inventory:this.inventory.toJSON(),stats:this.stats.toJSON(),blocks:this.grid.toJSON(),research:[...this.crafting.research],time:this.time.toJSON(),
       raft:{position:this.raft.position.toArray(),rotation:[this.raft.rotation.x,this.raft.rotation.y,this.raft.rotation.z],velocity:this.raftVelocity.toArray(),verticalVelocity:this.raftVerticalVelocity,anchored:this.anchored,sailOpen:this.sailOpen,helming:this.helming,autopilot:this.autopilot},
-      player:{position:this.player.position.toArray(),velocity:this.player.velocity.toArray(),heading:this.player.heading,grounded:this.player.grounded,onRaft:this.player.onRaft,swimming:this.player.swimming,jumpCooldown:this.player.jumpCooldown,stingCooldown:this.player.stingCooldown,attackCooldown:this.player.attackCooldown},
+      player:{position:this.player.position.toArray(),velocity:this.player.velocity.toArray(),heading:this.player.heading,grounded:this.player.grounded,onRaft:this.player.onRaft,swimming:this.player.swimming,diving:this.player.diving,jumpCooldown:this.player.jumpCooldown,stingCooldown:this.player.stingCooldown,attackCooldown:this.player.attackCooldown},
       camera:{yaw:this.cameraYaw,pitch:this.cameraPitch,distance:this.cameraDistance,selectedSlot:this.selectedSlot,buildType:this.buildType,buildRotation:this.buildRotation},
       crafting:this.crafting.job?reservation(this.crafting.job,'elapsed'):null,stationJobs:this.jobs.map(j=>reservation(j,'time')),
       fires:[...this.fires].filter(([id])=>blocksById.has(id)).map(([id,f])=>{const b=blocksById.get(id);return {key:gridKey(b.x,b.y,b.z),timer:f.timer};}),
@@ -174,30 +179,46 @@ export class Game {
     if(this.contextLost&&!value)return;this.renderNeeded=true;this.paused=value;this.clearInput();this.clock.reset();this.lastFrame=null;if(!value)this.renderer.domElement.focus({preventScroll:true});
   }
   applyQuality(preset=this.activeQuality) {this.quality?.apply(preset);}
+  persistSettings(){try{return writePreferences(localStorage,this.settings);}catch{return false;}}
+  mainMenu(){if(this.disposed)return;if(this.onMainMenu)this.onMainMenu(this);else{this.save();this.suppressUnloadSave=true;location.reload();}}
   selectSlot(index){this.selectedSlot=(index+8)%8;if(this.hook?.state==='charging')this.hook.state='idle';this.cancelFishing();this.equipVisual();this.ui.renderQuickbar();this.ui.renderBuildBar();this.audio.play('click');}
   get equipped(){return this.quickbar[this.selectedSlot];}
   equipVisual(){if(!this.avatar)return;const hand=this.avatar.userData.tool;hand.clear();if(this.toolVisuals.has(this.equipped)){hand.add(this.toolVisuals.get(this.equipped));return;}let m;switch(this.equipped){case'hook':m=createHook();m.rotation.z=.4;break;case'hammer':m=new THREE.Group();m.add(cylinder(.025,.025,.4,0x9d744c),box(.22,.13,.11,0x7e9286,0,.2,0));break;case'spear':m=createSpear();m.scale.setScalar(.7);m.rotation.x=.6;break;case'paddle':m=createPaddle();m.scale.setScalar(.7);m.rotation.x=.2;break;case'fishingRod':m=new THREE.Group();m.add(cylinder(.012,.02,1.35,0xbba174,0,.5,0));m.rotation.x=.5;break;case'water':m=cylinder(.065,.065,.19,0x83b1ae);break;case'cookedFish':m=createFish(true);m.scale.setScalar(.45);break;case'coconut':m=sphere(.12,0xa28559);break;}if(m){this.toolVisuals.set(this.equipped,m);hand.add(m);}}
+  listen(target,type,handler,options={}){target.addEventListener(type,handler,{...options,signal:this.lifecycle.signal});}
   bindInput(){
     const canvas=this.renderer.domElement;
-    window.addEventListener('resize',()=>this.resize());window.addEventListener('blur',()=>this.suspend());document.addEventListener('visibilitychange',()=>{if(document.hidden)this.suspend();else{this.clock.reset();this.lastFrame=null;}});
-    canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();this.contextLost=true;this.suspend();this.ui.openModal('context-lost');});
-    canvas.addEventListener('webglcontextrestored',()=>{this.contextLost=false;this.applyQuality();this.clock.reset();this.lastFrame=null;this.ui.openModal('pause');this.ui.toast('Graphics context restored. Your voyage is safe; resume when ready.','check','success');});
-    window.addEventListener('keydown',e=>{if(e.target.closest?.('input,textarea,select,[contenteditable]:not([contenteditable="false"])'))return;const k=e.key.toLowerCase();if([' ','tab','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();if(e.repeat)return;
+    this.listen(window,'resize',()=>this.resize());
+    this.listen(window,'blur',()=>this.suspend());
+    this.listen(document,'visibilitychange',()=>{if(document.hidden)this.suspend();else{this.clock.reset();this.lastFrame=null;}});
+    this.listen(canvas,'webglcontextlost',e=>{e.preventDefault();this.contextLost=true;this.suspend();this.ui.openModal('context-lost');});
+    this.listen(canvas,'webglcontextrestored',()=>{this.contextLost=false;this.applyQuality();this.clock.reset();this.lastFrame=null;this.ui.openModal('pause');this.ui.toast('Graphics context restored. Your voyage is safe; resume when ready.','check','success');});
+    this.listen(window,'keydown',e=>{
+      if(e.target.closest?.('input,textarea,select,[contenteditable]:not([contenteditable="false"])'))return;
+      const k=e.key.toLowerCase();if([' ','tab','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();if(e.repeat)return;
       if(k==='f3'){e.preventDefault();this.monitor.toggle();return;}
       if(k==='tab'||k==='i'){if(this.ui.modal==='inventory')this.ui.closeModal();else this.ui.openModal('inventory');return;}
       if(k==='escape'){if(this.ui.modal)this.ui.closeModal();else this.ui.openModal('pause');return;}
       if(k==='m'){this.ui.openModal('map');return;}if(k==='j'){this.ui.openModal('journal');return;}if(k==='h'){this.ui.toggleHUD();return;}if(k==='?'||k==='f1'){e.preventDefault();this.ui.openModal('help');return;}
       if(this.paused)return;this.start();this.keys.add(k);
       if(/^[1-8]$/.test(k)){this.selectSlot(Number(k)-1);return;}
-      if(k==='q')this.selectSlot(this.selectedSlot-1);if(k==='e')this.selectSlot(this.selectedSlot+1);if(k==='r'){this.buildRotation=(this.buildRotation+1)%4;if(this.ghost)this.ghost.rotation.y=this.buildRotation*Math.PI/2;}if(k==='f')this.interact();if(k==='g')this.toggleHelm();if(k==='x')this.removeTargetBlock();if(k==='t')this.repairBlock();if(k==='+'||k==='=')this.cameraDistance=clamp(this.cameraDistance-1,5,20);if(k==='-')this.cameraDistance=clamp(this.cameraDistance+1,5,20);
-    });window.addEventListener('keyup',e=>{this.keys.delete(e.key.toLowerCase());if(e.key.toLowerCase()==='x')this.dismantle=null;});
-    canvas.addEventListener('pointercancel',()=>this.clearInput());canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('pointerdown',e=>{if(this.paused)return;this.start();this.audio.init();canvas.focus({preventScroll:true});this.updatePointer(e);this.mouse.startX=e.clientX;this.mouse.startY=e.clientY;this.mouse.dragged=false;
+      if(k==='q')this.selectSlot(this.selectedSlot-1);if(k==='e')this.selectSlot(this.selectedSlot+1);if(k==='r'){this.buildRotation=(this.buildRotation+1)%4;if(this.ghost)this.ghost.rotation.y=this.buildRotation*Math.PI/2;}if(k==='f')this.interact();if(k==='c')this.toggleDive();if(k==='g')this.toggleHelm();if(k==='x')this.removeTargetBlock();if(k==='t')this.repairBlock();if(k==='+'||k==='=')this.cameraDistance=clamp(this.cameraDistance-1,5,20);if(k==='-')this.cameraDistance=clamp(this.cameraDistance+1,5,20);
+    });
+    this.listen(window,'keyup',e=>{this.keys.delete(e.key.toLowerCase());if(e.key.toLowerCase()==='x')this.dismantle=null;});
+    this.listen(canvas,'pointercancel',()=>this.clearInput());
+    this.listen(canvas,'contextmenu',e=>e.preventDefault());
+    this.listen(canvas,'pointerdown',e=>{
+      if(this.paused)return;this.start();this.audio.init();canvas.focus({preventScroll:true});this.updatePointer(e);this.mouse.startX=e.clientX;this.mouse.startY=e.clientY;this.mouse.dragged=false;
       if(e.button===2){this.mouse.right=true;}else if(e.button===0){this.mouse.down=true;if(this.equipped==='hook'&&this.hook.state==='idle'){this.hook.state='charging';this.hook.charge=.22;}else this.primaryAction();}
       if(e.pointerType==='touch'){this.touchCameraStart={x:e.clientX,y:e.clientY};}
-    });window.addEventListener('pointermove',e=>{if(e.target===canvas||this.mouse.right)this.updatePointer(e);if(this.mouse.right&&!this.paused){const dx=e.clientX-this.mouse.startX,dy=e.clientY-this.mouse.startY;if(Math.abs(dx)+Math.abs(dy)>3)this.mouse.dragged=true;this.cameraYaw-=dx*.006;this.cameraPitch=clamp(this.cameraPitch+dy*.004,.12,1.2);this.mouse.startX=e.clientX;this.mouse.startY=e.clientY;}if(e.pointerType==='touch'&&this.mouse.down&&e.target===canvas&&this.touchCameraStart){const dx=e.clientX-this.touchCameraStart.x,dy=e.clientY-this.touchCameraStart.y;if(Math.abs(dx)+Math.abs(dy)>8){this.cameraYaw-=dx*.004;this.cameraPitch=clamp(this.cameraPitch+dy*.003,.12,1.1);this.touchCameraStart={x:e.clientX,y:e.clientY};this.mouse.dragged=true;}}});
-    window.addEventListener('pointerup',e=>{if(e.button===2){if(this.mouse.right&&!this.mouse.dragged&&!this.paused&&this.equipped==='hammer')this.placeBlock();this.mouse.right=false;}else if(e.button===0){if(this.hook.state==='charging'){if(!this.paused&&!this.mouse.dragged)this.castHook();else this.hook.state='idle';}this.mouse.down=false;this.touchCameraStart=null;}});
-    canvas.addEventListener('wheel',e=>{e.preventDefault();if(this.paused)return;if(e.shiftKey)this.cameraDistance=clamp(this.cameraDistance+e.deltaY*.008,5,22);else this.selectSlot(this.selectedSlot+(e.deltaY>0?1:-1));},{passive:false});
-    window.addEventListener('beforeunload',()=>this.save());
+    });
+    this.listen(window,'pointermove',e=>{
+      if(e.target===canvas||this.mouse.right)this.updatePointer(e);
+      if(this.mouse.right&&!this.paused){const dx=e.clientX-this.mouse.startX,dy=e.clientY-this.mouse.startY,sensitivity=this.settings.mouseSensitivity;if(Math.abs(dx)+Math.abs(dy)>3)this.mouse.dragged=true;this.cameraYaw-=dx*.006*sensitivity;this.cameraPitch=clamp(this.cameraPitch+dy*.004*sensitivity,.12,1.2);this.mouse.startX=e.clientX;this.mouse.startY=e.clientY;}
+      if(e.pointerType==='touch'&&this.mouse.down&&e.target===canvas&&this.touchCameraStart){const dx=e.clientX-this.touchCameraStart.x,dy=e.clientY-this.touchCameraStart.y,sensitivity=this.settings.mouseSensitivity;if(Math.abs(dx)+Math.abs(dy)>8){this.cameraYaw-=dx*.004*sensitivity;this.cameraPitch=clamp(this.cameraPitch+dy*.003*sensitivity,.12,1.1);this.touchCameraStart={x:e.clientX,y:e.clientY};this.mouse.dragged=true;}}
+    });
+    this.listen(window,'pointerup',e=>{if(e.button===2){if(this.mouse.right&&!this.mouse.dragged&&!this.paused&&this.equipped==='hammer')this.placeBlock();this.mouse.right=false;}else if(e.button===0){if(this.hook.state==='charging'){if(!this.paused&&!this.mouse.dragged)this.castHook();else this.hook.state='idle';}this.mouse.down=false;this.touchCameraStart=null;}});
+    this.listen(canvas,'wheel',e=>{e.preventDefault();if(this.paused)return;if(e.shiftKey)this.cameraDistance=clamp(this.cameraDistance+e.deltaY*.008,5,22);else this.selectSlot(this.selectedSlot+(e.deltaY>0?1:-1));},{passive:false});
+    this.listen(window,'beforeunload',()=>this.save());
   }
   updatePointer(e){this.pointerScreen={x:e.clientX,y:e.clientY};this.pointer.set(e.clientX/innerWidth*2-1,-e.clientY/innerHeight*2+1);}
   resize(){this.camera.aspect=innerWidth/innerHeight;this.camera.updateProjectionMatrix();this.renderer.setSize(innerWidth,innerHeight);this.renderNeeded=true;this.ui?.resize();}
@@ -243,7 +264,13 @@ export class Game {
     this.avatar.position.copy(this.player.position);
   }
   setCourse(island){this.hull();const target=this.world.dockFor(island,this.hullRadius);this.autopilot={id:island.id,name:island.name,x:target.x,z:target.z,radius:1,dock:true};this.helming=false;this.anchored=false;this.ui.closeModal();this.ui.toast(`Course set for ${island.name} · following a sheltered approach · G for manual steering`,'compass','success',5500);}
-  interact(){const fire=this.nearFire();if(fire){if(this.inventory.remove('water')){this.fires.delete(fire.id);this.ui.toast('Fire extinguished','water','success');}else this.ui.toast('You need fresh water to put out this fire','water','warning');return;}const r=this.world.nearestResource(this.player.position);if(r){this.world.collect(r,this.player.position);return;}const station=this.nearStation();if(station){if(station.type==='sail'){this.setSailOpen(!this.sailOpen);this.ui.toast(this.sailOpen?'Sail unfurled · following the trade winds':'Sail furled · drifting slowly','sail');}else if(station.type==='workbench'){this.ui.openModal('inventory');}else if(station.type==='purifier'||station.type==='grill'){if(this.jobs.some(j=>j.blockId===station.id)||this.crafting.job?.stationKey===gridKey(station.x,station.y,station.z)){this.ui.toast('Still working. Give it a few seconds.','sun');return;}const baseRecipe=RECIPES.find(r=>r.id===(station.type==='purifier'?'water':'cookedFish')),rainCatch=station.type==='purifier'&&['rain','storm'].includes(this.time.weather);const recipe=rainCatch?{...baseRecipe,ingredients:{},name:'Collected rainwater'}:baseRecipe;if(!this.inventory.spend(recipe.ingredients)){this.ui.toast(station.type==='grill'?'You need one raw fish and one driftwood':'You need one driftwood to light the purifier','wood','warning');return;}this.jobs.push({blockId:station.id,recipe,time:0});this.audio.play('build');this.ui.toast(rainCatch?'Collecting rainwater · ready in 8 seconds':station.type==='purifier'?'Purifying seawater · ready in 8 seconds':'Fish on the grill · ready in 8 seconds',station.type,'info');}else if(station.type==='windcatcher')this.toggleHelm();else if(station.type==='rainCollector')this.ui.toast('Rain collector · one water per 35 seconds of rain · reserve limit 30','water');else if(station.type==='beacon')this.rescue();return;}this.ui.toast('F interacts with nearby workstations and island supplies','info');}
+  toggleDive(){
+    const p=this.player;
+    if(p.diving){p.diving=false;p.velocity.y=2.2;this.audio.setUnderwater(false);this.ui.toast('Returning to the surface','water');return true;}
+    if(!p.swimming){this.ui.toast('Swim away from the deck, then press C to shallow-dive','water');return false;}
+    p.diving=true;p.grounded=false;p.onRaft=false;p.velocity.y=-.55;this.audio.play('splash');this.audio.setUnderwater(true);this.ui.toast('Shallow dive · C or Space to surface · no oxygen limit','water','info',4500);return true;
+  }
+  interact(){const fire=this.nearFire();if(fire){if(this.inventory.remove('water')){this.fires.delete(fire.id);this.ui.toast('Fire extinguished','water','success');}else this.ui.toast('You need fresh water to put out this fire','water','warning');return;}const r=this.world.nearestResource(this.player.position,2.4,this.player.diving);if(r){this.world.collect(r,this.player.position,this.player.diving);return;}const station=this.nearStation();if(station){if(station.type==='sail'){this.setSailOpen(!this.sailOpen);this.ui.toast(this.sailOpen?'Sail unfurled · following the trade winds':'Sail furled · drifting slowly','sail');}else if(station.type==='workbench'){this.ui.openModal('inventory');}else if(station.type==='purifier'||station.type==='grill'){if(this.jobs.some(j=>j.blockId===station.id)||this.crafting.job?.stationKey===gridKey(station.x,station.y,station.z)){this.ui.toast('Still working. Give it a few seconds.','sun');return;}const baseRecipe=RECIPES.find(r=>r.id===(station.type==='purifier'?'water':'cookedFish')),rainCatch=station.type==='purifier'&&['rain','storm'].includes(this.time.weather);const recipe=rainCatch?{...baseRecipe,ingredients:{},name:'Collected rainwater'}:baseRecipe;if(!this.inventory.spend(recipe.ingredients)){this.ui.toast(station.type==='grill'?'You need one raw fish and one driftwood':'You need one driftwood to light the purifier','wood','warning');return;}this.jobs.push({blockId:station.id,recipe,time:0});this.audio.play('build');this.ui.toast(rainCatch?'Collecting rainwater · ready in 8 seconds':station.type==='purifier'?'Purifying seawater · ready in 8 seconds':'Fish on the grill · ready in 8 seconds',station.type,'info');}else if(station.type==='windcatcher')this.toggleHelm();else if(station.type==='rainCollector')this.ui.toast('Rain collector · one water per 35 seconds of rain · reserve limit 30','water');else if(station.type==='beacon')this.rescue();return;}this.ui.toast('F interacts with nearby workstations and island supplies','info');}
   setSailOpen(open) {this.sailOpen=!!open;for(const b of this.grid.blocks.values())if(b.type==='sail')b.mesh.userData.sail.visible=this.sailOpen;}
   nearStation(type=null,radius=1.9){let nearest=null,best=radius;for(const b of this.grid.blocks.values()){if(!BLOCKS[b.type].station||(type&&b.type!==type))continue;const p=this.raft.localToWorld(new V3(b.x,.5,b.z));const d=p.distanceTo(this.player.position);if(d<best){best=d;nearest=b;}}return nearest;}
   hasStation(type='workbench',radius=4){return !!this.nearStation(type,radius);}
@@ -326,7 +353,7 @@ export class Game {
   }
   raftGround(position){const x=Math.round(position.x-this.raft.position.x),z=Math.round(position.z-this.raft.position.z);let highest=null;for(let y=0;y<9;y++){const b=this.grid.at(x,y,z);if(!b)continue;let h;if(y===0&&BLOCKS[b.type].buoyant)h=this.raft.position.y+.27;else if(b.type==='floor')h=this.raft.position.y+.34+y-1;else if(b.type==='stairs'){const dx=position.x-this.raft.position.x-x,dz=position.z-this.raft.position.z-z,a=b.rotation*Math.PI/2,lz=dx*Math.sin(a)+dz*Math.cos(a);h=this.raft.position.y+.34+(y-1)+clamp((lz+.5),0,1);}if(h!==undefined&&h<=position.y+.46&&(!highest||h>highest.height))highest={height:h,block:b};}return highest;}
   updatePlayer(dt){const p=this.player;p.action=Math.max(0,p.action-dt);p.attackCooldown=Math.max(0,p.attackCooldown-dt);p.jumpCooldown=Math.max(0,p.jumpCooldown-dt);p.stingCooldown=Math.max(0,p.stingCooldown-dt);const old=p.position.clone();let ix=(this.keys.has('d')?1:0)-(this.keys.has('a')?1:0)+this.touchMove.x+this.gamepadMove.x,iz=(this.keys.has('s')?1:0)-(this.keys.has('w')?1:0)+this.touchMove.y+this.gamepadMove.y;if(this.helming){ix=0;iz=0;}
-    const movement=new V3(Math.cos(this.cameraYaw)*ix+Math.sin(this.cameraYaw)*iz,0,-Math.sin(this.cameraYaw)*ix+Math.cos(this.cameraYaw)*iz);if(movement.length()>1)movement.normalize();const moving=movement.length()>.05,speed=(this.keys.has('shift')?4.3:2.65)*(p.swimming?.62:1)*(this.stats.stung>0?.7:1);p.velocity.x=THREE.MathUtils.lerp(p.velocity.x,movement.x*speed,dt*12);p.velocity.z=THREE.MathUtils.lerp(p.velocity.z,movement.z*speed,dt*12);p.position.x+=p.velocity.x*dt;p.position.z+=p.velocity.z*dt;
+    const movement=new V3(Math.cos(this.cameraYaw)*ix+Math.sin(this.cameraYaw)*iz,0,-Math.sin(this.cameraYaw)*ix+Math.cos(this.cameraYaw)*iz);if(movement.length()>1)movement.normalize();const moving=movement.length()>.05,speed=(this.keys.has('shift')?4.3:2.65)*(p.swimming?(p.diving?.78:.62):1)*(this.stats.stung>0?.7:1);p.velocity.x=THREE.MathUtils.lerp(p.velocity.x,movement.x*speed,dt*12);p.velocity.z=THREE.MathUtils.lerp(p.velocity.z,movement.z*speed,dt*12);p.position.x+=p.velocity.x*dt;p.position.z+=p.velocity.z*dt;
     // Stations and walls are solid; the deck perimeter is deliberately open for swimming.
     const local=p.position.clone().sub(this.raft.position);
     for(const b of this.grid.blocks.values()) {
@@ -336,13 +363,25 @@ export class Game {
     }
     this.world.resolveMovement(old,p.position,p.swimming);
     let raftGround=this.raftGround(p.position),islandGround=this.world.groundAt(p.position.x,p.position.z,p.position.y);let ground=raftGround?.height??islandGround?.height??-100;const wasSwimming=p.swimming;
-    if(this.keys.has(' ')&&p.jumpCooldown<=0&&(p.grounded||p.swimming)){p.velocity.y=p.swimming?3.5:4.7;p.grounded=false;p.jumpCooldown=.6;if(p.swimming)p.position.y+=.15;this.audio.play('hook');}
-    p.velocity.y-=12*dt;p.position.y+=p.velocity.y*dt;const ceiling=this.world.ceilingAt(p.position,old.y);if(ceiling!==null){p.position.y=ceiling;p.velocity.y=Math.min(0,p.velocity.y);}p.grounded=false;p.onRaft=false;p.swimming=false;
-    if(p.position.y<=ground&&p.velocity.y<=0){p.position.y=ground;p.velocity.y=0;p.grounded=true;p.onRaft=!!raftGround;}else{const water=waveHeight(p.position.x,p.position.z,this.simTime,this.ocean.uniforms.amplitude.value)-.68;if(p.position.y<=water&&p.velocity.y<0){p.position.y=water;p.velocity.y=0;p.swimming=true;if(!wasSwimming)this.audio.play('splash');}}
-    if(p.swimming&&raftGround&&p.jumpCooldown<.3){p.position.y=raftGround.height;p.grounded=true;p.onRaft=true;p.swimming=false;} // automatic ledge grab
+    if(this.keys.has(' ')&&p.jumpCooldown<=0&&(p.grounded||p.swimming)){p.diving=false;p.velocity.y=p.swimming?3.5:4.7;p.grounded=false;p.jumpCooldown=.6;if(p.swimming)p.position.y+=.15;this.audio.play('hook');}
+    if(p.diving&&wasSwimming){
+      const surface=waveHeight(p.position.x,p.position.z,this.simTime,this.ocean.uniforms.amplitude.value),floor=this.world.terrainHeight(p.position.x,p.position.z)+.34;
+      if(floor>surface-.85){p.diving=false;p.velocity.y=1.2;}
+      else{const target=Math.max(floor,surface-1.45);p.velocity.y=THREE.MathUtils.lerp(p.velocity.y,clamp((target-p.position.y)*4,-2.2,2.2),Math.min(1,dt*8));}
+    }else p.velocity.y-=12*dt;
+    p.position.y+=p.velocity.y*dt;const ceiling=this.world.ceilingAt(p.position,old.y);if(ceiling!==null){p.position.y=ceiling;p.velocity.y=Math.min(0,p.velocity.y);}p.grounded=false;p.onRaft=false;p.swimming=false;
+    if(p.position.y<=ground&&p.velocity.y<=0){p.position.y=ground;p.velocity.y=0;p.grounded=true;p.onRaft=!!raftGround;p.diving=false;}
+    else if(p.diving&&wasSwimming){
+      const surface=waveHeight(p.position.x,p.position.z,this.simTime,this.ocean.uniforms.amplitude.value),floor=this.world.terrainHeight(p.position.x,p.position.z)+.34;
+      if(floor>surface-.85){p.diving=false;p.position.y=surface-.68;p.velocity.y=0;p.swimming=true;}
+      else{p.position.y=clamp(p.position.y,floor,surface-.92);p.swimming=true;if(p.position.y<=floor+.001)p.velocity.y=Math.max(0,p.velocity.y);}
+    }else{const water=waveHeight(p.position.x,p.position.z,this.simTime,this.ocean.uniforms.amplitude.value)-.68;if(p.position.y<=water&&p.velocity.y<0){p.position.y=water;p.velocity.y=0;p.swimming=true;if(!wasSwimming)this.audio.play('splash');}}
+    if(p.swimming&&raftGround&&p.jumpCooldown<.3){p.position.y=raftGround.height;p.grounded=true;p.onRaft=true;p.swimming=false;p.diving=false;} // automatic ledge grab
+    if(!p.swimming)p.diving=false;
+    if(this.underwaterAudio!==p.diving){this.underwaterAudio=p.diving;this.audio.setUnderwater(p.diving);}
     if(moving){const heading=Math.atan2(movement.x,movement.z);p.heading+= (THREE.MathUtils.euclideanModulo(heading-p.heading+Math.PI,Math.PI*2)-Math.PI)*Math.min(1,dt*12);}else if(this.mouse.down||p.action>0){const heading=Math.atan2(this.aimPoint.x-p.position.x,this.aimPoint.z-p.position.z);p.heading+=(THREE.MathUtils.euclideanModulo(heading-p.heading+Math.PI,Math.PI*2)-Math.PI)*Math.min(1,dt*10);}
     p.anim+=dt*(moving?speed*4:1.1);this.avatar.position.copy(p.position);this.avatar.rotation.y=p.heading;this.avatar.userData.body.position.y=moving?Math.sin(p.anim*2)*.016:Math.sin(this.simTime*1.4)*.01;const swing=moving?Math.sin(p.anim)*(p.swimming?.7:.42):0;this.avatar.userData.legs[0].rotation.x=swing;this.avatar.userData.legs[1].rotation.x=-swing;this.avatar.userData.arms[0].rotation.x=-swing*.7;this.avatar.userData.arms[1].rotation.x=swing*.7-(p.action>0?Math.sin(p.action/.55*Math.PI)*1.2:0);if(this.hook.state==='charging')this.avatar.userData.arms[1].rotation.x=-1.1;
-    if(p.swimming){this.avatar.rotation.x=.25;if(this.shark.mesh.visible&&p.position.distanceTo(this.shark.position)<2.7&&this.shark.biteCooldown<=0&&!this.settings.relaxed){this.stats.damage(10);this.shark.biteCooldown=5;this.ui.toast('Shark nearby! Get back to the raft.','spear','warning');}}else this.avatar.rotation.x=0;
+    if(p.swimming){this.avatar.rotation.x=p.diving?.72:.25;if(this.shark.mesh.visible&&p.position.distanceTo(this.shark.position)<2.7&&this.shark.biteCooldown<=0&&!this.settings.relaxed){this.stats.damage(10);this.shark.biteCooldown=5;this.ui.toast('Shark nearby! Get back to the raft.','spear','warning');}}else this.avatar.rotation.x=0;
     for(const island of this.world.islands)for(const jelly of island.jellies){jelly.position.y=-.28+Math.sin(this.simTime*1.5+jelly.position.x)*.1;const jpos=jelly.getWorldPosition(new V3());if(p.swimming&&p.position.distanceTo(jpos)<.7&&p.stingCooldown<=0){p.stingCooldown=10;this.stats.sting();}}
     if(p.position.distanceTo(this.raft.position)>230){p.position.copy(this.raft.position).add(new V3(.5,.5,.5));this.ui.toast('The current carried you home. Stay within sight of your raft.','anchor');}
   }
@@ -367,7 +406,7 @@ export class Game {
       if(fire.timer>18)this.fires.delete(id);
     }
   }
-  renderCamera(dt){const target=(this.player?.position||new V3(.5,0,.5)).clone().add(new V3(0,.8,0));if(this.helming)target.copy(this.raft.position).add(new V3(.5,.8,.5));this.cameraTarget.lerp(target,1-Math.exp(-dt*5));const cp=Math.cos(this.cameraPitch),sp=Math.sin(this.cameraPitch),distance=this.cameraDistance*clamp(1/this.camera.aspect,1,1.6);this.camera.position.set(this.cameraTarget.x+Math.sin(this.cameraYaw)*distance*cp,this.cameraTarget.y+sp*distance,this.cameraTarget.z+Math.cos(this.cameraYaw)*distance*cp);this.world?.cameraClip(this.cameraTarget,this.camera.position);this.camera.lookAt(this.cameraTarget);this.camera.updateMatrixWorld();this.raycaster.setFromCamera(this.pointer,this.camera);if(!this.raycaster.ray.intersectPlane(this.oceanPlane,this.aimPoint))this.aimPoint.copy(this.player.position).add(new V3(0,0,-10));const max=40;if(this.aimPoint.distanceTo(this.player.position)>max){const d=this.aimPoint.clone().sub(this.player.position).normalize();this.aimPoint.copy(this.player.position).addScaledVector(d,max);this.aimPoint.y=0;}}
+  renderCamera(dt){const target=(this.player?.position||new V3(.5,0,.5)).clone().add(new V3(0,this.player?.diving?.42:.8,0));if(this.helming)target.copy(this.raft.position).add(new V3(.5,.8,.5));this.cameraTarget.lerp(target,1-Math.exp(-dt*5));const pitch=this.player?.diving?-.08:this.cameraPitch,cp=Math.cos(pitch),sp=Math.sin(pitch),distance=(this.player?.diving?Math.min(this.cameraDistance,3.8):this.cameraDistance)*clamp(1/this.camera.aspect,1,1.6);this.camera.position.set(this.cameraTarget.x+Math.sin(this.cameraYaw)*distance*cp,this.cameraTarget.y+sp*distance,this.cameraTarget.z+Math.cos(this.cameraYaw)*distance*cp);this.world?.cameraClip(this.cameraTarget,this.camera.position);this.camera.lookAt(this.cameraTarget);this.camera.updateMatrixWorld();this.raycaster.setFromCamera(this.pointer,this.camera);if(!this.raycaster.ray.intersectPlane(this.oceanPlane,this.aimPoint))this.aimPoint.copy(this.player.position).add(new V3(0,0,-10));const max=40;if(this.aimPoint.distanceTo(this.player.position)>max){const d=this.aimPoint.clone().sub(this.player.position).normalize();this.aimPoint.copy(this.player.position).addScaledVector(d,max);this.aimPoint.y=0;}}
   gamepad(dt){
     let pads;try{pads=navigator.getGamepads?.();}catch{return;}
     const pad=pads&&[...pads].find(Boolean);this.gamepadMove={x:0,y:0};if(!pad)return;if(this.gamepadRequireNeutral){if(pad.buttons.some(b=>b.pressed)||pad.axes.some(a=>Math.abs(a)>.17))return;this.gamepadRequireNeutral=false;}
@@ -382,7 +421,7 @@ export class Game {
       this.gamepadButtons[7]=!!pad.buttons[7]?.pressed;return;
     }
     this.gamepadMove.x=dead(pad.axes[0]);this.gamepadMove.y=dead(pad.axes[1]);
-    this.cameraYaw-=dead(pad.axes[2]||0)*dt*2;this.cameraPitch=clamp(this.cameraPitch+dead(pad.axes[3]||0)*dt,.12,1.2);
+    this.cameraYaw-=dead(pad.axes[2]||0)*dt*2*this.settings.mouseSensitivity;this.cameraPitch=clamp(this.cameraPitch+dead(pad.axes[3]||0)*dt*this.settings.mouseSensitivity,.12,1.2);
     if(this.gamepadMove.x||this.gamepadMove.y||dead(pad.axes[2]||0)||dead(pad.axes[3]||0))this.pointer.set(0,.25);
     pressed(0,()=>{this.keys.add(' ');setTimeout(()=>this.keys.delete(' '),150);this.start();});pressed(1,()=>this.toggleHelm());
     pressed(4,()=>this.selectSlot(this.selectedSlot-1));pressed(5,()=>this.selectSlot(this.selectedSlot+1));pressed(2,()=>this.interact());
@@ -393,7 +432,7 @@ export class Game {
     this.gamepadButtons[7]=trigger;
   }
   rescue(){if(this.progress.rescued){this.ui.toast('Your signal is still out there. Keep exploring.','signal','success');return;}this.progress.rescued=true;this.audio.play('rescue');this.paused=true;this.ui.victory();this.save();}
-  revive(){this.stats.health=100;this.stats.hunger=65;this.stats.thirst=65;this.stats.alive=true;for(const id of['wood','leaf','plastic','scrap'])this.inventory.items[id]=Math.ceil(this.inventory.count(id)*.7);if(![...this.grid.blocks.values()].some(b=>b.core)){for(let x=0;x<=1;x++)for(let z=0;z<=1;z++)this.grid.add('foundation',x,0,z,true);}this.player.position.copy(this.raft.position).add(new V3(.5,.4,.5));this.player.velocity.set(0,0,0);this.player.onRaft=true;this.ui.closeModal();this.ui.toast('A new breath. Some supplies were lost to the sea.','heart');}
+  revive(){this.stats.health=100;this.stats.hunger=65;this.stats.thirst=65;this.stats.alive=true;for(const id of['wood','leaf','plastic','scrap'])this.inventory.items[id]=Math.ceil(this.inventory.count(id)*.7);if(![...this.grid.blocks.values()].some(b=>b.core)){for(let x=0;x<=1;x++)for(let z=0;z<=1;z++)this.grid.add('foundation',x,0,z,true);}this.player.position.copy(this.raft.position).add(new V3(.5,.4,.5));this.player.velocity.set(0,0,0);this.player.onRaft=true;this.player.diving=false;this.ui.closeModal();this.ui.toast('A new breath. Some supplies were lost to the sea.','heart');}
   simulate(dt) {
     if(this.paused||!this.stats.alive)return;
     this.simTime+=dt;this.time.update(dt);this.stats.update(dt,this.settings.relaxed);
@@ -407,13 +446,15 @@ export class Game {
   }
   updatePresentation(dt,active) {
     const atm=this.atmosphere.update(dt,this.simTime,this.player.position,this.time,this.time.weather);
-    this.ocean.uniforms.fogColor.value.copy(atm.fog);this.ocean.uniforms.sunDirection.value.copy(this.atmosphere.sun.position).sub(this.player.position).normalize();this.ocean.update(this.simTime,this.player.position,this.time.weather,atm.daylight,this.world.islands,dt);
+    const submerged=this.player.diving&&this.player.swimming;if(submerged)atm.fog.setHex(0x176b73);
+    this.ocean.uniforms.fogColor.value.copy(atm.fog);this.ocean.uniforms.sunDirection.value.copy(this.atmosphere.sun.position).sub(this.player.position).normalize();this.ocean.update(this.simTime,this.player.position,this.time.weather,atm.daylight,this.world.islands,dt);if(submerged){this.ocean.uniforms.fogDensity.value=.026;this.scene.fog.density=.028;}
     this.world.setDetail(this.player.position,QUALITY_PRESETS[this.activeQuality]);this.world.animate(this.simTime,atm.daylight,this.time.weather==='storm'?2:this.time.weather==='rain'?1.35:1);
     if(atm.lightning&&active) {
       this.audio.play('damage');if(!this.settings.relaxed&&Math.random()<.6){const blocks=[...this.grid.blocks.values()].filter(b=>BLOCKS[b.type].wooden),target=blocks[Math.floor(Math.random()*blocks.length)];if(target){this.fires.set(target.id,{timer:0});this.ui.toast('Lightning struck! Use fresh water nearby to put out the fire.','storm','warning',6000);}}
     }
   }
   frame(now) {
+    if(this.disposed)return;
     const rawDt=this.lastFrame===null?0:Math.max(0,(now-this.lastFrame)/1000);this.lastFrame=now;this.frameCount++;if(rawDt>0)this.fps=THREE.MathUtils.lerp(this.fps,1/rawDt,.05);
     if(!document.hidden&&!this.contextLost) {
       this.gamepad(Math.min(rawDt,.1));const active=this.started&&!this.paused&&this.stats.alive;let simulated=0;
@@ -430,6 +471,21 @@ export class Game {
       if(!this.paused||this.renderNeeded){this.renderer.render(this.scene,this.camera);this.renderNeeded=false;}
       this.quality.update(rawDt,active&&this.lastFrame!==null);this.monitor.recordFrame(rawDt,now,!this.paused&&this.lastFrame!==null);
     } else {this.clock.reset();this.monitor.recordFrame(0,now,false);}
-    this.animationFrameId=requestAnimationFrame(this.frame);
+    if(!this.disposed)this.animationFrameId=requestAnimationFrame(this.frame);
+  }
+
+  dispose({save=true}={}) {
+    if(this.disposed)return;
+    if(save)this.save();
+    this.disposed=true;this.ready=false;
+    if(this.animationFrameId)cancelAnimationFrame(this.animationFrameId);
+    this.animationFrameId=null;this.lifecycle.abort();this.clearInput();
+    this.ui?.dispose();this.monitor?.element.remove();
+    this.world?.dispose();
+    disposeObject(this.scene);this.scene.clear();
+    this.renderer.dispose();this.renderer.forceContextLoss();this.renderer.domElement.remove();
+    document.body.classList.remove('voyage-started','menu-open','is-building','hide-hud','underwater');this.audio.setUnderwater(false);
+    if(window.tidebound===this)delete window.tidebound;
+    if(window.tidebreak===this)delete window.tidebreak;
   }
 }

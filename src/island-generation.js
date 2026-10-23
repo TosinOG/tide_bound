@@ -99,6 +99,7 @@ function placeFoliage(island){
     const a=rnd()*Math.PI*2,r=plan.radius*(.9+rnd()*.30),x=Math.cos(a)*r,z=Math.sin(a)*r,y=plan.sample(x,z);if(y>-.45||y<-3.0)continue;
     reefBuckets[i%3].push({x,y,z,scale:.7+rnd()*.7,yaw:rnd()*Math.PI*2,shade:.90+rnd()*.18});
   }
+  island.reefPoints=reefBuckets.flat();
   island.reefMeshes=reefBuckets.flatMap((p,i)=>instanceIslandAssets(island.reef,'coral',i,p));
 }
 function waterfall(island){
@@ -188,6 +189,19 @@ export function createExplorationIsland(world,id,x,z,baseRadius,biomeIndex,seed)
   }
   for(const r of island.resources){r.navKey=island.nav.closest(r.local,true);if(!standing(r,r.local,r.position.y))throw new Error('Inaccessible island resource: '+r.id);setCollectedVisual(r);}
   if(island.resources.some(r=>r.collected&&r.collider))island.nav=rebuild();
+  // One optional shallow-water discovery per island. Reef shelves were rooted to
+  // the canonical seabed above; choosing one cannot move land routes or colliders.
+  const reefCandidates=(island.reefPoints||[]).filter(p=>p.y<-1.45&&p.y>-2.6).sort((a,b)=>Math.hypot(a.x-plan.landing.x,a.z-plan.landing.z)-Math.hypot(b.x-plan.landing.x,b.z-plan.landing.z));
+  let reefPoint=reefCandidates[0];
+  if(!reefPoint)for(let attempt=0;attempt<512&&!reefPoint;attempt++){
+    const a=attempt*2.39996+seed,r=plan.radius*(.86+(attempt%13)/13*.42),p={x:Math.cos(a)*r,z:Math.sin(a)*r,y:plan.sample(Math.cos(a)*r,Math.sin(a)*r)};
+    if(p.y<-1.45&&p.y>-2.6)reefPoint=p;
+  }
+  if(reefPoint){
+    const mesh=treasureChest(.68,true);mesh.rotation.y=plan.angle;
+    const cache=makeResource(world,island,{id:`${id}:explore:reef`,type:'reefCache',name:'Sunken keeper’s cache',point:reefPoint,mesh,loot:{coral:1,scrap:2,rope:1},story:'Beneath the coral, the same keeper’s mark. Their charts measured the safe shelves as carefully as the stars: a reminder that some forgotten roads begin below the tide.',icon:'compass',action:'recover'});
+    cache.requiresDive=true;island.reefCache=cache;
+  }
   const radial=new V3(plan.landing.x,0,plan.landing.z).normalize();let dock=plan.landing;
   for(let d=3;d<=12;d+=.5){const p={x:plan.landing.x+radial.x*d,z:plan.landing.z+radial.z*d};if(plan.sample(p.x,p.z)<-1.2){dock=p;break;}}
   island.dock={x:x+dock.x,z:z+dock.z,radius:2.3};
