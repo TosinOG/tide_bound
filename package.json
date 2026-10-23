@@ -9,6 +9,8 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --test tests/systems.test.js tests/upgrade.test.js tests/world.test.js tests/islands.test.js",
     "test:browser": "node tests/gameplay.mjs && node tests/endgame.mjs && node tests/regressions.mjs && node tests/islands.mjs",
+    "test:menu": "node tests/menu.mjs",
+    "test:exploration": "node tests/exploration.mjs",
     "build:standalone": "npm run build && node scripts/package-standalone.mjs",
     "test:all": "npm test && npm run test:browser && npm run test:standalone",
     "test:standalone": "npm run build:standalone && node tests/standalone.mjs",

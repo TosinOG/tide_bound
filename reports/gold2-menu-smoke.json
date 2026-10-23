@@ -1,0 +1,32 @@
+{
+  "passed": 21,
+  "checks": [
+    "Menu boots first without constructing gameplay",
+    "Fresh profile disables Continue and preserves the real title/tagline",
+    "Menu settings persist and affect the real renderer/audio",
+    "Escape closes a panel and restores main-menu focus",
+    "Credits contain only the specified public developer/contact details",
+    "How to Play documents eight real gameplay subjects and bindings",
+    "Play on a fresh profile offers an explicit New Game choice",
+    "New Game constructs and starts the existing game after the cinematic transition",
+    "New Game creates a valid V2 snapshot using the existing save system",
+    "Pause → Main Menu saves, disposes gameplay, and enables Continue",
+    "Returning to the menu retains modified inventory",
+    "Continue restores inventory through actual validation/load",
+    "A reload also lands on the menu rather than starting survival behind it",
+    "New Game over an existing voyage requires a separate confirmation",
+    "Confirmed New Game retains a valid previous-save backup",
+    "Unreadable saves show recovery without initializing a replacement world",
+    "Recovery gives a useful error and preserves the raw data",
+    "Confirmed invalid-save replacement keeps an exact raw recovery copy",
+    "Portrait menu fits without horizontal overflow",
+    "Portrait guide remains scrollable and usable",
+    "No browser page errors or console errors during menu/save transitions"
+  ],
+  "errors": [],
+  "environment": {
+    "browser": "Chromium 153 / SwiftShader",
+    "desktop": "1440×900 DPR 1",
+    "mobile": "390×844 DPR 1"
+  }
+}

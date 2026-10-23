@@ -13,7 +13,7 @@ export class Ocean {
   constructor(scene){
     this.atlasSize=65;this.coastPixels=new Uint8Array(65*65*4*4);this.coastTexture=new THREE.DataTexture(this.coastPixels,65,260,THREE.RGBAFormat);this.coastTexture.minFilter=this.coastTexture.magFilter=THREE.LinearFilter;this.coastTexture.generateMipmaps=false;this.coastTexture.needsUpdate=true;this.coastKey='';
     this.uniforms={coastAtlas:{value:this.coastTexture},coastColors:{value:Array.from({length:4},()=>new THREE.Color(0x4fc7b4))},microDetail:{value:1},time:{value:0},amplitude:{value:1},sunDirection:{value:new THREE.Vector3(-.5,.8,-.3).normalize()},sunColor:{value:new THREE.Color(0xffeccb)},deepColor:{value:new THREE.Color(0x176e87)},shallowColor:{value:new THREE.Color(0x67bdb0)},fogColor:{value:new THREE.Color(0xbad8d4)},fogDensity:{value:.0018},daylight:{value:1},islands:{value:Array.from({length:4},()=>new THREE.Vector3(10000,10000,0))}};
-    const mat=new THREE.ShaderMaterial({uniforms:this.uniforms,transparent:true,depthWrite:false,vertexShader:`
+    const mat=new THREE.ShaderMaterial({uniforms:this.uniforms,transparent:true,depthWrite:false,side:THREE.DoubleSide,vertexShader:`
       uniform float time, amplitude;
       varying vec3 vWorld, vNormal; varying float vHeight;
       void main(){
@@ -113,7 +113,7 @@ export class WorldGenerator {
   generateIsland(id,x,z,radius,biomeIndex,seed){return createExplorationIsland(this,id,x,z,radius,biomeIndex,seed);}
   localHeight(island,x,z){if(island.plan)return island.plan.sample(x,z);const a=Math.atan2(z,x),shape=1+Math.sin(a*3+island.seed)*.07+Math.cos(a*5+island.seed*.3)*.05;const r=Math.hypot(x,z)/(island.radius*shape);if(r>1.12)return -2;const profile=[[0,3.2],[.2,3.8],[.42,2.7],[.64,1.25],[.78,.38],[.94,.12],[1.02,-.2],[1.12,-1.5]];let h=-1;for(let i=1;i<profile.length;i++){if(r<=profile[i][0]){const [r0,h0]=profile[i-1],[r1,h1]=profile[i];h=THREE.MathUtils.lerp(h0,h1,(r-r0)/(r1-r0));break;}}return h+Math.sin(x*.7+island.seed)*Math.cos(z*.6)*.10*Math.max(0,1-r);}
   groundAt(x,z,feet=-Infinity){for(const island of this.islands){const extent=island.plan?.extent??island.radius*1.12;if(Math.abs(x-island.x)>extent||Math.abs(z-island.z)>extent)continue;const px=x-island.x,pz=z-island.z,h=this.localHeight(island,px,pz);if(h>-.15)return {height:island.plan?Math.max(h,obstacleTop(island,px,pz,feet)):h,island};}return null;}
-  nearestResource(position,max=2.4){let nearest=null,best=max;for(const island of this.islands)for(const r of island.resources){if(!r.collected){const dx=position.x-r.position.x,dz=position.z-r.position.z,dy=position.y-r.position.y,d=Math.hypot(dx,dz,dy*.65);if(d<best&&Math.abs(dy)<1.8&&this.interactionClear(island,position,r.position,r.id)){best=d;nearest={...r,island,original:r};if(r.type==='treasure'&&r.gate&&island.puzzle.sequence.every(k=>this.collected.has(`${island.id}:explore:rune${k}`))){nearest.name='Keeper’s provision chest';nearest.action='open';}}}}return nearest;}
+  nearestResource(position,max=2.4,diving=false){let nearest=null,best=max;for(const island of this.islands)for(const r of island.resources){if(!r.collected&&(!r.requiresDive||diving)){const dx=position.x-r.position.x,dz=position.z-r.position.z,dy=position.y-r.position.y,d=Math.hypot(dx,dz,dy*.65);if(d<best&&Math.abs(dy)<1.8&&this.interactionClear(island,position,r.position,r.id)){best=d;nearest={...r,island,original:r};if(r.type==='treasure'&&r.gate&&island.puzzle.sequence.every(k=>this.collected.has(`${island.id}:explore:rune${k}`))){nearest.name='Keeper’s provision chest';nearest.action='open';}}}}return nearest;}
   interactionClear(island,from,to,targetId=null){
     if(!island.plan)return true;
     const start=new THREE.Vector3(from.x-island.x,from.y+1.1,from.z-island.z),end=new THREE.Vector3(to.x-island.x,to.y+.30,to.z-island.z),d=end.clone().sub(start),length=d.length();
@@ -138,9 +138,9 @@ export class WorldGenerator {
   }
   animate(t,daylight=1,gust=1){islandWind.time.value=t%4096;islandWind.strength.value=(this.quality?.foliage??.65)*gust;for(const i of this.islands){if(i.waterfall)i.waterfall.material.uniforms.daylight.value=daylight;if(i.mist){i.mist.position.y=Math.sin(t*.9+i.seed)*.08;i.mist.material.opacity=.15+.15*daylight;}if(i.fumarole){i.fumarole.position.y=Math.sin(t*.45+i.seed)*.20;i.fumarole.material.opacity=.12+.16*daylight;}}}
   navigationPath(island,resource){return island.nav?.pathTo({x:resource.position.x-island.x,z:resource.position.z-island.z}).map(p=>new THREE.Vector3(p.x+island.x,p.y,p.z+island.z))||[];}
-  collect(resource,position=null) {
+  collect(resource,position=null,diving=false) {
     const r=resource?.original,island=resource?.island;
-    if(!r||!this.islands.includes(island)||!island.resources.includes(r)||r.collected||this.collected.has(r.id))return false;
+    if(!r||!this.islands.includes(island)||!island.resources.includes(r)||r.collected||this.collected.has(r.id)||(r.requiresDive&&!diving))return false;
     if(position&&(Math.hypot(position.x-r.position.x,position.z-r.position.z,(position.y-r.position.y)*.65)>2.6||Math.abs(position.y-r.position.y)>1.8))return false;
     if(position&&!this.interactionClear(island,position,r.position,r.id))return false;
     if(r.type==='rune'){
@@ -152,6 +152,10 @@ export class WorldGenerator {
     r.collected=true;setCollectedVisual(r);this.collected.add(r.id);this.bus.emit('resourceCollected',{type:r.type,island,resource:r});return true;
   }
   toJSON(){return {generationVersion:3,collected:[...this.collected],discovered:[...this.discovered]};}
+  dispose(){
+    for(const chunk of this.chunks.values())if(chunk.island){this.scene.remove(chunk.island.group);disposeObject(chunk.island.group);}
+    this.chunks.clear();this.islands=[];this.pending=[];this.needed.clear();this.palms=[];
+  }
 }
 
 export class DebrisSpawner {

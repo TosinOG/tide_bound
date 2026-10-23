@@ -68,6 +68,7 @@ export const QUESTS = [
   { id: 'provisions', optional: true, title: 'Let the rain provide', research: 'resin', target: 1, tip: 'Find palm resin; study vines, then resin', reward: { rope: 2 } },
   { id: 'fortify', optional: true, title: 'Learn from the reef', research: 'coral', target: 1, tip: 'Find sea glass coral; study copper, then coral', reward: { scrap: 2 } },
   { id: 'navigator', optional: true, title: 'Read an older compass', research: 'relic', target: 1, tip: 'Find a navigator’s lens at an outpost', reward: { wood: 3 } },
+  { id: 'below-the-blue', optional: true, title: 'Recover a sunken keeper’s cache', counter: 'reefs', target: 1, tip: 'Swim to a coastal reef · C to dive · F beside the submerged cache', reward: { cookedFish: 1 } },
 ];
 
 export const RECIPES = [

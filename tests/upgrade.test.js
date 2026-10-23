@@ -4,9 +4,19 @@ import {EventBus,Inventory,GridManager,CraftingManager,FixedStepClock,SurvivalSt
 import {ITEMS,BLOCKS,RECIPES,RESEARCH,QUESTS,BIOMES,QUICKBAR} from '../src/data.js';
 import {normalizeSave,reservedRecipe,readStoredSave,writeStoredSave,readBackup,SAVE_KEY,LEGACY_SAVE_KEY,IMPORT_BACKUP_KEY,PREVIOUS_SAVE_KEY,MAX_SAVE_BYTES} from '../src/persistence.js';
 import {QuestManager} from '../src/progression.js';
+import {DEFAULT_PREFERENCES,PREFERENCES_KEY,normalizePreferences,readPreferences,writePreferences} from '../src/config.js';
 const bus=()=>new EventBus();
 const legacy=()=>({version:1,savedAt:100,simTime:30,inventory:{leaf:4,wood:8,rawFish:2},stats:{health:82,hunger:55,thirst:41},blocks:[{type:'foundation',x:0,y:0,z:0,core:true,hp:80,rotation:0},{type:'foundation',x:1,y:0,z:0,core:false,hp:100,rotation:0},{type:'workbench',x:0,y:1,z:0,core:false,hp:120,rotation:0},{type:'grill',x:1,y:1,z:0,core:false,hp:100,rotation:1}],research:['vine','copper'],time:{elapsed:482,weather:'storm'},raftPosition:[100,.02,-200],playerPosition:[100.4,.29,-199.7],world:{collected:['0,-1:cache'],discovered:['0,-1']},progress:{salvaged:8,built:2,water:1,islands:1,caches:1,rescued:false},notebook:[],quickbar:QUICKBAR,settings:{quality:'auto',volume:.2,relaxed:false,dynamicWeather:true,showHints:true}});
 const memoryStorage=()=>{const data=new Map();return {data,getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v),removeItem:k=>data.delete(k)};};
+
+test('Preferences are bounded, separate, serializable and resilient to unavailable storage',()=>{
+ const p=normalizePreferences({quality:'auto',volume:9,musicVolume:-2,pixelRatio:-1,mouseSensitivity:Infinity,relaxed:true,unknown:'discard'});assert.equal(p.quality,'medium');assert.equal(p.adaptiveQuality,true);assert.equal(p.volume,1);assert.equal(p.musicVolume,0);assert.equal(p.pixelRatio,.5);assert.equal(p.mouseSensitivity,DEFAULT_PREFERENCES.mouseSensitivity);assert.equal(p.relaxed,true);assert.equal('unknown' in p,false);
+ const st=memoryStorage();assert.equal(writePreferences(st,p),true);assert.deepEqual(readPreferences(st),p);st.setItem(PREFERENCES_KEY,'{bad');assert.deepEqual(readPreferences(st,p),p);const blocked={getItem(){throw Error('blocked');},setItem(){throw Error('blocked');}};assert.deepEqual(readPreferences(blocked,p),p);assert.equal(writePreferences(blocked,p),false);
+});
+
+test('Additive reef progress and diving state roundtrip safely; impossible land-diving is normalized',()=>{
+ const s=normalizeSave(legacy());assert.equal(s.progress.reefs,0);assert.equal(s.player.diving,false);s.progress.reefs=1;s.player.swimming=true;s.player.onRaft=false;s.player.grounded=false;s.player.diving=true;s.world.collected.push('0,-1:explore:reef');const round=normalizeSave(JSON.stringify(s));assert.equal(round.progress.reefs,1);assert.equal(round.player.diving,true);assert.ok(round.world.collected.includes('0,-1:explore:reef'));round.player.swimming=false;round.player.diving=true;assert.equal(normalizeSave(round).player.diving,false);s.progress.reefs=Infinity;assert.throws(()=>normalizeSave(s));
+});
 
 test('Inventory rejects unknown IDs, NaN, infinities, fractional and negative transactions atomically',()=>{
  const i=new Inventory(bus(),{wood:5});for(const n of [NaN,Infinity,-1,.5]){assert.equal(i.add('wood',n),false);assert.equal(i.remove('wood',n),false);assert.equal(i.spend({wood:n}),false);}assert.equal(i.spend({wood:2,unknown:1}),false);assert.equal(i.add('__proto__',2),false);assert.equal(i.count('wood'),5);assert.throws(()=>new Inventory(bus(),{unknown:1}));assert.equal(i.spend({}),true);

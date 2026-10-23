@@ -2,7 +2,7 @@
 
 A single-player, browser-based Three.js ocean-survival adventure. Gather salvage, build a connected raft, stay fed and watered, explore procedural islands, and assemble a rescue beacon. Version **1.2.0**, save schema **2**, island generation **3**.
 
-This upgrades Tosin’s Tidebound / the original Tidebreak project **in place**. It is the playable game, not a separate island demo. The vanilla ESM / Three.js / Vite architecture, old controls, rescue route, development scripts, and offline deployment remain. No new runtime dependencies were added.
+This upgrades Tosin’s Tidebound / the original Tidebreak project **in place**. It is the playable game, not a separate island demo. The vanilla ESM / Three.js / Vite architecture, original core controls, rescue route, development scripts, and offline deployment remain. The cinematic menu and C/touch shallow-dive controls are additive. No new runtime dependencies were added.
 
 ## Play
 
@@ -12,11 +12,11 @@ This upgrades Tosin’s Tidebound / the original Tidebreak project **in place**.
 
 **Embedded previews:** storage, downloads, audio, and fullscreen depend on iframe/browser permissions. Download the HTML and open it directly for reliable local saving/export. The game still plays when browser storage is unavailable; do not assume an embedded preview will retain progress.
 
-1. Begin your voyage. Hold/release the hook near floating salvage.
+1. Choose **Play** for a new voyage or **Continue** for a validated save. The animated menu does not start survival simulation behind it. New Game asks before replacing an existing voyage. Hold/release the hook near floating salvage.
 2. Use the purifier and grill with **F**; eat/drink from your quickbar.
 3. Equip the hammer to extend your raft; keep a path to a core foundation.
 4. Open **M**, chart a course, and swim ashore. Follow the landing trail to a journal and overlook; look for the side path into a sheltered grotto.
-5. Read keeper journals with **F**, revisit clues with **J**, and solve ordered waystones where present. Hidden chests reward exploration once.
+5. Read keeper journals with **F**, revisit clues with **J**, and solve ordered waystones where present. Hidden chests reward exploration once. While swimming, press **C** (or the touch C button) for a shallow dive; recover one sunken reef cache per island with **F**, then surface with **C** or **Space**. There is no oxygen timer.
 6. Research copper, recover three island signal fragments, build a beacon, and press **F** beside it. This original rescue route is unchanged and does not require the new puzzles. You can keep exploring after rescue.
 
 For a slower PC, start with **Low**, a **0.50–0.75 pixel-ratio limit**, and adaptive quality enabled. Use **F3** to inspect your own machine. There is no verified hardware-GPU FPS guarantee.
@@ -26,7 +26,8 @@ For a slower PC, start with **Low**, a **0.50–0.75 pixel-ratio limit**, and ad
 | Control | Action |
 |---|---|
 | WASD / left stick | Move; steer while at the helm |
-| Space / gamepad A | Jump / leave the water |
+| Space / gamepad A | Jump / leave the water; surface from a dive |
+| **C / touch C** | Toggle a shallow dive while swimming; surface while diving |
 | Shift | Run |
 | Left mouse | Use equipped item; hold/release to cast hook |
 | Right drag / right stick | Look around |
@@ -79,6 +80,8 @@ The original three-cache rescue route is unchanged. Extra research does **not** 
 
 Every island retains its original cache/resources and also gains a biome research resource. Landmarks have their own geometry, supplies, short journal entry, and persistent collection ID. Duplicate/stale collection requests cannot give loot twice.
 
+Each island also has one finite **sunken keeper’s cache** on an actual submerged reef shelf. It requires the shallow-dive state, ordinary interaction reach and line of sight; surface collection is rejected. Its sea-glass coral, two scrap and rope feed existing research/building, its short clue joins the journal, and the optional **Below the Blue** quest grants one cooked fish. Diving uses the existing swimming controller with seabed clamping, a submerged camera, local fog and filtered ambience—no oxygen meter, separate underwater world or new loot economy.
+
 ### Follow a shore’s miniature adventure
 
 - Every generated island has a finite landing cache, its original resource IDs, a research discovery and landmark supplies, **plus a keeper’s journal and a hidden grotto chest**.
@@ -96,7 +99,7 @@ Research is data-driven and documents rather than consumes the item:
 - **Copper + sea glass coral → raft plating.** Plating above a foundation halves shark bite damage and prevents reef scraping on that foundation. Plates take wear from bites.
 - **Copper + navigator’s lens → windcatcher.** One provides a 20% manual/charted sailing bonus; additional ones do not stack.
 
-Main quests and four optional discovery/research quests are definitions in `data.js`. Modest rewards are granted once, with completion IDs saved. Existing completed V1 goals are marked without replaying rewards.
+Main quests and five optional discovery/research quests are definitions in `data.js`. Modest rewards are granted once, with completion IDs saved. Existing completed V1 goals are marked without replaying rewards.
 
 ## Performance, quality, simulation
 
@@ -116,7 +119,7 @@ See `UPGRADE-REPORT.md` and `reports/profile-islands-{before,after}.json` for th
 
 ## Saving, migration, and import safety
 
-- V2 saves now identify island generation **3** and persist journal reads, valid ordered waystone prefixes, finite hidden loot, and the optional adventure quest counters. The storage key/schema have not changed.
+- V2 saves now identify island generation **3** and persist journal reads, valid ordered waystone prefixes, finite hidden/reef loot, shallow-dive state, and the optional adventure quest counters. Older V2 saves default safely to zero reef progress and not diving. The storage key/schema have not changed.
 - Generation-1/2 voyages retain their inventory, original resource/landmark IDs and collected supplies. Expanded shores safely reproject a stranded raft/player and retarget old automatic courses; they do not regenerate old loot. Defined unsupported future generation versions are rejected, rather than silently loaded as today’s world. Export a backup before upgrading a valuable voyage.
 - V2 saves include inventory, health/hunger/thirst/sting state, player position/velocity/movement flags/cooldowns, raft position/rotation/velocity/buoyancy/anchor/sail/helm/course, structures/HP/production timers, research, clock/weather timer, journal/discoveries, quest completions, camera/quickbar selection, reserved jobs, fires, shark state, and reclaimed floating bundles.
 - Jobs are keyed by grid coordinate and recipe ID, not recreated numeric block IDs or untrusted recipe objects. Loading does not spend/refund them a second time.
@@ -125,10 +128,12 @@ See `UPGRADE-REPORT.md` and `reports/profile-islands-{before,after}.json` for th
 - A legitimate V1 structure held up only by the old adjacency bug is removed from the migrated graph and its **full building cost** is refunded once. This is reported on migration/import. Truly detached/malformed components are rejected rather than converted into free resources.
 - Imports are size-limited, schema-validated, normalized, then require confirmation. Unknown versions/items/recipes, nonfinite or negative counts, duplicate cells/jobs, broken supports, and invalid states are rejected before replacement.
 - A known-good previous autosave and separate pre-import backup are retained when storage allows. Settings can restore a backup after confirmation.
-- Corrupt local saves are protected from automatic overwrite; a temporary new voyage does not destroy them.
+- Corrupt local saves are never silently replaced. Continue explains the validation failure; a separately confirmed New Game preserves the exact raw payload in `tidebound.save.recovery.raw` when storage allows.
 - Import/reset navigation suppresses the old page’s unload autosave, preventing it from overwriting the incoming save or resurrecting an erased voyage.
 - Gold generation-3 exploration saves are not a supported downgrade into 1.1; retain a pre-Gold export and archived source for rollback.
 - V2 cannot be loaded by the old V1 game. The untouched V1 key/archived source is the rollback option.
+
+Global menu/gameplay preferences live separately in `tidebound.settings.v1`; changing them does not write voyage progress. Continue uses the same strict save validator as import. Pause → Main Menu saves and disposes gameplay before the menu scene is created, and later entry constructs a fresh game rather than duplicating loops/listeners.
 
 In-flight hook casts and fishing animations reset on reload. Ordinary procedural debris is reseeded; reclaimed bundles are saved, but abandoned bundles can still drift out of range and be lost to the sea. The death screen itself is not a checkpoint; the latest living save remains until revival is saved.
 
@@ -150,9 +155,11 @@ npm run build                 # production web build in dist/
 npm run preview               # serve the production build
 npm run build:standalone      # Gold standalone + both identical legacy-name copies
 npx playwright install chromium
-npm test                      # 68 pure-system / world / quality / island tests
-npm run test:browser          # 57 groups: original play + endgame + upgrade + real island walks
-npm run test:islands          # island units + real-controller six-biome acceptance
+npm test                      # 71 pure-system / world / quality / island / preference tests
+npm run test:menu             # 21 current menu/save/lifecycle browser checks; dev server required
+npm run test:exploration      # 14 current shallow-dive/save/touch browser checks; dev server required
+npm run test:browser          # additional legacy end-to-end scripts; not part of the current 35-check result
+npm run test:islands          # island units + legacy real-controller six-biome acceptance
 npm run test:seeds            # additional 360-layout deterministic placement sweep
 npm run test:standalone       # rebuild and test offline/file + opaque iframe
 npm run test:all              # all of the above tests
@@ -162,7 +169,7 @@ node tests/island-views-profile.mjs       # actual Low on-shore rendering profil
 node tests/release-smoke.mjs              # local static web-build smoke
 ```
 
-Keep the dev server running in another terminal for browser tests and profiling.
+Keep the dev server running in another terminal for browser tests and profiling. For the current menu/diving update, the verified set is `npm test`, `npm run build`, `npm run test:menu`, `npm run test:exploration`, and standalone packaging plus `tests/standalone.mjs`: **71/71 unit tests, 35/35 menu/exploration Chromium checks, and 2/2 offline standalone scenarios**. The older `test:browser` / `test:all` aggregates were not rerun and are not included in those counts. Machine-readable results are in `reports/gold2-menu-smoke.json` and `reports/gold2-exploration-smoke.json`; see `reports/GOLD-2-VERIFICATION.md` for scope and limitations.
 
 The tests use headless Chromium/SwiftShader because a hardware GPU is not available here. Some test scenarios deliberately advance timers/positions or dispatch focus/visibility events. Native WebGL loss/restoration, actual save/import reloads, real keyboard hold/tap input, original mouse gameplay, mobile layout, and offline/opaque-origin boot are also exercised. See the report for actual run outcomes, not just available scripts.
 
@@ -182,13 +189,15 @@ The tests use headless Chromium/SwiftShader because a hardware GPU is not availa
 | `persistence.js` | Pure V1→V2 migration, strict validation, reservations and storage/backup boundaries |
 | `performance.js` | Quality budgets, adaptive controller, frame-loop-driven F3 panel |
 | `progression.js` | Data-driven quest evaluation and exactly-once rewards |
-| `audio.js`, `main.js` | Local WebAudio and existing bootstrap |
+| `audio.js`, `main.js`, `config.js` | Shared local WebAudio, bounded preferences, menu-first application coordinator |
+| `menu.js`, `menu-scene.js`, `menu.css` | Accessible cinematic menu, disposable procedural backdrop, responsive panels |
+| `exploration.css` | Lightweight shallow-dive HUD and underwater presentation |
 
 `window.tidebound` is the local developer inspector. `window.tidebreak` remains a compatibility alias; neither is a read-only security boundary. Browser tests use this API for deterministic fixtures.
 
 ## Limits and licensing
 
-This is a playable procedural prototype, not a production survival release. It is single-player, has one active shark plus jellyfish, simplified collisions/boat motion, reusable procedural architectural/vegetation modules, and no underwater/dive system, multiplayer, manual world seed UI, or external services. A raft is limited to 2,000 structures and save/import payloads to 2 MB; world/journal history is also validated to finite bounds. Very large rafts/long histories and real low-end GPUs need further hardware testing. **GT710-class hardware has not been verified.** Low keeps nearby solid scenery and all interactions, with reduced foliage density, lower canopy/terrain LOD, no shadows and a pixel cap. In the software-renderer profile it draws fewer calls/triangles than 1.1, but measured FPS is lower; this is not claimed as a GPU speedup. Coral, submerged rocks and stranded wrecks are scenery/hazards around existing swimming, not a new diving or underwater-looting system. Context recovery depends on the browser; a persistently lost context may require reloading. Physical gamepads and Firefox/Safari have not been verified here.
+This is a playable procedural prototype, not a production survival release. It is single-player, has one active shark plus jellyfish, simplified collisions/boat motion, reusable procedural architectural/vegetation modules, and focused shallow reef diving rather than a free-roam deep-sea simulation. There is no multiplayer, manual world seed UI, or external service. A raft is limited to 2,000 structures and save/import payloads to 2 MB; world/journal history is also validated to finite bounds. Very large rafts/long histories and real low-end GPUs need further hardware testing. **GT710-class hardware has not been verified.** Low keeps nearby solid scenery and all interactions, with reduced foliage density, lower canopy/terrain LOD, no shadows and a pixel cap. In the software-renderer profile it draws fewer calls/triangles than 1.1, but measured FPS is lower; this is not claimed as a GPU speedup. Coral, submerged rocks and stranded wrecks remain scenery/hazards; only the finite reef caches use the new shallow-dive interaction. There is no oxygen system, deep-sea terrain, or separate underwater world. Context recovery depends on the browser; a persistently lost context may require reloading. Physical gamepads and Firefox/Safari have not been verified here.
 
 Source is MIT licensed. Original attribution is retained in `LICENSE.txt`; font and Three.js redistribution notices are in `public/licenses/` and embedded in standalone HTML. Bundled fonts and original third-party notices were not replaced.
 

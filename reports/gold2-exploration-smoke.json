@@ -1,0 +1,26 @@
+{
+  "passed": 14,
+  "checks": [
+    "A real generated cache sits on a submerged shelf and the fixture starts swimming",
+    "Surface interaction cannot recover a dive-only cache",
+    "C enters a bounded shallow dive with submerged camera, HUD and reef interaction context",
+    "F recovers the existing-material loot and connected story exactly through gameplay events",
+    "The optional reef quest completes and grants its existing cooked-fish reward",
+    "Quest reward is applied once to the real inventory",
+    "A collected cache cannot be harvested again",
+    "Repeated interaction does not duplicate any inventory item",
+    "The live V2 save contains additive diving, reef progress and collected-ID state",
+    "Continue restores the dive and recovered cache without replaying loot",
+    "C reliably returns to ordinary swimming and clears underwater presentation",
+    "Touch layout exposes a usable dive/surface button without horizontal overflow",
+    "The touch button performs the same real surface transition as C",
+    "No browser page errors or console errors during diving, recovery, reload or touch"
+  ],
+  "errors": [],
+  "environment": {
+    "browser": "Chromium 153 / SwiftShader",
+    "desktop": "1440×900 DPR 1",
+    "mobile": "390×844 DPR 1",
+    "note": "Functional checks only; no hardware FPS claim."
+  }
+}

@@ -3,11 +3,14 @@ import { META, ITEMS, BLOCKS, RESEARCH, RECIPES, QUESTS, QUICKBAR, WEATHER } fro
 import { EventBus, GridManager, gridKey } from './systems.js';
 
 import {validExplorationProgress} from './exploration.js';
+import { normalizePreferences } from './config.js';
 
 export const SAVE_KEY='tidebound.save.v2';
 export const LEGACY_SAVE_KEY='tidebreak.save.v1';
 export const PREVIOUS_SAVE_KEY='tidebound.save.previous.v2';
 export const IMPORT_BACKUP_KEY='tidebound.save.backup.v2';
+// An exact raw copy used only after explicit confirmation to replace an unreadable save.
+export const RECOVERY_SAVE_KEY='tidebound.save.recovery.raw';
 export const MAX_SAVE_BYTES=2*1024*1024;
 export class SaveError extends Error { constructor(message){super(message);this.name='SaveError';} }
 const fail=message=>{throw new SaveError(message);};
@@ -20,7 +23,7 @@ const text=(v,name,max=2000)=>{if(typeof v!=='string'||v.length>max)fail(`Invali
 const array=(v,name,max=20000)=>{if(!Array.isArray(v)||v.length>max)fail(`Invalid ${name}.`);return v;};
 const vector=(v,name,limit=1e7)=>{array(v,name,3);if(v.length!==3)fail(`Invalid ${name}.`);return v.map(n=>number(n,name,-limit,limit));};
 const islandId=/^-?\d{1,7},-?\d{1,7}$/;
-const collectedId=/^-?\d{1,7},-?\d{1,7}:(cache|resource\d{1,3}|special|poi:(spring|wreck|observatory)|explore:(journal|treasure|rune[0-2]))$/;
+const collectedId=/^-?\d{1,7},-?\d{1,7}:(cache|resource\d{1,3}|special|poi:(spring|wreck|observatory)|explore:(journal|treasure|reef|rune[0-2]))$/;
 const cellId=/^-?\d{1,2},[0-8],-?\d{1,2}$/;
 const unique=(v,name,valid,max)=>{const a=array(v,name,max);if(a.some(id=>typeof id!=='string'||!valid(id))||new Set(a).size!==a.length)fail(`Invalid ${name}.`);return [...a];};
 
@@ -37,13 +40,22 @@ function safeKeys(input,depth=0) {
   }
 }
 function settings(input={}) {
-  object(input,'settings');let quality=input.quality??'medium';const adaptive=input.adaptiveQuality??quality==='auto';if(quality==='auto')quality='medium';
+  object(input,'settings');
+  // Validate legacy fields strictly, then apply additive bounded defaults for the
+  // independent music/ambience/effects and mouse-sensitivity preferences.
+  let quality=input.quality??'medium';if(quality==='auto')quality='medium';
   if(!['low','medium','high'].includes(quality))fail('Unknown quality preset.');
-  return {volume:number(input.volume??.35,'audio volume',0,1),quality,adaptiveQuality:boolean(adaptive,'adaptive quality'),pixelRatio:number(input.pixelRatio??1.25,'pixel ratio',.5,2),relaxed:boolean(input.relaxed??false,'calm seas setting'),dynamicWeather:boolean(input.dynamicWeather??true,'dynamic weather'),showHints:boolean(input.showHints??true,'hint setting')};
+  number(input.volume??.35,'audio volume',0,1);
+  boolean(input.adaptiveQuality??(input.quality==='auto'),'adaptive quality');
+  number(input.pixelRatio??1.25,'pixel ratio',.5,2);
+  boolean(input.relaxed??false,'calm seas setting');
+  boolean(input.dynamicWeather??true,'dynamic weather');
+  boolean(input.showHints??true,'hint setting');
+  return normalizePreferences(input);
 }
 function progress(input) {
   object(input,'progress');const p={};
-  for(const id of ['salvaged','built','crafted','water','islands','caches','poi','secrets','journals','puzzles','sharks'])p[id]=integer(input[id]??0,`${id} progress`);
+  for(const id of ['salvaged','built','crafted','water','islands','caches','poi','secrets','journals','puzzles','sharks','reefs'])p[id]=integer(input[id]??0,`${id} progress`);
   p.rescued=boolean(input.rescued??false,'rescue progress');return p;
 }
 export function reservedRecipe(job) {
@@ -112,13 +124,14 @@ export function normalizeSave(input) {
   if(autopilot!==null) {object(autopilot,'charted course');if(!islandId.test(autopilot.id))fail('Invalid destination.');autopilot={id:autopilot.id,name:text(autopilot.name,'destination name',160),x:number(autopilot.x,'destination X'),z:number(autopilot.z,'destination Z'),radius:number(autopilot.radius,'island radius',1,30),dock:boolean(autopilot.dock??false,'sheltered approach')};}
   s.raft={position:vector(legacy?raw.raftPosition:r.position,'raft position'),rotation:vector(r.rotation??[0,0,0],'raft rotation',Math.PI*2),velocity:vector(r.velocity??[0,0,-.12],'raft velocity',12),verticalVelocity:number(r.verticalVelocity??0,'raft vertical velocity',-30,30),anchored:boolean(r.anchored??false,'anchor state'),sailOpen:boolean(r.sailOpen??true,'sail state'),helming:boolean(r.helming??false,'helm state'),autopilot};
   const p=legacy?{}:object(raw.player,'player state');
-  s.player={position:vector(legacy?raw.playerPosition:p.position,'player position'),velocity:vector(p.velocity??[0,0,0],'player velocity',30),heading:number(p.heading??2.8,'player heading',-10000,10000),grounded:boolean(p.grounded??true,'grounded state'),onRaft:boolean(p.onRaft??true,'deck state'),swimming:boolean(p.swimming??false,'swimming state'),jumpCooldown:number(p.jumpCooldown??0,'jump cooldown',0,1),stingCooldown:number(p.stingCooldown??0,'sting cooldown',0,10),attackCooldown:number(p.attackCooldown??0,'attack cooldown',0,2)};
+  s.player={position:vector(legacy?raw.playerPosition:p.position,'player position'),velocity:vector(p.velocity??[0,0,0],'player velocity',30),heading:number(p.heading??2.8,'player heading',-10000,10000),grounded:boolean(p.grounded??true,'grounded state'),onRaft:boolean(p.onRaft??true,'deck state'),swimming:boolean(p.swimming??false,'swimming state'),diving:boolean(p.diving??false,'diving state'),jumpCooldown:number(p.jumpCooldown??0,'jump cooldown',0,1),stingCooldown:number(p.stingCooldown??0,'sting cooldown',0,10),attackCooldown:number(p.attackCooldown??0,'attack cooldown',0,2)};
   if(legacy) {
     const dx=Math.round(s.player.position[0]-s.raft.position[0]),dz=Math.round(s.player.position[2]-s.raft.position[2]),deck=blockMap.get(gridKey(dx,0,dz));
     s.player.onRaft=!!deck&&BLOCKS[deck.type].buoyant&&Math.abs(s.player.position[1]-s.raft.position[1]-.27)<.5;
     s.player.swimming=!s.player.onRaft&&s.player.position[1]<-.1;s.player.grounded=s.player.onRaft||(!s.player.swimming&&s.player.position[1]>=0);
   }
   if(s.player.onRaft&&s.player.swimming)fail('A player cannot be on deck and swimming at the same time.');
+  if(s.player.diving&&!s.player.swimming)s.player.diving=false;
   if(Math.hypot(s.player.position[0]-s.raft.position[0],s.player.position[2]-s.raft.position[2])>250)fail('The player is too far from their raft.');
   const c=object(raw.camera??{},'camera state');s.camera={yaw:number(c.yaw??-.35,'camera yaw',-1e6,1e6),pitch:number(c.pitch??.3,'camera pitch',.12,1.2),distance:number(c.distance??10.5,'camera distance',5,22),selectedSlot:integer(c.selectedSlot??0,'selected slot',0,7),buildType:c.buildType??'foundation',buildRotation:integer(c.buildRotation??0,'building rotation',0,3)};if(!own(BLOCKS,s.camera.buildType))fail('Unknown selected structure.');
   // V1 snapshots already refunded reservations. Never restore/refund them a second time.
@@ -148,6 +161,19 @@ export function readStoredSave(storage) {
     const data=normalizeSave(current??legacy),original=JSON.parse(current??legacy);return {data,migrated:original.version===1,compensatedBlocks:original.version===1?original.blocks.length-data.blocks.length:0,source:current===null?LEGACY_SAVE_KEY:SAVE_KEY};
   } catch(error) {return {data:null,error:error.message,unavailable:!(error instanceof SaveError)};}
 }
+export function quarantineUnreadableSave(storage) {
+  const current=storage.getItem(SAVE_KEY);
+  if(current===null)return false;
+  // Copy first. If storage is full or denied, the original remains untouched.
+  storage.setItem(RECOVERY_SAVE_KEY,current);
+  storage.removeItem(SAVE_KEY);
+  return true;
+}
+
+export function readRawSave(storage,key=SAVE_KEY) {
+  try{return storage?.getItem(key)??null;}catch{return null;}
+}
+
 export function writeStoredSave(storage,data,{importing=false}={}) {
   const normalized=normalizeSave(data),encoded=JSON.stringify(normalized),current=storage.getItem(SAVE_KEY);
   if(new TextEncoder().encode(encoded).length>MAX_SAVE_BYTES)fail('This voyage exceeds the 2 MB save limit. Export a backup and reduce the raft/journal size.');
