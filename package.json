@@ -15,6 +15,7 @@
     "test:all": "npm test && npm run test:browser && npm run test:standalone",
     "test:standalone": "npm run build:standalone && node tests/standalone.mjs",
     "profile": "node tests/profile.mjs islands-after",
+    "intake": "node scripts/game-intake.mjs",
     "test:islands": "node --test tests/islands.test.js && node tests/islands.mjs",
     "test:seeds": "node tests/islands-seed-sweep.mjs"
   },

@@ -23,6 +23,7 @@ __pycache__/
 
 # Download archives and OS/editor files
 *.zip
+.intake/
 .DS_Store
 Thumbs.db
 *.tsbuildinfo
