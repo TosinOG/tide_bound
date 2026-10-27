@@ -1,20 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { EventBus } from '../src/systems.js';
+import { EventBus, Inventory, CraftingManager } from '../src/systems.js';
 import { ITEMS, RECIPES, RESEARCH } from '../src/data.js';
 import {
   UnderwaterWorld, DIVE_OXYGEN_BASE, DIVE_OXYGEN_PER_TANK, DIVE_OXYGEN_MAX,
   UNDERWATER_CHUNK_SIZE, UNDERWATER_RESOURCE_TYPES, getOxygenCapacity, getOxygenDrainRate,
 } from '../src/underwater.js';
 
-test('Every submerged resource feeds the existing crafting/research progression', () => {
+test('Every submerged resource feeds real progression and abyss crystals craft oxygen tanks', () => {
   for (const type of UNDERWATER_RESOURCE_TYPES) {
     assert.ok(ITEMS[type], `${type} is a real inventory item`);
     assert.ok(RECIPES.some(recipe => recipe.ingredients?.[type] > 0), `${type} is consumed by a real recipe`);
   }
   assert.equal(RESEARCH.pearl.unlock, 'oxygenTank');
-  assert.ok(RECIPES.find(recipe => recipe.id === 'oxygenTank').ingredients.deepCrystal > 0);
+  const recipe = RECIPES.find(candidate => candidate.id === 'oxygenTank');
+  assert.ok(recipe.ingredients.deepCrystal > 0);
+
+  const events = new EventBus();
+  const inventory = new Inventory(events, { ironOre: 5, scrap: 4, rope: 2, pearl: 1, deepCrystal: 1 });
+  const crafting = new CraftingManager(inventory, events);
+  assert.equal(crafting.researchItem('pearl'), true);
+  assert.equal(crafting.start(recipe, true, '0,1,0').ok, true);
+  assert.equal(inventory.count('deepCrystal'), 0);
+  crafting.update(recipe.seconds);
+  assert.equal(inventory.count('oxygenTank'), 1);
 });
 
 function makeWorld() {
