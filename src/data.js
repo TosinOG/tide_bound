@@ -22,6 +22,13 @@ export const ITEMS = {
   cookedFish: { name: 'Grilled fish', icon: 'cookedFish', color: '#d78d5d', description: '+30 hunger. A little comfort, a long way from land.', hunger: 30, stack: 20, consumable: true },
   water: { name: 'Fresh water', icon: 'water', color: '#75bfc9', description: '+40 thirst. Purify seawater or collect it during rain.', thirst: 40, stack: 20, consumable: true },
   coconut: { name: 'Coconut', icon: 'coconut', color: '#aa8461', description: '+15 hunger, +15 thirst. Found beneath island palms.', hunger: 15, thirst: 15, stack: 20, consumable: true },
+  seaweed: { name: 'Tide kelp', icon: 'leaf', color: '#77a779', description: 'A useful, flexible kelp gathered from the submerged shelves.', stack: 99 },
+  shell: { name: 'Seashell', icon: 'shell', color: '#c9a78b', description: 'A sturdy shell, smoothed by the current. Useful for diving gear.', stack: 99 },
+  ironOre: { name: 'Seabed iron', icon: 'ore', color: '#89948f', description: 'Iron-rich nodules found on the deeper seabed.', stack: 99 },
+  pearl: { name: 'Pearl oyster', icon: 'pearl', color: '#ece1ca', description: 'A rare pearl from the dark shelves. Study it at a workbench to understand pressure gear.', stack: 99, research: 'pearl' },
+  deepCrystal: { name: 'Abyss crystal', icon: 'crystal', color: '#69c9d0', description: 'A luminous pressure-stabilizer from the deepest shelves, used to craft extra oxygen tanks.', stack: 99 },
+  oxygenTank: { name: 'Pressure-rated oxygen tank', icon: 'water', color: '#82c3c3', description: 'Passive dive equipment. Adds 44 seconds of breathing reserve; tanks are capped at 124 seconds.', stack: 4 },
+  divingFins: { name: 'Brass diving fins', icon: 'paddle', color: '#c4a46d', description: 'Passive dive equipment. Improves underwater swimming speed by 35%.', stack: 1 },
 };
 
 export const BLOCKS = {
@@ -47,6 +54,7 @@ export const RESEARCH = {
   resin: { title: 'Provisioned by the palms', unlock: 'rainCollector', requires: ['vine'], description: 'Waterproof lashings unlock automatic rain collection and nourishing island stew.' },
   coral: { title: 'A home with stronger edges', unlock: 'armor', requires: ['copper'], description: 'Reef-hardened plates halve shark bites and stop reef scraping on the foundation below.' },
   relic: { title: 'Read the trade winds', unlock: 'windcatcher', requires: ['copper'], description: 'An old navigator’s lens unlocks a windcatcher: 20% faster helming and charted sailing.' },
+  pearl: { title: 'A breath beyond the surface', unlock: 'oxygenTank', requires: [], description: 'Study a deep-water pearl at your workbench. The pressure-rated tank and fitted fins turn short reef dips into real underwater expeditions.' },
 };
 
 export const QUEST_CHAPTERS = [
@@ -68,7 +76,8 @@ export const QUESTS = [
   { id: 'provisions', optional: true, title: 'Let the rain provide', research: 'resin', target: 1, tip: 'Find palm resin; study vines, then resin', reward: { rope: 2 } },
   { id: 'fortify', optional: true, title: 'Learn from the reef', research: 'coral', target: 1, tip: 'Find sea glass coral; study copper, then coral', reward: { scrap: 2 } },
   { id: 'navigator', optional: true, title: 'Read an older compass', research: 'relic', target: 1, tip: 'Find a navigator’s lens at an outpost', reward: { wood: 3 } },
-  { id: 'below-the-blue', optional: true, title: 'Recover a sunken keeper’s cache', counter: 'reefs', target: 1, tip: 'Swim to a coastal reef · C to dive · F beside the submerged cache', reward: { cookedFish: 1 } },
+  { id: 'below-the-blue', optional: true, title: 'Recover a sunken keeper’s cache', counter: 'reefs', target: 1, tip: 'Dive below the tide · steer with the right stick · swim up or down with the dive controls', reward: { cookedFish: 1 } },
+  { id: 'lanternwake', optional: true, title: 'Unlock the Lanternwake locker', counter: 'wrecks', target: 1, tip: 'Find the brass key in the wreck, then open the captain’s locker', reward: { seaweed: 4, pearl: 1 } },
 ];
 
 export const RECIPES = [
@@ -79,6 +88,8 @@ export const RECIPES = [
   { id: 'fishingRod', name: 'Fishing rod', output: 'fishingRod', amount: 1, ingredients: { wood: 4, rope: 3 }, seconds: 5, category: 'tools', description: 'There is always something beneath the surface.' },
   { id: 'paddle', name: 'Wooden paddle', output: 'paddle', amount: 1, ingredients: { wood: 4, plastic: 2 }, seconds: 3, category: 'tools', description: 'A little more say in where you end up.' },
   { id: 'heartyMeal', name: 'Island stew', output: 'heartyMeal', amount: 1, ingredients: { rawFish: 1, coconut: 1, wood: 1 }, seconds: 8, category: 'food', station: 'grill', research: 'resin', description: 'A more sustaining meal: +45 hunger and +15 thirst.' },
+  { id: 'oxygenTank', name: 'Pressure-rated oxygen tank', output: 'oxygenTank', amount: 1, ingredients: { ironOre: 5, scrap: 4, rope: 2, pearl: 1, deepCrystal: 1 }, seconds: 12, category: 'tools', station: 'workbench', research: 'pearl', description: 'A workbench-built reserve, stabilized with an abyss crystal. Adds 44 seconds to your dive time, up to a 124-second total.' },
+  { id: 'divingFins', name: 'Brass diving fins', output: 'divingFins', amount: 1, ingredients: { seaweed: 4, shell: 4, rope: 2 }, seconds: 8, category: 'tools', station: 'workbench', research: 'pearl', description: 'A fitted pair that increases underwater swimming speed by 35%.' },
   ...Object.entries(BLOCKS).map(([id, b]) => ({ id: `build_${id}`, name: b.name, output: id, block: id, amount: 1, ingredients: b.cost, seconds: 0, category: 'building', research: b.research, description: b.description })),
 ];
 

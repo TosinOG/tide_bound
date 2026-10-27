@@ -1,6 +1,6 @@
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
-const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--enable-unsafe-swiftshader','--use-angle=swiftshader']});
+const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{}),args:['--no-sandbox','--disable-dev-shm-usage','--enable-unsafe-swiftshader','--use-angle=swiftshader']});
 const page=await browser.newPage({viewport:{width:1280,height:800},deviceScaleFactor:1});const errors=[];page.on('pageerror',e=>errors.push(e.stack));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
 try{
  await page.goto('http://127.0.0.1:3000');await page.waitForFunction(()=>window.tidebreak?.ready);await page.evaluate(()=>{tidebreak.ui.changeSetting('quality','low');tidebreak.renderer.setPixelRatio(.45);tidebreak.resize();tidebreak.settings.relaxed=true;tidebreak.start();});

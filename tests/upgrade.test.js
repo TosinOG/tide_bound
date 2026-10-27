@@ -14,8 +14,8 @@ test('Preferences are bounded, separate, serializable and resilient to unavailab
  const st=memoryStorage();assert.equal(writePreferences(st,p),true);assert.deepEqual(readPreferences(st),p);st.setItem(PREFERENCES_KEY,'{bad');assert.deepEqual(readPreferences(st,p),p);const blocked={getItem(){throw Error('blocked');},setItem(){throw Error('blocked');}};assert.deepEqual(readPreferences(blocked,p),p);assert.equal(writePreferences(blocked,p),false);
 });
 
-test('Additive reef progress and diving state roundtrip safely; impossible land-diving is normalized',()=>{
- const s=normalizeSave(legacy());assert.equal(s.progress.reefs,0);assert.equal(s.player.diving,false);s.progress.reefs=1;s.player.swimming=true;s.player.onRaft=false;s.player.grounded=false;s.player.diving=true;s.world.collected.push('0,-1:explore:reef');const round=normalizeSave(JSON.stringify(s));assert.equal(round.progress.reefs,1);assert.equal(round.player.diving,true);assert.ok(round.world.collected.includes('0,-1:explore:reef'));round.player.swimming=false;round.player.diving=true;assert.equal(normalizeSave(round).player.diving,false);s.progress.reefs=Infinity;assert.throws(()=>normalizeSave(s));
+test('Additive reef, wreck and oxygen progress roundtrip safely; impossible land-diving is normalized',()=>{
+ const s=normalizeSave(legacy());assert.equal(s.progress.reefs,0);assert.equal(s.progress.wrecks,0);assert.equal(s.player.diving,false);assert.equal(s.player.oxygen,56);s.progress.reefs=1;s.progress.wrecks=1;s.player.oxygen=23;s.player.swimming=true;s.player.onRaft=false;s.player.grounded=false;s.player.diving=true;s.world.collected.push('0,-1:explore:reef','sea:-1,0:0','wreck:brass-key','wreck:sealed-locker');s.world.discovered.push('wreck:lanternwake');const round=normalizeSave(JSON.stringify(s));assert.equal(round.progress.reefs,1);assert.equal(round.progress.wrecks,1);assert.equal(round.player.diving,true);assert.equal(round.player.oxygen,23);assert.ok(round.world.collected.includes('0,-1:explore:reef'));assert.ok(round.world.collected.includes('sea:-1,0:0'));assert.ok(round.world.collected.includes('wreck:sealed-locker'));assert.ok(round.world.discovered.includes('wreck:lanternwake'));round.player.swimming=false;round.player.diving=true;assert.equal(normalizeSave(round).player.diving,false);s.progress.reefs=Infinity;assert.throws(()=>normalizeSave(s));
 });
 
 test('Inventory rejects unknown IDs, NaN, infinities, fractional and negative transactions atomically',()=>{
@@ -81,7 +81,7 @@ test('Research branches enforce discovery/prerequisites and preserve their mater
  const i=new Inventory(bus(),{vine:1,resin:1}),c=new CraftingManager(i,bus());assert.equal(c.researchItem('resin'),false);assert.equal(c.researchItem('vine'),true);assert.equal(c.researchItem('resin'),true);assert.equal(i.count('resin'),1);assert.equal(c.researchItem('resin'),false);
 });
 test('All data-driven research, quest rewards and biome loot reference real content',()=>{
- for(const [id,r] of Object.entries(RESEARCH)){assert.ok(ITEMS[id]);assert.ok(BLOCKS[r.unlock]);for(const prerequisite of r.requires)assert.ok(RESEARCH[prerequisite]);}
+ for(const [id,r] of Object.entries(RESEARCH)){assert.ok(ITEMS[id]);assert.ok(BLOCKS[r.unlock]||ITEMS[r.unlock]);for(const prerequisite of r.requires)assert.ok(RESEARCH[prerequisite]);}
  for(const q of QUESTS)for(const [id,n] of Object.entries(q.reward||{})){assert.ok(ITEMS[id]);assert.ok(Number.isInteger(n)&&n>0);}
  for(const b of BIOMES){assert.ok(ITEMS[b.special]);for(const id of Object.keys(b.poi.loot))assert.ok(ITEMS[id]);}
 });

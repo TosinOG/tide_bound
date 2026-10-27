@@ -11,7 +11,7 @@ export class QualityController {
     const g=this.game,p=QUALITY_PRESETS[preset]||QUALITY_PRESETS.medium;this.current=QUALITY_PRESETS[preset]?preset:'medium';g.activeQuality=this.current;
     const ratio=Math.max(.5,Math.min(globalThis.devicePixelRatio||1,g.settings.pixelRatio,p.maxPixelRatio)*this.scale);
     g.renderer.setPixelRatio(ratio);g.renderer.shadowMap.enabled=p.shadows;g.renderer.shadowMap.needsUpdate=true;
-    g.ocean.setQuality(p.oceanSegments);g.atmosphere.setQuality(p);g.particles.setQuality(p.particles);g.debris.entityDistance=p.entityDistance;g.world.setDetail(g.player.position,p);g.resize();g.renderNeeded=true;
+    g.ocean.setQuality(p.oceanSegments);g.atmosphere.setQuality(p);g.particles.setQuality(p.particles);g.debris.entityDistance=p.entityDistance;g.world.setDetail(g.player.position,p);g.underwater?.setQuality(p);g.resize();g.renderNeeded=true;
   }
   configure() {this.scale=1;this.window=0;this.frames=0;this.cooldown=5;this.goodWindows=0;this.apply(this.game.settings.quality);}
   update(dt,eligible=true) {

@@ -1,0 +1,34 @@
+.keyboard-controls-page{padding:0 25px 20px;color:var(--ink,#244c4c)}
+.keyboard-controls-intro{display:flex;justify-content:space-between;align-items:flex-start;gap:22px;padding:18px 0 12px;border-bottom:1px solid #d9ded0}
+.keyboard-controls-intro p{max-width:650px;margin:0;color:#64766c;font-size:12px;line-height:1.65}
+.keyboard-controls-reserved{flex:0 0 auto!important;white-space:nowrap}
+.keyboard-controls-reserved kbd{margin-right:5px}
+.keyboard-controls-status{min-height:35px;display:flex;align-items:center;color:#5b756b;font-size:11px;line-height:1.5}
+.keyboard-controls-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px 24px;max-height:min(54dvh,590px);overflow:auto;padding:3px 2px 15px;overscroll-behavior:contain}
+.keyboard-controls-group h3{margin:0 0 8px;padding-bottom:7px;border-bottom:1px solid #d9ded0;color:#315653;font:500 18px/1.2 var(--serif,Georgia,serif)}
+.keyboard-controls-list{display:grid}
+.keyboard-control-row{min-height:45px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid #e7e7dc}
+.keyboard-control-name{display:flex;flex-wrap:wrap;align-items:center;gap:6px;color:#455e55;font-size:11px}
+.keyboard-control-name small{padding:2px 4px;border:1px solid #d8c48d;border-radius:2px;color:#92794c;font:8px var(--mono,monospace);letter-spacing:.06em}
+.keyboard-control-actions{display:flex;align-items:center;gap:5px;flex:0 0 auto}
+.keyboard-binding,.keyboard-reset-one,.keyboard-reset-all,.keyboard-controls-footer button,.keyboard-conflict button{min-height:31px;padding:6px 10px;border:1px solid #bfcbbd;border-radius:3px;background:#f8f6ed;color:#355950;font:10px var(--mono,monospace);cursor:pointer}
+.keyboard-binding{min-width:76px;color:#244c4c;font-weight:600}
+.keyboard-binding:hover,.keyboard-controls-footer button:hover,.keyboard-conflict button:hover{border-color:#789b7d;background:#eff1e4}
+.keyboard-binding.is-listening{border-color:#bc9550;color:#795927;background:#fff8df;animation:keybind-pulse 1.15s ease-in-out infinite alternate}
+.keyboard-reset-one{min-width:50px;padding:5px 7px;color:#77857a}
+.keyboard-controls-footer{display:flex;align-items:center;gap:9px;padding-top:14px;border-top:1px solid #d9ded0}
+.keyboard-controls-footer>span{flex:1}
+.keyboard-controls-footer .keyboard-reset-all{margin-right:auto}
+.keyboard-controls-footer .keyboard-save{border-color:#426a5a;background:#416b5d;color:#fff}
+.keyboard-controls-footer .keyboard-save:hover{background:#31584d}
+.keyboard-conflict{margin:7px 0 10px;padding:12px 14px;border:1px solid #c7885e;border-radius:4px;background:#fff4e9;color:#674b38}
+.keyboard-conflict strong{font:600 12px var(--sans,Arial,sans-serif)}
+.keyboard-conflict p{margin:5px 0 10px;font-size:11px;line-height:1.5}
+.keyboard-conflict>div{display:flex;gap:8px}
+.keyboard-conflict .keyboard-conflict-replace{border-color:#a86d4a;background:#986441;color:#fff}
+.keyboard-conflict .keyboard-conflict-replace:hover{background:#794c35}
+@keyframes keybind-pulse{to{box-shadow:0 0 0 3px #d3b86b40}}
+.menu-panel-controls .keyboard-controls-page{padding:0 34px 28px}
+.menu-panel-controls .keyboard-controls-intro p{color:#68796e}
+.menu-panel-controls .keyboard-control-row{border-color:#e4e3d9}
+@media(max-width:760px){.keyboard-controls-page{padding:0 16px 16px}.keyboard-controls-intro{display:grid;gap:10px}.keyboard-controls-intro p{font-size:11px}.keyboard-controls-groups{grid-template-columns:1fr;max-height:calc(52dvh - 15px);gap:12px}.keyboard-controls-group h3{font-size:16px}.keyboard-control-row{min-height:42px;gap:7px}.keyboard-control-name{font-size:10px}.keyboard-control-actions{gap:4px}.keyboard-binding{min-width:66px;padding:5px 7px}.keyboard-controls-footer{flex-wrap:wrap}.keyboard-controls-footer>span{display:none}.keyboard-controls-footer button{flex:1 1 auto}.keyboard-controls-footer .keyboard-reset-all{flex:1 0 100%;margin:0}.keyboard-conflict>div{flex-wrap:wrap}.menu-panel-controls .keyboard-controls-page{padding:0 17px 22px}}

@@ -23,7 +23,8 @@ const text=(v,name,max=2000)=>{if(typeof v!=='string'||v.length>max)fail(`Invali
 const array=(v,name,max=20000)=>{if(!Array.isArray(v)||v.length>max)fail(`Invalid ${name}.`);return v;};
 const vector=(v,name,limit=1e7)=>{array(v,name,3);if(v.length!==3)fail(`Invalid ${name}.`);return v.map(n=>number(n,name,-limit,limit));};
 const islandId=/^-?\d{1,7},-?\d{1,7}$/;
-const collectedId=/^-?\d{1,7},-?\d{1,7}:(cache|resource\d{1,3}|special|poi:(spring|wreck|observatory)|explore:(journal|treasure|reef|rune[0-2]))$/;
+const collectedId=/^(?:-?\d{1,7},-?\d{1,7}:(?:cache|resource\d{1,3}|special|poi:(?:spring|wreck|observatory)|explore:(?:journal|treasure|reef|rune[0-2]))|sea:-?\d{1,7},-?\d{1,7}:\d{1,2}|wreck:(?:brass-key|captains-log|sealed-locker))$/;
+const discoveredId=/^(?:-?\d{1,7},-?\d{1,7}|wreck:lanternwake)$/;
 const cellId=/^-?\d{1,2},[0-8],-?\d{1,2}$/;
 const unique=(v,name,valid,max)=>{const a=array(v,name,max);if(a.some(id=>typeof id!=='string'||!valid(id))||new Set(a).size!==a.length)fail(`Invalid ${name}.`);return [...a];};
 
@@ -55,7 +56,7 @@ function settings(input={}) {
 }
 function progress(input) {
   object(input,'progress');const p={};
-  for(const id of ['salvaged','built','crafted','water','islands','caches','poi','secrets','journals','puzzles','sharks','reefs'])p[id]=integer(input[id]??0,`${id} progress`);
+  for(const id of ['salvaged','built','crafted','water','islands','caches','poi','secrets','journals','puzzles','sharks','reefs','wrecks'])p[id]=integer(input[id]??0,`${id} progress`);
   p.rescued=boolean(input.rescued??false,'rescue progress');return p;
 }
 export function reservedRecipe(job) {
@@ -115,7 +116,7 @@ export function normalizeSave(input) {
   const t=object(raw.time??{},'world clock');const weather=t.weather??'clear';if(!own(WEATHER,weather))fail('Unknown weather.');
   s.time={elapsed:number(t.elapsed??270,'world time',0,1e12),weather,weatherTime:number(t.weatherTime??0,'weather timer',0,10000)};
   s.settings=settings(raw.settings);s.progress=progress(raw.progress??{});
-  const w=object(raw.world??{},'world progress');if(w.generationVersion!==undefined&&![1,2,3].includes(w.generationVersion))fail('Unsupported island generation. Your voyage was not changed.');s.world={generationVersion:w.generationVersion===3?3:2,collected:unique(w.collected??[],'collected resources',id=>collectedId.test(id),20000),discovered:unique(w.discovered??[],'charted islands',id=>islandId.test(id),20000)};
+  const w=object(raw.world??{},'world progress');if(w.generationVersion!==undefined&&![1,2,3].includes(w.generationVersion))fail('Unsupported island generation. Your voyage was not changed.');s.world={generationVersion:w.generationVersion===3?3:2,collected:unique(w.collected??[],'collected resources',id=>collectedId.test(id),20000),discovered:unique(w.discovered??[],'charted islands and landmarks',id=>discoveredId.test(id),20000)};
   if(!validExplorationProgress(s.world.collected))fail('Invalid waystone sequence or missing trail journal.');
   s.notebook=array(raw.notebook??[],'journal',10000).map(n=>{object(n,'journal entry');return {title:text(n.title,'journal title',160),text:text(n.text,'journal message',4000),island:text(n.island,'journal island',160)};});
   s.quickbar=array(raw.quickbar??QUICKBAR,'quickbar',8).map(id=>{if(id!==null&&!own(ITEMS,id))fail('Unknown quickbar item.');return id;});if(s.quickbar.length!==8)fail('The quickbar must have eight slots.');
@@ -124,7 +125,7 @@ export function normalizeSave(input) {
   if(autopilot!==null) {object(autopilot,'charted course');if(!islandId.test(autopilot.id))fail('Invalid destination.');autopilot={id:autopilot.id,name:text(autopilot.name,'destination name',160),x:number(autopilot.x,'destination X'),z:number(autopilot.z,'destination Z'),radius:number(autopilot.radius,'island radius',1,30),dock:boolean(autopilot.dock??false,'sheltered approach')};}
   s.raft={position:vector(legacy?raw.raftPosition:r.position,'raft position'),rotation:vector(r.rotation??[0,0,0],'raft rotation',Math.PI*2),velocity:vector(r.velocity??[0,0,-.12],'raft velocity',12),verticalVelocity:number(r.verticalVelocity??0,'raft vertical velocity',-30,30),anchored:boolean(r.anchored??false,'anchor state'),sailOpen:boolean(r.sailOpen??true,'sail state'),helming:boolean(r.helming??false,'helm state'),autopilot};
   const p=legacy?{}:object(raw.player,'player state');
-  s.player={position:vector(legacy?raw.playerPosition:p.position,'player position'),velocity:vector(p.velocity??[0,0,0],'player velocity',30),heading:number(p.heading??2.8,'player heading',-10000,10000),grounded:boolean(p.grounded??true,'grounded state'),onRaft:boolean(p.onRaft??true,'deck state'),swimming:boolean(p.swimming??false,'swimming state'),diving:boolean(p.diving??false,'diving state'),jumpCooldown:number(p.jumpCooldown??0,'jump cooldown',0,1),stingCooldown:number(p.stingCooldown??0,'sting cooldown',0,10),attackCooldown:number(p.attackCooldown??0,'attack cooldown',0,2)};
+  s.player={position:vector(legacy?raw.playerPosition:p.position,'player position'),velocity:vector(p.velocity??[0,0,0],'player velocity',30),heading:number(p.heading??2.8,'player heading',-10000,10000),grounded:boolean(p.grounded??true,'grounded state'),onRaft:boolean(p.onRaft??true,'deck state'),swimming:boolean(p.swimming??false,'swimming state'),diving:boolean(p.diving??false,'diving state'),surfacing:boolean(p.surfacing??false,'surfacing state'),oxygen:number(p.oxygen??56,'oxygen reserve',0,124),jumpCooldown:number(p.jumpCooldown??0,'jump cooldown',0,1),stingCooldown:number(p.stingCooldown??0,'sting cooldown',0,10),attackCooldown:number(p.attackCooldown??0,'attack cooldown',0,2)};
   if(legacy) {
     const dx=Math.round(s.player.position[0]-s.raft.position[0]),dz=Math.round(s.player.position[2]-s.raft.position[2]),deck=blockMap.get(gridKey(dx,0,dz));
     s.player.onRaft=!!deck&&BLOCKS[deck.type].buoyant&&Math.abs(s.player.position[1]-s.raft.position[1]-.27)<.5;
@@ -132,6 +133,7 @@ export function normalizeSave(input) {
   }
   if(s.player.onRaft&&s.player.swimming)fail('A player cannot be on deck and swimming at the same time.');
   if(s.player.diving&&!s.player.swimming)s.player.diving=false;
+  if(!s.player.swimming||s.player.diving)s.player.surfacing=false;
   if(Math.hypot(s.player.position[0]-s.raft.position[0],s.player.position[2]-s.raft.position[2])>250)fail('The player is too far from their raft.');
   const c=object(raw.camera??{},'camera state');s.camera={yaw:number(c.yaw??-.35,'camera yaw',-1e6,1e6),pitch:number(c.pitch??.3,'camera pitch',.12,1.2),distance:number(c.distance??10.5,'camera distance',5,22),selectedSlot:integer(c.selectedSlot??0,'selected slot',0,7),buildType:c.buildType??'foundation',buildRotation:integer(c.buildRotation??0,'building rotation',0,3)};if(!own(BLOCKS,s.camera.buildType))fail('Unknown selected structure.');
   // V1 snapshots already refunded reservations. Never restore/refund them a second time.

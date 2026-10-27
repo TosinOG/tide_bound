@@ -58,6 +58,12 @@ const paths = {
   heart: '<path d="M12 21 3 12c-6-8 5-14 9-7 4-7 15-1 9 7l-9 9Z"/>',
   research: '<path d="M8 2h8M10 2v7L3 20c-1 2 19 2 18 0L14 9V2M7 14h10m-7 3h1m4 2h1"/>',
   eye: '<path d="M1 12C7 2 17 2 23 12 17 22 7 22 1 12Z"/><circle cx="12" cy="12" r="3"/>',
+  hand: '<path d="M8 12V6a2 2 0 0 1 4 0v5-7a2 2 0 0 1 4 0v8-6a2 2 0 0 1 4 0v8c0 5-3 8-8 8h-1c-3 0-5-2-7-5l-2-3a2 2 0 0 1 3-2l3 3"/>',
+  shell: '<path d="M3 18c0-7 4-13 9-13s9 6 9 13c-5 3-13 3-18 0Z"/><path d="M12 5v13M7 8l3 10m7-10-3 10M4 14l6 5m10-5-6 5"/>',
+  pearl: '<circle cx="12" cy="12" r="8"/><path d="M7 8c2-3 6-4 9-2M8 16c2 2 5 3 8 2"/><circle cx="9" cy="8" r="1" fill="currentColor"/>',
+  crystal: '<path d="m12 2 8 6-2 11-6 3-6-3L4 8l8-6Zm0 0v20m-8-14 8 4 8-4m-14 11 6-7 6 7"/>',
+  chest: '<path d="M3 9h18v12H3V9Zm-1 0V6h20v3M8 9V5m8 4V5m-4 3v5m-2-3h4"/>',
+  key: '<circle cx="8" cy="15" r="5"/><path d="m11.5 11.5 9-9m-3 3 3 3m-6 0 3 3"/>',
   repair: '<path d="M21 3a6 6 0 0 1-8 8L5 21l-3-3 9-9a6 6 0 0 1 8-8l-4 4 4 2 2-4Z"/>',
   chevron: '<path d="m9 5 7 7-7 7"/>',
 };

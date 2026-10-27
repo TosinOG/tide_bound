@@ -2,17 +2,22 @@ import { MenuScene } from './menu-scene.js';
 import { icon, logoMark } from './icons.js';
 import { META } from './data.js';
 import { readRawSave, RECOVERY_SAVE_KEY } from './persistence.js';
+import { ControlsEditor } from './controls-editor.js';
+import { bindingLabel } from './input-bindings.js';
 
 const esc = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 const key = value => `<kbd>${value}</kbd>`;
 const button = (label, action, className = 'menu-button', extra = '') => `<button type="button" class="${className}" data-menu-action="${action}" ${extra}>${label}</button>`;
 
 export class MainMenu {
-  constructor({ stage, saveStatus, settings, audio, onPlay, onSettings, onRefreshSave, onRestoreBackup }) {
+  constructor({ stage, saveStatus, settings, audio, inputBindings, onPlay, onSettings, onRefreshSave, onRestoreBackup }) {
     this.stage = stage;
     this.saveStatus = saveStatus;
     this.settings = settings;
     this.audio = audio;
+    this.inputBindings = inputBindings;
+    this.controlsEditor = null;
+    this.controlSaveMessage = '';
     this.onPlay = onPlay;
     this.onSettings = onSettings;
     this.onRefreshSave = onRefreshSave;
@@ -38,6 +43,9 @@ export class MainMenu {
     }
     this.audio.setScene('menu');
   }
+
+  keyLabel(action) { return (this.inputBindings?.codesForAction(action) || []).map(bindingLabel).join(' / ') || 'Unbound'; }
+  keycaps(action) { return (this.inputBindings?.codesForAction(action) || []).map(code => key(esc(bindingLabel(code)))).join(' / ') || key('—'); }
 
   template() {
     return `
@@ -103,7 +111,7 @@ export class MainMenu {
       if (this.saveStatus?.data) return this.startVoyage('continue');
       return this.openPanel(this.saveStatus?.error ? 'save-error' : 'play');
     }
-    if (['settings', 'guide', 'credits'].includes(action)) return this.openPanel(action);
+    if (['settings', 'guide', 'credits', 'controls'].includes(action)) return this.openPanel(action);
     if (action === 'close') return this.closePanel();
     if (action === 'new') {
       if (this.saveStatus?.data || (this.saveStatus?.error && !this.saveStatus?.unavailable)) return this.openPanel('confirm-new');
@@ -124,7 +132,8 @@ export class MainMenu {
     if (this.disposed) return;
     if (event.key === 'Escape' && this.panel && !this.busy) {
       event.preventDefault();
-      this.closePanel();
+      if (this.panel === 'controls') this.openPanel('settings');
+      else this.closePanel();
       return;
     }
     if (this.panel && event.key === 'Tab') {
@@ -176,6 +185,7 @@ export class MainMenu {
 
   openPanel(type) {
     if (this.disposed) return;
+    if (type !== 'controls' && this.controlsEditor) { this.controlsEditor.dispose(); this.controlsEditor = null; }
     if (!this.panel) this.previousFocus = document.activeElement;
     this.panel = type;
     this.home.inert = true;
@@ -183,6 +193,7 @@ export class MainMenu {
     this.panelElement.className = `menu-panel menu-panel-${type}`;
     if (type === 'play') this.renderPlay();
     else if (type === 'settings') this.renderSettings();
+    else if (type === 'controls') this.renderControls();
     else if (type === 'guide') this.renderGuide();
     else if (type === 'credits') this.renderCredits();
     else if (type === 'confirm-new') this.renderConfirmNew();
@@ -195,6 +206,8 @@ export class MainMenu {
 
   closePanel() {
     if (!this.panel || this.busy) return;
+    this.controlsEditor?.dispose();
+    this.controlsEditor = null;
     this.panel = null;
     this.overlay.classList.add('hidden');
     this.home.inert = false;
@@ -259,24 +272,44 @@ export class MainMenu {
       </section><section><h3>Controls & survival</h3>
         <label class="menu-setting menu-setting-range"><span><strong>Mouse sensitivity</strong><small>Right-drag and touch camera speed.</small></span><div><input type="range" data-preference="mouseSensitivity" min="0.25" max="2.5" step="0.05" value="${s.mouseSensitivity}" aria-label="Mouse sensitivity"><output data-preference-value="mouseSensitivity">${s.mouseSensitivity.toFixed(2)}×</output></div></label>
         <label class="menu-setting"><span><strong>Calm seas mode</strong><small>No hunger, thirst, or shark damage in gameplay.</small></span><input class="menu-toggle" type="checkbox" data-preference="relaxed" ${s.relaxed ? 'checked' : ''} aria-label="Calm seas mode"></label>
+        ${button('CUSTOMIZE KEYBOARD CONTROLS', 'controls', 'menu-choice full-width')}
+        <p class="settings-footnote">${this.controlSaveMessage || 'Escape remains reserved as an always-available menu exit. Changes are saved separately from your voyage.'}</p>
         <p class="settings-footnote">Low disables shadows and reduces scenery, particles, view distance, ocean detail, and resolution. All gathering, landmarks, puzzles, and survival interactions remain available.</p>
       </section></div>${this.panelFooter()}`;
   }
 
+  renderControls() {
+    this.controlSaveMessage = '';
+    this.panelElement.innerHTML = `${this.panelHeading('YOUR HANDS, YOUR WAY', 'Keyboard controls.', 'Remap the bindings used by the real movement, swimming, survival, and navigation systems.')}
+      <div id="keyboard-controls-menu"></div>`;
+    this.controlsEditor = new ControlsEditor({
+      element: this.panelElement.querySelector('#keyboard-controls-menu'),
+      bindings: this.inputBindings,
+      onBack: () => this.openPanel('settings'),
+      onSaved: persisted => {
+        this.controlSaveMessage = persisted ? 'Keyboard controls saved and applied on this device.' : 'Controls applied for this session, but browser storage did not allow saving them.';
+        this.controlsEditor?.dispose();
+        this.controlsEditor = null;
+        this.openPanel('settings');
+      },
+    });
+  }
+
   renderGuide() {
+    const k = action => this.keycaps(action);
     const sections = [
-      ['01', 'Move & look', `${key('W')}${key('A')}${key('S')}${key('D')} or the left stick moves. Right-drag or the right stick looks around. ${key('SPACE')} / gamepad A jumps or leaves the water; ${key('SHIFT')} runs. While swimming, ${key('C')} toggles a shallow dive and C / Space surfaces. Use ${key('+')} ${key('−')} or Shift + wheel to zoom.`],
-      ['02', 'Gather what the current brings', `Select the salvage hook with ${key('1')}. Hold left mouse to charge and release near drifting salvage. On land, approach a resource and press ${key('F')} / gamepad X. Collection feedback names exactly what entered your inventory.`],
-      ['03', 'Inventory, crafting & research', `${key('TAB')} or ${key('I')} / gamepad Y opens the paused workshop. Crafting lists real ingredients and missing requirements. Workstations use ${key('F')}; research at a workbench documents rare island materials and unlocks useful recipes.`],
-      ['04', 'Build & upgrade your raft', `Equip the hammer with ${key('2')}. Choose a module above the quickbar; green means valid placement. Right-click builds, ${key('R')} rotates, ${key('T')} repairs, and holding ${key('X')} dismantles. Structures must retain support from a core foundation. Research unlocks nets, rain collection, plating, and windcatchers.`],
+      ['01', 'Move & look', `${k('moveForward')}${k('moveLeft')}${k('moveBackward')}${k('moveRight')} or the left stick moves. Right-drag or the right stick looks around. ${k('jump')} / gamepad A jumps or climbs out of the water; ${k('sprint')} runs. While swimming, ${k('dive')} toggles a dive and ${k('swimUp')} rises. Use ${k('zoomIn')} / ${k('zoomOut')} or Shift + wheel to zoom.`],
+      ['02', 'Gather what the current brings', `Select the salvage hook with ${k('slot1')}. Hold left mouse to charge and release near drifting salvage. On land, approach a resource and press ${k('interact')} / gamepad X. Collection feedback names exactly what entered your inventory.`],
+      ['03', 'Inventory, crafting & research', `${k('inventory')} / gamepad Y opens the paused workshop. Crafting lists real ingredients and missing requirements. Workstations use ${k('interact')}; research at a workbench documents rare island materials and unlocks useful recipes.`],
+      ['04', 'Build & upgrade your raft', `Equip the hammer with ${k('slot2')}. Choose a module above the quickbar; green means valid placement. Right-click builds, ${k('rotateBuild')} rotates, ${k('repairBlock')} repairs, and holding ${k('removeBlock')} dismantles. Structures must retain support from a core foundation. Research unlocks nets, rain collection, plating, and windcatchers.`],
       ['05', 'Health, hunger & thirst', `Thirst drains faster than hunger. Eat and drink from the quickbar; purify seawater and cook fish at stations. Warnings appear before critical states. Storms, reefs, jellyfish, fire, and sharks are telegraphed hazards—not offline penalties.`],
-      ['06', 'Sail & navigate', `${key('G')} / gamepad B takes or leaves the helm; WASD steers. ${key('M')} opens the ocean chart for automatic courses and anchor control. Wind and upgraded navigation affect sailing. Automatic approaches stop offshore so you can swim ashore.`],
-      ['07', 'Islands, treasure & ruins', `Every shore has finite supplies and environmental stories. Follow trails to journals and landmarks. Read clues with ${key('F')}, revisit them with ${key('J')}, and activate carved waystones in the journal’s order. Hidden chests reward exploration once. Each coast also has one finite sunken cache on a real reef shelf: press C while swimming, then F nearby to recover it. The three-fragment rescue objective remains your main route home.`],
+      ['06', 'Sail & navigate', `${k('helm')} / gamepad B takes or leaves the helm; ${k('moveForward')}${k('moveLeft')}${k('moveBackward')}${k('moveRight')} steers. ${k('map')} opens the ocean chart for automatic courses and anchor control. Wind and upgraded navigation affect sailing. Automatic approaches stop offshore so you can swim ashore.`],
+      ['07', 'Islands, treasure & ruins', `Every shore has finite supplies and environmental stories. Follow trails to journals and landmarks. Read clues with ${k('interact')}, revisit them with ${k('journal')}, and activate carved waystones in the journal’s order. Hidden chests reward exploration once. Each coast also has one finite sunken cache on a real reef shelf: press ${k('dive')} while swimming, then ${k('interact')} nearby to recover it. The three-fragment rescue objective remains your main route home.`],
       ['08', 'Save, continue & recover', `The game autosaves every 20 simulated seconds and when you return to the menu. Export or import from Settings. CONTINUE validates and restores the local V2 voyage. New Game always asks before replacing an existing one; unreadable saves are protected and can be downloaded or quarantined.`],
     ];
     this.panelElement.innerHTML = `${this.panelHeading('A FIELD GUIDE TO FINDING YOUR FEET', 'How to play.', 'The actual bindings used by this build. Inventory, map, journal, and pause menus stop survival time.')}
       <div class="menu-guide-grid">${sections.map(([number, title, text]) => `<article><span>${number}</span><div><h3>${title}</h3><p>${text}</p></div></article>`).join('')}</div>
-      <div class="guide-extra"><span>${key('1–8')} ${key('Q')} ${key('E')} / wheel · quickbar</span><span>${key('H')} · hide HUD</span><span>${key('F1')} / ${key('?')} · guide</span><span>${key('F3')} · performance</span><span>${key('ESC')} / Start · pause</span></div>${this.panelFooter()}`;
+      <div class="guide-extra"><span>${k('slot1')}–${k('slot8')} ${k('quickbarPrevious')} ${k('quickbarNext')} / wheel · quickbar</span><span>${k('toggleHUD')} · hide HUD</span><span>${k('help')} · guide</span><span>${k('performance')} · performance</span><span><kbd>ESC</kbd> / Start · pause</span></div>${this.panelFooter()}`;
   }
 
   renderCredits() {
@@ -368,6 +401,8 @@ export class MainMenu {
     if (this.disposed) return;
     this.disposed = true;
     this.abort.abort();
+    this.controlsEditor?.dispose();
+    this.controlsEditor = null;
     this.scene?.dispose();
     this.root.remove();
   }

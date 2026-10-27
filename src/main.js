@@ -1,18 +1,29 @@
 import './style.css';
 import './menu.css';
 import './exploration.css';
+import './mobile-controls.css';
+import './keyboard-controls.css';
 import { Game } from './game.js';
 import { MainMenu } from './menu.js';
 import { SeaAudio } from './audio.js';
 import { logoMark } from './icons.js';
 import { normalizePreferences, readPreferences, writePreferences } from './config.js';
+import { KeyboardBindings } from './input-bindings.js';
 import { SAVE_KEY, readStoredSave, writeStoredSave, readBackup, quarantineUnreadableSave } from './persistence.js';
 
 let menu = null;
 let game = null;
 let settings;
 let audio;
+let keyboardBindings;
 let transitioning = false;
+
+function getKeyboardBindings() {
+  if (keyboardBindings) return keyboardBindings;
+  try { keyboardBindings = new KeyboardBindings(localStorage); }
+  catch { keyboardBindings = new KeyboardBindings(null); }
+  return keyboardBindings;
+}
 
 function refreshSave() {
   try { return readStoredSave(localStorage); }
@@ -70,6 +81,7 @@ function showMenu() {
     saveStatus,
     settings,
     audio,
+    inputBindings: getKeyboardBindings(),
     onPlay: startVoyage,
     onSettings: changeSettings,
     onRefreshSave: refreshSave,
@@ -119,6 +131,7 @@ async function startVoyage({ mode, confirmed }) {
       loadStatus,
       settings,
       audio,
+      inputBindings: getKeyboardBindings(),
       onMainMenu: returnToMenu,
     });
     game.start();
