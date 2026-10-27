@@ -64,7 +64,11 @@ body.first-person .crosshair{display:block}
 .guide-card p{font:400 9px/1.7 var(--sans);margin:0 0 11px;color:#4a5d57}
 .guide-steps{display:flex;gap:5px;margin-bottom:8px}.guide-steps i{width:14px;height:3px;background:#b9b098;border-radius:2px}.guide-steps i.done{background:#7ba58b}.guide-steps i.active{background:#d9a75f}
 .guide-card small{display:block;font:600 6px var(--mono);letter-spacing:1px;color:#8a7445;margin-bottom:8px}
-.guide-skip{background:none;border:0;font:600 6px var(--mono);letter-spacing:1px;color:#6f8179;cursor:pointer;text-decoration:underline;padding:0}
+/* #hud sets pointer-events:none, so this button used to be unclickable: the
+   whole tutorial card ignored the mouse. Restore the hit target explicitly. */
+.guide-skip{background:none;border:0;font:600 6px var(--mono);letter-spacing:1px;color:#6f8179;cursor:pointer;text-decoration:underline;padding:5px 0;pointer-events:auto;display:block;width:max-content;margin-left:auto;min-height:18px}
+.guide-skip:hover{color:var(--rust)}
+body.photo-mode .guide-card *{pointer-events:none!important}
 .photo-hint{position:absolute;left:50%;top:24px;transform:translateX(-50%);z-index:60;background:#173f43d9;color:#f4ecd4;border:1px solid #e7d7a566;border-radius:3px;padding:8px 14px;font:600 8px var(--mono);letter-spacing:1.6px}
 .photo-hint i{color:#e7c67e;font-style:normal;margin:0 5px}
 body.photo-mode .game-header,body.photo-mode .vitals-panel,body.photo-mode .resources-panel,body.photo-mode .navigation-panel,body.photo-mode .quest-panel,body.photo-mode .quickbar-dock,body.photo-mode .bottom-right,body.photo-mode .bottom-left,body.photo-mode .toasts,body.photo-mode .guide-card,body.photo-mode .buff-strip,body.photo-mode .action-prompt,body.photo-mode .mobile-controls{opacity:0!important;pointer-events:none!important}

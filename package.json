@@ -1,6 +1,6 @@
 {
   "name": "tidebound-gold",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "Tidebound Gold \u2014 a browser-based Three.js ocean survival and island exploration adventure",
   "type": "module",
   "scripts": {

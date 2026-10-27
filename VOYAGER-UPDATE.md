@@ -212,3 +212,38 @@ saves keep working.
 | Portal sandbox boot | blocked `localStorage` + missing Font API + missing fullscreen → menu still renders and PLAY is clickable |
 | Production bundle | no `eval`, no `alert`/`confirm`, no third-party network requests; fonts served locally |
 | Browser suites | still not runnable here (Chromium download blocked); unchanged tests remain |
+
+---
+
+## 9. Build tabs and tutorial skip — 1.3.2
+
+Two interaction bugs reported after the 1.3.1 review:
+
+1. **Build options vanished after choosing Raft, Workstations or Decorations.**
+   The `buildcat:` prefix is nine characters long, but the click handler did
+   `action.slice(8)`. It stored `":structure"` / `":cosmetic"` and the renderer
+   found no block with that category, so the whole options row went blank until
+   a build was chosen from the crafting menu. Category parsing now lives in a
+   single validated helper (`parseBuildCategory`), unknown values are ignored,
+   and `renderBuildBar()` self-heals any stale category back to `structure` so
+   the bar can never render empty again. Verified in jsdom: **13 raft / 9
+   workstation / 8 decoration** options after each tab click.
+
+2. **“Skip guidance” did nothing.** The tutorial card lives inside `#hud`,
+   which sets `pointer-events:none`. Most HUD buttons opt back in with
+   `pointer-events:auto`; the skip button did not, so every click passed
+   through to the ocean canvas. The button now restores its own hit target
+   (right-aligned, 18 px tall, so it cannot cover the mobile joystick) and
+   performs an immediate save. The tutorial card was also rebuilding its
+   `innerHTML` every six frames, which could detach the button between
+   pointer-down and pointer-up; rendering is now signature-guarded and only
+   updates when the step or progress actually changes.
+
+### Verified
+
+| Check | Result |
+|---|---|
+| `npm test` | **97 / 97 passed** (4 new regressions for build tabs and skip) |
+| Real-DOM jsdom flow | clicking all three build tabs keeps every option (13/9/8); clicking `.guide-skip` sets `done`, hides the card and leaves it hidden |
+| HUD hit-testing | `.guide-skip` has `pointer-events:auto`; photo mode disables it again |
+| Save schema / island generation | unchanged (**2** / **3**) |

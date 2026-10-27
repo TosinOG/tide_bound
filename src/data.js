@@ -1,5 +1,5 @@
 // Data-only definitions: edit these without changing the game systems.
-export const META = Object.freeze({ title: "Tidebound Gold", version: '1.3.1', saveVersion: 2 });
+export const META = Object.freeze({ title: "Tidebound Gold", version: '1.3.2', saveVersion: 2 });
 export const ITEMS = {
   wood: { name: 'Driftwood', icon: 'wood', color: '#b78351', description: 'Sun-bleached timber. The beginning of a home.', stack: 99 },
   plastic: { name: 'Plastic', icon: 'plastic', color: '#80bbba', description: 'A little ocean waste, a lot of possibility.', stack: 99 },

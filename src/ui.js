@@ -1,9 +1,22 @@
-import { ITEMS, BLOCKS, RECIPES, WEATHER, META, RESEARCH, QUEST_CHAPTERS, ACHIEVEMENTS, TRADES, STORY_ISLANDS, DIFFICULTIES, BUFFS, TOOL_TIERS, HOOK_TOOLS } from './data.js';
+import { ITEMS, BLOCKS, RECIPES, WEATHER, META, RESEARCH, QUEST_CHAPTERS, ACHIEVEMENTS, TRADES, STORY_ISLANDS, DIFFICULTIES, BUFFS, TOOL_TIERS, HOOK_TOOLS, TUTORIAL_STEPS } from './data.js';
 import { icon, logoMark } from './icons.js';
 import { clamp } from './systems.js';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const btn=(text,action,cls='button',extra='')=>`<button class="${cls}" data-action="${action}" ${extra}>${text}</button>`;
 const kbd=k=>`<kbd>${k}</kbd>`;
+/** Build-bar tabs. Anything not in this list is rejected, never stored. */
+export const BUILD_TABS=[['structure','Raft'],['station','Workstations'],['cosmetic','Decorations']];
+export const DEFAULT_BUILD_CATEGORY='structure';
+/**
+ * Parse the payload of a `buildcat:<id>` action.
+ * `"buildcat:"` is nine characters long, so `slice(8)` used to leave a leading
+ * colon (`":structure"`) that matched no block category and blanked the entire
+ * build bar. Returns null for unknown categories so callers can ignore them.
+ */
+export function parseBuildCategory(action) {
+  const id = String(action || '').slice('buildcat:'.length);
+  return BUILD_TABS.some(([tab]) => tab === id) ? id : null;
+}
 
 export class UI {
   constructor(game){this.game=game;this.modal=null;this.inventoryTab='crafting';this.category='all';this.recipeId='rope';this.selectedItem='wood';this.savedAt=0;this.lastQuest='';this.previousStats={};this.disposed=false;this.buildCategory='structure';this.mealId='seaStew';this.chartCode='';this.build();this.bind();}
@@ -79,8 +92,17 @@ export class UI {
     if(action==='photo')return g.togglePhotoMode();
     if(action==='capture')return g.capturePhoto();
     if(action==='endless')return g.enableEndless();
-    if(action==='skip-guide'){g.tutorial.skip();return this.renderGuideCard();}
-    if(action.startsWith('buildcat:')){this.buildCategory=action.slice(8);return this.renderBuildBar();}
+    if(action==='skip-guide'){
+      g.tutorial.skip();
+      g.save?.();
+      this.toast('Guidance skipped · the ocean is yours to explore','compass','info');
+      return this.renderGuideCard();
+    }
+    if(action.startsWith('buildcat:')){
+      const category=parseBuildCategory(action);
+      if(category){this.buildCategory=category;this.renderBuildBar();}
+      return;
+    }
     if(action.startsWith('cook:')){const id=action.slice(5),station=g.nearStation('cookingPot',4);if(!station){this.toast('Stand near your cooking pot','grill','warning');return;}if(g.startStationJob(station,id)){this.mealId=id;g.selectedMeal=id;this.closeModal();}return;}
     if(action.startsWith('trade:')){
       const t=TRADES.find(x=>x.id===action.slice(6));if(!t)return;
@@ -131,8 +153,10 @@ export class UI {
   renderQuickbar(){document.getElementById('quickbar').innerHTML=this.game.quickbar.map((id,i)=>`<button class="quick-slot ${i===this.game.selectedSlot?'selected':''} ${id&&!this.game.inventory.count(id)?'empty-item':''}" data-action="slot:${i}" title="${id?ITEMS[id]?.name:'Empty slot'} (${i+1})" aria-label="Slot ${i+1}: ${id?ITEMS[id]?.name:'empty'}" aria-pressed="${i===this.game.selectedSlot}"><span class="slot-index">${i+1}</span>${id?`<span class="slot-icon item-${id}" style="--item-color:${ITEMS[id]?.color}">${icon(ITEMS[id]?.icon||id,'',30)}</span>${!ITEMS[id]?.tool?`<span class="slot-count">${this.game.inventory.count(id)}</span>`:''}`:'<span class="empty-slot-mark">+</span>'}${i===this.game.selectedSlot?'<span class="slot-selected-dot"></span>':''}</button>`).join('');const id=this.game.equipped;document.getElementById('equipped-label').innerHTML=`${id?ITEMS[id]?.name.toUpperCase():'EMPTY HANDS'} <span>0${this.game.selectedSlot+1} / 08</span>`;}
   updateResources(){const el=document.getElementById('resource-counts');if(el)el.innerHTML=['wood','leaf','plastic','scrap'].map(id=>`<span title="${ITEMS[id].name}">${icon(ITEMS[id].icon,'',19)}<b>${this.game.inventory.count(id)}</b></span>`).join('');}
   renderBuildBar(){const g=this.game,active=g.equipped==='hammer';document.body.classList.toggle('is-building',active);const el=document.getElementById('build-bar');el.classList.toggle('hidden',!active);if(!active)return;
-    const category=b=>b.category||'structure';
-    const tabs=[['structure','Raft'],['station','Workstations'],['cosmetic','Decorations']];
+    const category=b=>b.category||DEFAULT_BUILD_CATEGORY;
+    const tabs=BUILD_TABS;
+    // A stale or malformed category must never be able to empty the bar.
+    if(!tabs.some(([id])=>id===this.buildCategory))this.buildCategory=DEFAULT_BUILD_CATEGORY;
     const entries=Object.entries(BLOCKS).filter(([,b])=>category(b)===this.buildCategory);
     el.innerHTML=`<div class="build-categories">${tabs.map(([id,label])=>`<button class="build-cat ${this.buildCategory===id?'active':''}" data-action="buildcat:${id}">${label}</button>`).join('')}<span class="build-rotate-hint">HOLD R + DRAG TO ROTATE</span></div><div class="build-options">${entries.map(([id,b])=>`<button class="build-option ${g.buildType===id?'active':''} ${b.research&&!g.crafting.research.has(b.research)?'locked':''}" data-action="build:${id}" title="${b.name} · ${Object.entries(b.cost).map(([k,n])=>`${n} ${ITEMS[k].name}`).join(', ')}" aria-label="Build ${b.name}">${icon(b.icon,'',25)}<span>${b.name}</span></button>`).join('')}</div>`;}
   quests(includeOptional=false) {return this.game.quests.entries(this.game.progress,this.game.crafting.research).filter(q=>includeOptional||!q.optional);}
@@ -201,12 +225,24 @@ export class UI {
   renderGuideCard() {
     const el = document.getElementById('guide-card'); if (!el) return;
     const g = this.game, step = g.tutorial.current();
-    if (!step || g.tutorial.done || !g.settings.interactiveGuide) { el.classList.add('hidden'); return; }
+    if (!step || g.tutorial.done || !g.settings.interactiveGuide) {
+      el.classList.add('hidden');
+      this.guideSignature = '';
+      return;
+    }
     const current = step.metric === 'research' ? g.crafting.research.size : Number(g.progress[step.metric] || 0);
+    const shown = Math.min(current, step.target);
     el.classList.remove('hidden');
+    // The HUD calls this several times a second. Rewriting identical markup
+    // recreated the Skip button between pointerdown and pointerup, so real
+    // clicks landed on a detached node and were swallowed. Only touch the DOM
+    // when the visible content actually changes.
+    const signature = `${g.tutorial.step}|${step.title}|${shown}|${step.target}|${g.touchDevice ? 1 : 0}`;
+    if (signature === this.guideSignature) return;
+    this.guideSignature = signature;
     el.innerHTML = `<span class="guide-eyebrow">FIRST STEPS AT SEA <i>·</i> 0${(g.tutorial.step || 0) + 1}</span><strong>${esc(step.title)}</strong><p>${esc(step.prompt)}</p>
-      <div class="guide-steps">${Array.from({length:6},(_,i)=>`<i class="${i<g.tutorial.step?'done':i===g.tutorial.step?'active':''}"></i>`).join('')}</div>
-      <small>${Math.min(current,step.target)} / ${step.target} ${step.touch&&g.touchDevice?`· ${esc(step.touch)}`:''}</small><button class="guide-skip" data-action="skip-guide">Skip guidance</button>`;
+      <div class="guide-steps">${Array.from({length:TUTORIAL_STEPS.length},(_,i)=>`<i class="${i<g.tutorial.step?'done':i===g.tutorial.step?'active':''}"></i>`).join('')}</div>
+      <small>${shown} / ${step.target} ${step.touch&&g.touchDevice?`· ${esc(step.touch)}`:''}</small><button type="button" class="guide-skip" data-action="skip-guide">Skip guidance</button>`;
   }
   renderAchievements() {
     const g = this.game, entries = g.voyageLog.entries(), earned = entries.filter(a => a.earned).length;
