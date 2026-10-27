@@ -5,30 +5,31 @@
   "saveSchema": 2,
   "islandGeneration": 3,
   "dependenciesAdded": [],
-  "deployment": "Not performed; remains paused",
+  "deployment": "Live at https://tidebound-gold.vercel.app/ (Vercel project tide_bound, production alias)",
   "verification": {
-    "units": 80,
+    "units": 86,
     "browserGroups": 57,
     "offlineChecks": 2,
     "additionalSeedLayouts": 360,
     "staticProductionSmokeChecks": 5,
     "hardwareGPU": "Not available; GT710 frame-rate claims are not verified",
     "browserRerun": "Not rerun: Chromium download blocked in this sandbox. A jsdom + WebGL-stub harness instantiated the game, exercised all new modals/systems, story shores, boss finale, save/reload and landscape resize with zero runtime errors.",
-    "domHarnessScenarios": 3
+    "domHarnessScenarios": 4,
+    "horizonFixHarness": "jsdom + WebGL stub: constructor, hook cast\u2192reel\u2192collect (salvaged 1), rod-tip fishing line (1.17m from hand), upgraded hook via touch use, chart auto-zoom, and sailing into island discovery \u2014 0 runtime errors."
   },
   "standalone": {
-    "bytes": 1567440,
-    "sha256": "15993a256b55205227bb9ffea292d18f54275c0d63dfdcb646ca60861da29170"
+    "bytes": 1568958,
+    "sha256": "ccd2d64941e333dd854ca87272516ba9ba95dddbca85ef5b8acffd568213ec1b"
   },
   "sourceSha256": {
     "src/assets.js": "c5018bca27a6e7c1ba2c810eb3e7a25a09ed4ee03e90c568b55068295d248b9c",
     "src/audio.js": "778206b8f3351430e0067dbb1e4e0882e99ee87c6b874c9d953211d215af1872",
     "src/coastal-navigation.js": "9349ecd3afc71f50786503b8e596224af91b8f1bdb136ba684ee740dd47156c6",
     "src/config.js": "4b2d6ef25ccb0c2f3338e1770a456ceb74d7b0114afe136ba9b240764012c48d",
-    "src/data.js": "5bf0ea5db5f146d20c9e2ab23965ffcfc26c408b148a15eef7ed9278e8e816d5",
+    "src/data.js": "7494d7fdbab9921bcfd372b84c0eecd7648c7e865fe51e7dcae135849b3df569",
     "src/exploration.css": "b320dde1c1a5dae17c1d76da6c0f8d008dee36de1337c843caf14316a790f9cd",
     "src/exploration.js": "f1f1a3d0b8cdb2364c0ad45026ad3b3d868850fa1083183f52cf273f6200af67",
-    "src/game.js": "1151bb9396049aa2e45f29d3a2048b5193bb74afcb9c2b5d95cedcc8fd33bf1b",
+    "src/game.js": "e3fee33797e40c400b661d0d05c2eed00fd0e2a1dd223265819ad7ea99c31357",
     "src/icons.js": "a807dbd50342f183dd1013e92ba6e215bec4efa315c4b285f472ad2e8d87c8ef",
     "src/island-assets.js": "b9bbb623a43af5997340fc65cc890986964e8cce5d901feb208ac4f15c3569dc",
     "src/island-generation.js": "249876798e4f81c6f035e04ea4594a265b0a0ad70dbcfa495995ea9b54b0fa35",
@@ -42,12 +43,12 @@
     "src/progression.js": "59832f8683b429acc1e7a52e1bfbc8932d06c46f52bf5698e08330e1240c980a",
     "src/style.css": "4fc67c7dcd59d0247a4e386b8a459761e527a2a899a3f3940e555b8a438c5353",
     "src/systems.js": "e22fc6a82a7b8c190b837d56995741c523ea91268d5427f60beca27a7171b221",
-    "src/ui.js": "62e09d8457c74b6687ae03f049506672e9d7a22ba10c370105e8fab48bb21a8c",
-    "src/world.js": "cd837ad732826f0e06c2f03d911ce3a6003ec8fdfd944771e7c1d1cc52bcbff2"
+    "src/ui.js": "90a1fb985782598aac49c8e238f757c5d5b287a65b7f3e68a1414a07615c66e6",
+    "src/world.js": "20bdb2c947ab61f7dfc23b6f1013654ee36b383f158ea5d5fc2b5cfb30147cbe"
   },
   "productionAssets": {
-    "assets/index-Bclfw-U9.css": "8a439af2df16ac5ee8f6385bf344450ff277172301303b0d60ff98814ff5c841",
-    "assets/index-CZ-TWt3f.js": "d682a182c3d074245dc5d33b2bf0e89ad20337c4532cb188208e54b3a2dceb74",
+    "assets/index-3gXF-2L7.css": "97194dc36281be21666dd77285f4d11f58bd8f0a732287a07cec1d1d4a7d285c",
+    "assets/index-CQVf4riT.js": "e1876e1b2304af17b923ff8da087eefb0da42f55a194770a59ca13f83bd64fc9",
     "fonts/fraunces-400.ttf": "3eb6cf0a14feb1876cc464fa093af4e0c5b05dc46dec65619c1d95f2a1ab5aa7",
     "fonts/fraunces-500.ttf": "0c2fad18ed36cc400041f1e281ee79954a329b345caffc38dfaa3bb8bcef57de",
     "fonts/mono-400.ttf": "c97fcd822f825e9e731867b650a39ee678b609bead29385e320171b573ec0910",
@@ -57,7 +58,7 @@
     "fonts/outfit-600.ttf": "8900df5726b5a6f23e723594f11d5ea27e695bd85c884f18d88ed080544fe205",
     "fonts/outfit-700.ttf": "49dcdf653a004a2575b3de649f5e4c549d774fecddf317812330edd0ad70685a",
     "fonts/outfit-800.ttf": "27147c0353ecafbb8e69fe02da56680f7d12bdc2764c8346012ec031374036d6",
-    "index.html": "7117e093e16e03ef20fabe9d694216f7482cf6e10f5065f8f3678fb5e58a9a6e",
+    "index.html": "97fb050ee3b55337d92570e51e10a88f1c4ef768b5ee871d77237558c4d3be54",
     "licenses/dmmono-OFL.txt": "2bada5ea45c3c63b7f1ea1f88ce9672c9e4f0c42b2c3b7378949084fe55a3066",
     "licenses/fraunces-OFL.txt": "bdf4c22802eaf804f998195871c6b8938aac2ac14b2d78a8bd66a6f1eced833b",
     "licenses/outfit-OFL.txt": "c676351bf8576b9aba743cd5eaa8c0e7ee0d51f805d720447b4df4ddb6a2e416",

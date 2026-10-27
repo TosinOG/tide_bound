@@ -13,7 +13,7 @@ export const ITEMS = {
   coral: { name: 'Sea glass coral', icon: 'ore', color: '#b4cfc3', description: 'Reef-hardened material. Study it after copper for protective raft plating.', stack: 99, research: 'armor' },
   relic: { name: 'Navigator’s lens', icon: 'compass', color: '#cba96d', description: 'A rare outpost instrument. Study it after copper for a windcatcher.', stack: 99, research: 'windcatcher' },
   heartyMeal: { name: 'Island stew', icon: 'cookedFish', color: '#d1a16c', description: '+45 hunger, +15 thirst. Fish and coconut, made to go a little further.', hunger: 45, thirst: 15, stack: 20, consumable: true },
-  hook: { name: 'Salvage hook', icon: 'hook', color: '#d8bc7a', description: 'Hold to charge. Release to cast. Click again to reel in.', stack: 1, tool: true },
+  hook: { name: 'Salvage hook', icon: 'hook', color: '#d8bc7a', description: 'Hold to charge. Release to cast. Click again to reel in.', stack: 1, tool: true, family: 'hook', tier: 0 },
   hammer: { name: 'Building hammer', icon: 'hammer', color: '#b58b61', description: 'Select a structure, point at your raft, and build.', stack: 1, tool: true },
   spear: { name: 'Wooden spear', icon: 'spear', color: '#b89c71', description: 'Repel the shark during its charge. Also a good fishing companion.', stack: 1, tool: true },
   fishingRod: { name: 'Fishing rod', icon: 'fishing', color: '#b3946d', description: 'Cast into the sea. When the float dips, click to catch a fish.', stack: 1, tool: true },
@@ -169,6 +169,7 @@ export const WEATHER = {
   storm: { label: 'Storm warning', icon: 'storm', amplitude: 4, fog: .007, rain: 1, duration: 100, wind: 24.6 },
 };
 
+export const HOOK_TOOLS = Object.freeze(['hook', 'scrapHook', 'chainHook']);
 export const QUICKBAR = ['hook', 'hammer', 'spear', 'cookedFish', 'water', 'fishingRod', 'paddle', null];
 export const STARTER_ITEMS = { wood: 12, plastic: 8, leaf: 10, scrap: 5, rope: 3, hook: 1, hammer: 1, spear: 1, fishingRod: 1, paddle: 1, rawFish: 2, cookedFish: 2, water: 3 };
 export const ISLAND_NAMES = ['Pelican Cay', 'Whisper Key', 'Morrow Atoll', 'Driftwood Reach', 'Lantern Isle', 'The Quiet Shore', 'Copperhead Cay', 'Saltwind Key', 'Sunspoke Island', 'Lost Letter Atoll'];
@@ -184,7 +185,8 @@ export const LORE = [
 
 /** Hook/spear tiers. The best tool you own is always the one that is used. */
 export const TOOL_TIERS = {
-  hook: { range: 0, speed: 1, haul: 1, catchRadius: .85 },
+  hook: { range: 0, speed: 1, haul: 1, catchRadius: 1.15 },
+  // The other tiers keep their original values; only the starter hook was too tight.
   scrapHook: { range: 7, speed: 1.2, haul: 2, catchRadius: 1.2 },
   chainHook: { range: 14, speed: 1.45, haul: 3, catchRadius: 1.7 },
   spear: { damage: 15 },
@@ -240,6 +242,25 @@ export const STORY_ISLANDS = [
   { id: '3,2', name: 'Lighthouse Key', code: '9053', biome: 0, x: 350, z: 250, radius: 16, title: 'The last light', story: 'Every keeper’s chart ends here. The lamp is cold, but a beacon placed at its foot can still call the world home. The final code is 9053.', reward: { recipeBook: 1, brassHinge: 1, palmSeed: 2 }, finale: true },
 ];
 export const STORY_BY_CHUNK = Object.fromEntries(STORY_ISLANDS.map(i => [i.id, i]));
+
+/*
+ * Horizons and discovery.
+ * A streaming chunk is deliberately large: with a 3x3 window the nearest
+ * procedural shore sits roughly 300 units away instead of ~150, so the game
+ * opens on empty water. Island meshes (and their shallow-water coast patch)
+ * only appear inside ISLAND_SIGHT_DISTANCE, which makes land something you
+ * sail toward and find rather than something already on screen at spawn.
+ */
+export const WORLD_CHUNK_SIZE = 240;
+export const ISLAND_SIGHT_DISTANCE = 170;
+/** Chunk 0,0 is centred on the spawn, so neighbouring shores start ~240m out. */
+export const worldChunkKey = (x, z) => {
+  const cx = Math.floor((x + WORLD_CHUNK_SIZE / 2) / WORLD_CHUNK_SIZE);
+  const cz = Math.floor((z + WORLD_CHUNK_SIZE / 2) / WORLD_CHUNK_SIZE);
+  return cx + ',' + cz;
+};
+/** Story shores keep their save ids, but are looked up by their streaming chunk. */
+export const STORY_AT_CHUNK = Object.fromEntries(STORY_ISLANDS.map(i => [worldChunkKey(i.x, i.z), i]));
 
 /** Voyage Log achievements. `metric` is a progress counter or a derived value. */
 export const ACHIEVEMENTS = [

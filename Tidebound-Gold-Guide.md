@@ -193,3 +193,14 @@ The tests use headless Chromium/SwiftShader because a hardware GPU is not availa
 This is a playable procedural prototype, not a production survival release. It is single-player, has one active shark plus jellyfish, simplified collisions/boat motion, reusable procedural architectural/vegetation modules, and no underwater/dive system, multiplayer, manual world seed UI, or external services. A raft is limited to 2,000 structures and save/import payloads to 2 MB; world/journal history is also validated to finite bounds. Very large rafts/long histories and real low-end GPUs need further hardware testing. **GT710-class hardware has not been verified.** Low keeps nearby solid scenery and all interactions, with reduced foliage density, lower canopy/terrain LOD, no shadows and a pixel cap. In the software-renderer profile it draws fewer calls/triangles than 1.1, but measured FPS is lower; this is not claimed as a GPU speedup. Coral, submerged rocks and stranded wrecks are scenery/hazards around existing swimming, not a new diving or underwater-looting system. Context recovery depends on the browser; a persistently lost context may require reloading. Physical gamepads and Firefox/Safari have not been verified here.
 
 Source is MIT licensed. Original attribution is retained in `LICENSE.txt`; font and Three.js redistribution notices are in `public/licenses/` and embedded in standalone HTML. Bundled fonts and original third-party notices were not replaced.
+
+
+## Horizon and discovery
+
+Shores are no longer visible when you start. The world streams in 240 m chunks
+and land only appears within a 170 m sight line, so you find islands by sailing
+toward them. Press **M** to open the ocean chart — it auto-zooms to show distant
+shores, and "Set a course" sails there automatically. When land first comes into
+view you get a "Land ho" message. Your hook (hold to charge, release to cast)
+pulls in floating salvage; clicking again recalls a missed cast. The fishing
+line now runs from the tip of your rod to the float.

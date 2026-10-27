@@ -7,7 +7,7 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "node --test tests/systems.test.js tests/upgrade.test.js tests/world.test.js tests/islands.test.js tests/voyager.test.js",
+    "test": "node --test tests/systems.test.js tests/upgrade.test.js tests/world.test.js tests/islands.test.js tests/voyager.test.js tests/horizon-fixes.test.js",
     "test:browser": "node tests/gameplay.mjs && node tests/endgame.mjs && node tests/regressions.mjs && node tests/islands.mjs",
     "test:menu": "node tests/menu.mjs",
     "test:exploration": "node tests/exploration.mjs",

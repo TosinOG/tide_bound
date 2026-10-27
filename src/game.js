@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ITEMS, BLOCKS, RECIPES, QUICKBAR, WEATHER, LORE, STARTER_ITEMS, META, RESEARCH, TOOL_TIERS, BUFFS, DIFFICULTIES, STORY_ISLANDS, STORY_BY_CHUNK, PALETTE, TRADES, FISH_TABLE, ACHIEVEMENTS, TUTORIAL_STEPS } from './data.js';
+import { ITEMS, BLOCKS, RECIPES, QUICKBAR, HOOK_TOOLS, WEATHER, LORE, STARTER_ITEMS, META, RESEARCH, TOOL_TIERS, BUFFS, DIFFICULTIES, STORY_ISLANDS, STORY_BY_CHUNK, PALETTE, TRADES, FISH_TABLE, ACHIEVEMENTS, TUTORIAL_STEPS } from './data.js';
 import { EventBus, Inventory, SurvivalStats, GridManager, CraftingManager, TimeAndWeather, clamp, gridKey, FixedStepClock } from './systems.js';
 import { material, box, cylinder, sphere, beam, createBlock, createAvatar, createHook, createSpear, createPaddle, createFish, disposeObject } from './assets.js';
 import { Ocean, WorldGenerator, DebrisSpawner, SharkAI, SeagullAI, ParticlePool, Atmosphere, waveHeight } from './world.js';
@@ -77,6 +77,7 @@ export class Game {
     this.bus.on('researched',id=>{this.audio.play('discover');this.ui.toast(`${BLOCKS[RESEARCH[id].unlock].name} unlocked`,'research','success');this.ui.renderInventory();});
     this.bus.on('questComplete',q=>{if(this.ready){this.ui.toast(`${q.title} · journal updated`,'check','success');this.ui.renderQuests();}});
     this.bus.on('weather',id=>{if(this.ready){this.ui.toast(WEATHER[id].label,id==='storm'?'storm':WEATHER[id].icon,id==='storm'?'warning':'info');if(id==='storm'){this.audio.play('warning');this.kick(.3,.05);}}this.audio.setMood(id,this.threatLevel);});
+    this.bus.on('islandSpotted',island=>{if(this.ready&&this.ui&&!this.world.discovered.has(island.id))this.ui.toast(`Land ho · ${island.name} on the horizon`,'island','info',5000);});
     this.bus.on('islandDiscovered',island=>{this.progress.islands++;if(island.biome?.id)this.world.biomesSeen.add(island.biome.id);if(island.story&&!this.voyage.storyVisited.includes(island.story.id))this.voyage.storyVisited.push(island.story.id);if(this.ready){this.audio.play('discover');this.ui.discover(island);}});
     this.bus.on('sharkWarning',()=>{this.audio.play('shark');this.threatLevel=1;this.ui.toast('A shark is eyeing your foundations. Ready your spear.','spear','warning',6000);});
     this.bus.on('sharkCharge',()=>{this.threatLevel=1;this.ui.toast('Shark charging! Strike now with your spear.','spear','warning',4000);});
@@ -144,13 +145,14 @@ export class Game {
   updateViewModel() {
     if (!this.viewModel) return;
     this.viewModel.clear();
+    this.viewRodTip = null;
     const id = this.equipped;
     if (!id || ITEMS[id]?.consumable) return;
     let m = null;
     if (id === 'hook' || id === 'scrapHook' || id === 'chainHook') { m = createHook(); m.rotation.z = .35; m.scale.setScalar(.8); }
     else if (id === 'spear' || id === 'metalSpear') { m = createSpear(); m.scale.setScalar(.45); m.rotation.x = -.5; }
     else if (id === 'paddle') { m = createPaddle(); m.scale.setScalar(.45); m.rotation.x = -.4; }
-    else if (id === 'fishingRod') { m = new THREE.Group(); m.add(cylinder(.012, .02, 1.35, 0xbba174, 0, .5, 0)); m.scale.setScalar(.6); }
+    else if (id === 'fishingRod') { m = new THREE.Group(); m.add(cylinder(.012, .02, 1.35, 0xbba174, 0, .5, 0)); m.scale.setScalar(.6); m.userData.tip = new THREE.Object3D(); m.userData.tip.position.set(0, 1.17, 0); m.add(m.userData.tip); this.viewRodTip = m.userData.tip; }
     else if (id === 'axe') { m = new THREE.Group(); m.add(cylinder(.02, .02, .42, 0x9d744c), box(.2, .12, .1, 0x8e9c92, 0, .24, 0)); m.scale.setScalar(.9); }
     else if (id === 'paintBrush') { m = new THREE.Group(); m.add(cylinder(.015, .015, .4, 0xb58b61), box(.1, .1, .04, 0xd98a63, 0, .24, 0)); m.scale.setScalar(.9); }
     else if (id === 'hammer') { m = new THREE.Group(); m.add(cylinder(.025, .025, .4, 0x9d744c), box(.22, .13, .11, 0x7e9286, 0, .2, 0)); m.scale.setScalar(.9); }
@@ -297,7 +299,7 @@ export class Game {
     if (step.id === 'salvage') { let best = null, d = 40; for (const x of this.debris.active) { const q = x.mesh.position.distanceTo(this.player.position); if (q < d) { d = q; best = x.mesh.position.clone(); } } return best; }
     if (step.id === 'build') return this.raft.position.clone().add(new V3(2, .5, 2));
     if (step.id === 'water') return station('purifier');
-    if (step.id === 'chart') { const i = this.world.islands[0]; return i ? new V3(i.x, 1.5, i.z) : null; }
+    if (step.id === 'chart') { const i = this.world.visibleIslands[0]; return i ? new V3(i.x, 1.5, i.z) : null; }
     if (step.id === 'research') return station('workbench');
     if (step.id === 'defend' && this.shark.mesh.visible) return this.shark.position.clone();
     return null;
@@ -402,7 +404,7 @@ export class Game {
   mainMenu(){if(this.disposed)return;if(this.onMainMenu)this.onMainMenu(this);else{this.save();this.suppressUnloadSave=true;location.reload();}}
   selectSlot(index){this.selectedSlot=(index+8)%8;if(this.hook?.state==='charging')this.hook.state='idle';this.cancelFishing();this.equipVisual();this.ui.renderQuickbar();this.ui.renderBuildBar();this.audio.play('click');}
   get equipped(){return this.quickbar[this.selectedSlot];}
-  equipVisual(){this.updateViewModel();if(!this.avatar)return;const hand=this.avatar.userData.tool;hand.clear();if(this.toolVisuals.has(this.equipped)){hand.add(this.toolVisuals.get(this.equipped));return;}let m;switch(this.equipped){case'hook':case'scrapHook':case'chainHook':m=createHook();m.rotation.z=.4;if(this.equipped!=='hook')m.scale.setScalar(1.12);break;case'hammer':m=new THREE.Group();m.add(cylinder(.025,.025,.4,0x9d744c),box(.22,.13,.11,0x7e9286,0,.2,0));break;case'spear':case'metalSpear':m=createSpear();m.scale.setScalar(this.equipped==='metalSpear'?.8:.7);m.rotation.x=.6;break;case'paddle':m=createPaddle();m.scale.setScalar(.7);m.rotation.x=.2;break;case'fishingRod':m=new THREE.Group();m.add(cylinder(.012,.02,1.35,0xbba174,0,.5,0));m.rotation.x=.5;break;case'axe':m=new THREE.Group();m.add(cylinder(.022,.022,.44,0x9d744c),box(.19,.13,.09,0x93a19a,0,.24,0));m.scale.setScalar(.75);break;case'paintBrush':m=new THREE.Group();m.add(cylinder(.015,.015,.38,0xb58b61),box(.1,.1,.035,0xd98a63,0,.23,0));m.scale.setScalar(.8);break;case'water':m=cylinder(.065,.065,.19,0x83b1ae);break;case'cookedFish':case'seaStew':case'spicedFish':m=createFish(true);m.scale.setScalar(.45);break;case'coconut':case'reefSalad':m=sphere(.12,0xa28559);break;}if(m){this.toolVisuals.set(this.equipped,m);hand.add(m);}}
+  equipVisual(){this.updateViewModel();if(!this.avatar)return;const hand=this.avatar.userData.tool;hand.clear();if(this.toolVisuals.has(this.equipped)){hand.add(this.toolVisuals.get(this.equipped));return;}let m;switch(this.equipped){case'hook':case'scrapHook':case'chainHook':m=createHook();m.rotation.z=.4;if(this.equipped!=='hook')m.scale.setScalar(1.12);break;case'hammer':m=new THREE.Group();m.add(cylinder(.025,.025,.4,0x9d744c),box(.22,.13,.11,0x7e9286,0,.2,0));break;case'spear':case'metalSpear':m=createSpear();m.scale.setScalar(this.equipped==='metalSpear'?.8:.7);m.rotation.x=.6;break;case'paddle':m=createPaddle();m.scale.setScalar(.7);m.rotation.x=.2;break;case'fishingRod':m=new THREE.Group();m.add(cylinder(.012,.02,1.35,0xbba174,0,.5,0));m.rotation.x=.5;m.userData.tip=new THREE.Object3D();m.userData.tip.position.set(0,1.17,0);m.add(m.userData.tip);break;case'axe':m=new THREE.Group();m.add(cylinder(.022,.022,.44,0x9d744c),box(.19,.13,.09,0x93a19a,0,.24,0));m.scale.setScalar(.75);break;case'paintBrush':m=new THREE.Group();m.add(cylinder(.015,.015,.38,0xb58b61),box(.1,.1,.035,0xd98a63,0,.23,0));m.scale.setScalar(.8);break;case'water':m=cylinder(.065,.065,.19,0x83b1ae);break;case'cookedFish':case'seaStew':case'spicedFish':m=createFish(true);m.scale.setScalar(.45);break;case'coconut':case'reefSalad':m=sphere(.12,0xa28559);break;}if(m){this.toolVisuals.set(this.equipped,m);hand.add(m);}}
   listen(target,type,handler,options={}){target.addEventListener(type,handler,{...options,signal:this.lifecycle.signal});}
   bindInput(){
     const canvas=this.renderer.domElement;
@@ -432,7 +434,7 @@ export class Game {
     this.listen(canvas,'contextmenu',e=>e.preventDefault());
     this.listen(canvas,'pointerdown',e=>{
       if(this.paused)return;this.start();this.audio.init();canvas.focus({preventScroll:true});this.updatePointer(e);this.mouse.startX=e.clientX;this.mouse.startY=e.clientY;this.mouse.dragged=false;
-      if(e.button===2){this.mouse.right=true;}else if(e.button===0){this.mouse.down=true;if(this.equipped==='hook'&&this.hook.state==='idle'){this.hook.state='charging';this.hook.charge=.22;}else this.primaryAction();}
+      if(e.button===2){this.mouse.right=true;}else if(e.button===0){this.mouse.down=true;if(HOOK_TOOLS.includes(this.equipped)&&this.hook.state==='idle'){this.hook.state='charging';this.hook.charge=.22;}else this.primaryAction();}
       if(e.pointerType==='touch'){this.touchCameraStart={x:e.clientX,y:e.clientY};}
     });
     this.listen(window,'pointermove',e=>{
@@ -452,7 +454,7 @@ export class Game {
     document.body.classList.toggle('touch-device',!!coarse);this.touchDevice=!!coarse;
     this.renderNeeded=true;this.ui?.resize();}
   primaryAction(){if(this.paused)return;const id=this.equipped;
-    if(id==='hook'||id==='scrapHook'||id==='chainHook'){if(this.hook.state!=='idle')this.hook.state='reeling';}
+    if(HOOK_TOOLS.includes(id)){if(this.hook.state!=='idle')this.hook.state='reeling';}
     else if(id==='hammer')this.placeBlock();
     else if(id==='spear'||id==='metalSpear')this.attack();
     else if(id==='paintBrush')this.paintBlock();
@@ -466,13 +468,13 @@ export class Game {
     if(r&&r.original&&['wood','coconut'].includes(r.original.type)){this.inventory.add('wood',2);this.ui.floatText('+2 Driftwood',this.player.position.clone().add(new V3(0,1.2,0)),'gain');this.ui.toast('The axe finds extra timber','wood','success');}
     else this.ui.toast('Axe swing · find island timber or coconuts to gather extra wood','repair');
   }
-  castHook(){const h=this.hook;this.avatar.userData.tool.getWorldPosition(h.origin);h.mesh.position.copy(h.origin);h.target.copy(this.aimPoint);h.target.y=.02;const flat=h.target.clone().sub(h.origin);flat.y=0;const maxRange=7+h.charge*20;if(flat.length()>maxRange)h.target.copy(h.origin).add(flat.normalize().multiplyScalar(maxRange)).setY(.02);
+  castHook(){const h=this.hook,tier=this.bestTool('hook');this.avatar.userData.tool.getWorldPosition(h.origin);h.mesh.position.copy(h.origin);h.target.copy(this.aimPoint);h.target.y=.02;const flat=h.target.clone().sub(h.origin);flat.y=0;const maxRange=7+h.charge*20+(tier.range||0);if(flat.length()>maxRange)h.target.copy(h.origin).add(flat.normalize().multiplyScalar(maxRange)).setY(.02);h.caught=null;h.extra=[];
     // Slight magnetic assistance makes small, bobbing salvage practical with a mouse.
     let best=1.65;for(const d of this.debris.active){const dist=Math.hypot(d.x-h.target.x,d.z-h.target.z);if(dist<best&&h.origin.distanceTo(d.mesh.position)<maxRange+1){best=dist;h.target.copy(d.mesh.position);}}
     const distance=Math.hypot(h.target.x-h.origin.x,h.target.z-h.origin.z),flight=clamp(distance/(12*tier.speed),.35,1.7);h.velocity.copy(h.target).sub(h.origin).divideScalar(flight);h.velocity.y+=.5*8*flight;h.state='flying';h.time=0;h.mesh.visible=true;this.rope.visible=true;this.avatar.userData.tool.visible=false;this.player.action=.5;this.audio.play('hook');}
   updateHook(dt){const h=this.hook,tier=this.bestTool('hook');if(h.state==='charging'){h.charge=clamp(h.charge+dt*.6*tier.speed,.22,1);return;}if(h.state==='idle')return;h.time+=dt;const hand=this.avatar.userData.tool.getWorldPosition(new V3());
     if(h.state==='flying'){h.velocity.y-=8*dt;h.mesh.position.addScaledVector(h.velocity,dt);h.mesh.rotation.z+=dt*5;const d=this.debris.nearest(h.mesh.position,tier.catchRadius);if(d){h.caught=d;d.hooked=true;this.haulExtra(h,tier);h.state='reeling';this.audio.play('splash');this.particles.burst(d.mesh.position,0xd8e9d5,10,.9);}else if(h.mesh.position.y<=waveHeight(h.mesh.position.x,h.mesh.position.z,this.simTime)+.03){h.mesh.position.y=.06;h.state='floating';h.time=0;this.audio.play('splash');this.particles.burst(h.mesh.position,0xe2ede0,8,.8);}if(h.mesh.position.distanceTo(hand)>28)h.state='reeling';}
-    if(h.state==='floating'){h.mesh.position.y=waveHeight(h.mesh.position.x,h.mesh.position.z,this.simTime)+.05;const d=this.debris.nearest(h.mesh.position,tier.catchRadius*1.4);if(d){h.caught=d;d.hooked=true;this.haulExtra(h,tier);h.state='reeling';}if(h.time>.75)h.state='reeling';}
+    if(h.state==='floating'){h.mesh.position.y=waveHeight(h.mesh.position.x,h.mesh.position.z,this.simTime)+.05;const d=this.debris.nearest(h.mesh.position,tier.catchRadius*1.6);if(d){h.caught=d;d.hooked=true;this.haulExtra(h,tier);h.state='reeling';}if(h.time>1.1)h.state='reeling';}
     if(h.state==='reeling'){const diff=hand.clone().sub(h.mesh.position);const dist=diff.length();h.mesh.position.addScaledVector(diff.normalize(),Math.min(dt*12*tier.speed,dist));if(h.caught){h.caught.mesh.position.copy(h.mesh.position).add(new V3(0,-.08,0));h.caught.x=h.mesh.position.x;h.caught.z=h.mesh.position.z;}if(h.extra)for(const e of h.extra){if(!this.debris.active.includes(e))continue;e.mesh.position.copy(h.mesh.position).add(new V3((Math.random()-.5)*.4,0,(Math.random()-.5)*.4));e.x=e.mesh.position.x;e.z=e.mesh.position.z;}if(dist<.5){if(h.caught)this.collectDebris(h.caught);for(const e of h.extra||[])this.collectDebris(e);h.extra=[];h.caught=null;h.state='idle';h.mesh.visible=false;this.rope.visible=false;this.avatar.userData.tool.visible=true;}}
     if(h.state!=='idle')this.updateRope(hand,h.mesh.position,h.state==='reeling'?.12:.5);
   }
@@ -489,12 +491,23 @@ export class Game {
     this.progress.salvaged++;this.particles.burst(d.mesh.position,0xe4d4a2,12,.7);
     if(label)this.ui.floatText(label,d.mesh.position.clone().add(new V3(0,.4,0)),'gain');
     this.debris.release(d);this.audio.play('collect');}
+  // The fishing line leaves the end of the rod, not the player's fist.
+  // In first person the rod lives on the camera viewmodel; in third person it
+  // is the tool group attached to the avatar's hand.
+  lineOrigin(target=new V3()){
+    if(this.equipped==='fishingRod'){
+      if(this.firstPerson&&this.viewModel?.visible&&this.viewRodTip)return this.viewRodTip.getWorldPosition(target);
+      const hand=this.avatar?.userData?.tool;
+      if(hand)for(const tool of hand.children)if(tool.userData?.tip)return tool.userData.tip.getWorldPosition(target);
+    }
+    return this.avatar.userData.tool.getWorldPosition(target);
+  }
   updateRope(from,to,sag){const a=this.rope.geometry.attributes.position.array;for(let i=0;i<=32;i++){const f=i/32;a[i*3]=THREE.MathUtils.lerp(from.x,to.x,f);a[i*3+1]=THREE.MathUtils.lerp(from.y,to.y,f)-Math.sin(f*Math.PI)*sag;a[i*3+2]=THREE.MathUtils.lerp(from.z,to.z,f);}this.rope.geometry.attributes.position.needsUpdate=true;}
   fish(){const f=this.fishing;if(f.state==='idle'){if(this.hook.state!=='idle'){this.ui.toast('Reel your hook in first','hook');return;}f.position.copy(this.aimPoint);const dir=f.position.clone().sub(this.player.position);dir.y=0;if(dir.length()>12)f.position.copy(this.player.position).addScaledVector(dir.normalize(),12);f.position.y=.02;f.state='waiting';f.time=0;f.biteAt=4+Math.random()*5;f.float.visible=true;f.float.position.copy(f.position);this.rope.visible=true;this.audio.play('splash');this.ui.toast('Line cast. Wait for the float to dip…','fishing');}
     else if(f.state==='bite'){this.inventory.add('rawFish',1);let extra='';
       if(Math.random()<.38){const table=FISH_TABLE.filter(x=>x.id!=='rawFish'),total=table.reduce((s,x)=>s+x.weight,0);let roll=Math.random()*total;const pick=table.find(x=>(roll-=x.weight)<=0)||table[0];this.inventory.add(pick.id,1);extra=` +1 ${ITEMS[pick.id].name}`;}
       this.audio.play('collect');this.ui.toast(`A fine catch! +1 raw fish${extra}`,'fish','success');this.particles.burst(f.float.position,0xc8e2ce,14,1);this.ui.floatText('+1 catch',f.float.position.clone(),'gain');this.cancelFishing();}else{this.ui.toast('Nothing on the line yet. Try again.','fishing');this.cancelFishing();}}
-  updateFishing(dt){const f=this.fishing;if(f.state==='idle')return;f.time+=dt;f.float.position.copy(f.position);f.float.position.y=waveHeight(f.position.x,f.position.z,this.simTime)+.07+(f.state==='bite'?Math.sin(this.simTime*22)*.07:0);if(f.state==='waiting'&&f.time>=f.biteAt){f.state='bite';f.time=0;this.ui.toast('A bite! Click now to reel it in.','fish','success',3000);this.audio.play('collect');}else if(f.state==='bite'&&f.time>3){this.ui.toast('That one got away. Cast again.','fish');this.cancelFishing();}if(f.state!=='idle'){this.rope.visible=true;this.updateRope(this.avatar.userData.tool.getWorldPosition(new V3()),f.float.position,.2);}}
+  updateFishing(dt){const f=this.fishing;if(f.state==='idle')return;f.time+=dt;f.float.position.copy(f.position);f.float.position.y=waveHeight(f.position.x,f.position.z,this.simTime)+.07+(f.state==='bite'?Math.sin(this.simTime*22)*.07:0);if(f.state==='waiting'&&f.time>=f.biteAt){f.state='bite';f.time=0;this.ui.toast('A bite! Click now to reel it in.','fish','success',3000);this.audio.play('collect');}else if(f.state==='bite'&&f.time>3){this.ui.toast('That one got away. Cast again.','fish');this.cancelFishing();}if(f.state!=='idle'){this.rope.visible=true;this.updateRope(this.lineOrigin(),f.float.position,.2);}}
   cancelFishing(){if(!this.fishing)return;this.fishing.state='idle';this.fishing.float.visible=false;if(this.hook?.state==='idle')this.rope.visible=false;}
   attack(){if(this.player.attackCooldown>0)return false;this.player.attackCooldown=.65;this.player.action=.55;this.player.actionKind='thrust';this.audio.play('hook');
     const tier=this.bestTool('spear'),damage=(tier.damage||15)*(this.stats.hasBuff('spearMight')?2:1);
@@ -731,7 +744,7 @@ export class Game {
     pressed(4,()=>this.selectSlot(this.selectedSlot-1));pressed(5,()=>this.selectSlot(this.selectedSlot+1));pressed(2,()=>this.interact());
     pressed(6,()=>{if(this.equipped==='hammer')this.placeBlock();});
     const trigger=!!pad.buttons[7]?.pressed;
-    if(trigger&&!this.gamepadButtons[7]){this.start();this.pointer.set(0,.25);if(this.equipped==='hook'&&this.hook.state==='idle'){this.hook.state='charging';this.hook.charge=.22;}else this.primaryAction();}
+    if(trigger&&!this.gamepadButtons[7]){this.start();this.pointer.set(0,.25);if(HOOK_TOOLS.includes(this.equipped)&&this.hook.state==='idle'){this.hook.state='charging';this.hook.charge=.22;}else this.primaryAction();}
     if(!trigger&&this.gamepadButtons[7]&&this.hook.state==='charging')this.castHook();
     this.gamepadButtons[7]=trigger;
   }
@@ -757,7 +770,7 @@ export class Game {
   updatePresentation(dt,active) {
     const atm=this.atmosphere.update(dt,this.simTime,this.player.position,this.time,this.time.weather);
     const submerged=this.player.diving&&this.player.swimming;if(submerged)atm.fog.setHex(0x176b73);
-    this.ocean.uniforms.fogColor.value.copy(atm.fog);this.ocean.uniforms.sunDirection.value.copy(this.atmosphere.sun.position).sub(this.player.position).normalize();this.ocean.update(this.simTime,this.player.position,this.time.weather,atm.daylight,this.world.islands,dt);if(submerged){this.ocean.uniforms.fogDensity.value=.026;this.scene.fog.density=.028;}
+    this.ocean.uniforms.fogColor.value.copy(atm.fog);this.ocean.uniforms.sunDirection.value.copy(this.atmosphere.sun.position).sub(this.player.position).normalize();this.ocean.update(this.simTime,this.player.position,this.time.weather,atm.daylight,this.world.visibleIslands||this.world.islands,dt);if(submerged){this.ocean.uniforms.fogDensity.value=.026;this.scene.fog.density=.028;}
     this.world.setDetail(this.player.position,QUALITY_PRESETS[this.activeQuality]);this.world.animate(this.simTime,atm.daylight,this.time.weather==='storm'?2:this.time.weather==='rain'?1.35:1);
     if(atm.lightning&&active) {
       this.audio.play('damage');if(!this.settings.relaxed&&Math.random()<.6){const blocks=[...this.grid.blocks.values()].filter(b=>BLOCKS[b.type].wooden),target=blocks[Math.floor(Math.random()*blocks.length)];if(target){this.fires.set(target.id,{timer:0});this.ui.toast('Lightning struck! Use fresh water nearby to put out the fire.','storm','warning',6000);}}
@@ -784,7 +797,7 @@ export class Game {
       const guide=this.settings.interactiveGuide&&!this.tutorial.done?this.guideTarget():null;
       this.objectiveMarker.visible=!!guide&&!this.paused&&this.started;
       if(guide){this.objectiveMarker.position.set(guide.x,guide.y+2.4,guide.z);this.objectiveMarker.material.opacity=.18+Math.sin(this.simTime*3)*.1;}
-      this.aimRing.visible=this.started&&!this.paused&&!this.firstPerson&&['hook','scrapHook','chainHook','fishingRod','paddle'].includes(this.equipped);this.aimRing.position.set(this.aimPoint.x,waveHeight(this.aimPoint.x,this.aimPoint.z,this.simTime)+.025,this.aimPoint.z);this.aimRing.scale.setScalar(this.hook.state==='charging'?1+this.hook.charge*.35:1);
+      this.aimRing.visible=this.started&&!this.paused&&!this.firstPerson&&[...HOOK_TOOLS,'fishingRod','paddle'].includes(this.equipped);this.aimRing.position.set(this.aimPoint.x,waveHeight(this.aimPoint.x,this.aimPoint.z,this.simTime)+.025,this.aimPoint.z);this.aimRing.scale.setScalar(this.hook.state==='charging'?1+this.hook.charge*.35:1);
       const target=this.shark.target;this.threatRing.visible=!this.paused&&!!target&&['targeting','attacking'].includes(this.shark.state)&&this.grid.at(target.x,target.y,target.z)===target;
       if(this.threatRing.visible){this.threatRing.position.copy(this.raft.localToWorld(new V3(target.x,.29,target.z)));this.threatRing.material.opacity=.55+Math.sin(this.simTime*7)*.35;}
       this.statsTimer+=rawDt;if(this.statsTimer>=.1&&(!this.paused||this.renderNeeded)){this.statsTimer=0;this.ui.update();}

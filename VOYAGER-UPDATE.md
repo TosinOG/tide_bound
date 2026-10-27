@@ -61,7 +61,7 @@ Additional improvements not in the original list: build-bar categories, a shared
 
 **UI / presentation:** `src/ui.js` (guide card, float numbers, buff strip, crosshair, build categories, cookbook/chart/trade/storage/achievements modals, settings, victory, help), `src/style.css` (new panels + mobile landscape fix), `src/menu.js` (difficulty, first-person, guide, world seed, new guide sections).
 
-**Build / docs:** `package.json` (v1.3.0, 80-test script), `README.md`, `BUILD-INFO.json`, `VOYAGER-UPDATE.md`, `tests/voyager.test.js`, regenerated `Tidebound-Gold.html` / `Tosins-Tidebound.html` / `Tidebreak.html` and `web-build/`.
+**Build / docs:** `package.json` (v1.3.0, 86-test script), `README.md`, `BUILD-INFO.json`, `VOYAGER-UPDATE.md`, `tests/voyager.test.js`, regenerated `Tidebound-Gold.html` / `Tosins-Tidebound.html` / `Tidebreak.html` and `web-build/`.
 
 ---
 
@@ -94,3 +94,58 @@ Additional improvements not in the original list: build-bar categories, a shared
 3. Add a proper oxygen/air-pocket dive ruin for the reef lantern fish.
 4. Consider lightweight async co-op (shared seed + ghost raft) rather than full netcode.
 5. Profile the new stations and particle wake on Low preset; tune `ParticlePool` budgets if needed.
+
+
+---
+
+## 7. Post-release fixes — hook, fishing line and the horizon
+
+Three issues found while playing the live 1.3.0 build. Version, save schema (2)
+and island generation (3) are unchanged.
+
+**1. The salvage hook could not collect anything.** `Game.castHook()` used
+`tier.speed` without ever defining `tier`, so releasing a charged cast threw a
+`ReferenceError` and the hook never left the player's hand. Fixed by resolving
+`bestTool('hook')` at cast time and applying its `range` bonus to the cast
+distance. Also fixed every input path (mouse, gamepad, touch "use" button and
+the aim ring) to recognise `scrapHook` and `chainHook`, not just the starter
+hook. The starter hook's catch radius went from 0.85 to 1.15, a missed cast now
+lingers 1.1 s instead of 0.75 s, and each cast clears stale catch state, so
+small bobbing salvage is realistically collectable.
+
+**2. The fishing line started at the player's fist.** `updateFishing()` drew the
+line from `avatar.userData.tool` (the hand group). Both the third-person rod and
+the first-person viewmodel now carry a tip anchor at the end of the 1.35-unit
+rod, and a new `Game.lineOrigin()` resolves the correct world position for the
+active view. Third person, first person and tool switching are all covered.
+
+**3. Islands were too close and visible from the start.** The streaming grid was
+100 m wide with islands roughly 140–210 m away, and `viewDistance` reached
+245 m, so land was on screen at spawn. The grid is now **240 m** and centred on
+the spawn (chunk 0,0 covers −120…120), which puts procedural shores ~240 m+
+away. `ISLAND_SIGHT_DISTANCE = 170` caps island visibility independently of the
+graphics preset, so high/ultra presets cannot push land back onto the starting
+horizon; the ocean's shallow-water coast atlas uses the same visible-island
+list. Sailing within range fires a one-time `islandSpotted` event ("Land ho"),
+the shore fades into the chart, and the tutorial objective marker only points at
+already-sighted shores. The first authored shore moved from (28, −61) to
+(90, −185) but keeps its `0,-1` save id; story shores keep their ids too —
+`STORY_AT_CHUNK` maps their coordinates onto the new chunk keys, and the ocean
+chart auto-zooms so distant shores stay on the map (the header now shows
+"240 METERS PER CHUNK").
+
+Because chunk keys changed, previously collected resources on **random**
+procedural islands will regenerate for existing saves; authored shores, story
+shores, raft progress, inventory and all Voyager progress are unaffected.
+
+**Verification for these fixes**
+
+| Check | Result |
+|---|---|
+| `npm test` | **86 / 86 passed** (6 new regressions in `tests/horizon-fixes.test.js`) |
+| Hook | `castHook()` no longer throws; a full cast→reel cycle collects salvage (`salvaged: 1`); tier range bonuses apply |
+| Fishing line | Starts 1.17 units from the hand — the rod tip — in third person and on the first-person viewmodel |
+| Horizon | 0 islands visible at spawn on spawn/low/medium/high; sailing toward a shore sets `sighted`, shows its mesh and fires one land-ho event |
+| Shared caches | `tests/world.test.js` recalibrated for the larger grid and strengthened: the shared material/geometry caches plateau after 120 chunk crossings and stay flat through 360 |
+| DOM/WebGL-stub harness | Zero runtime errors across constructor, hook cast, fishing, touch "use" on an upgraded hook, chart rendering and sailing into discovery |
+| Chromium suites | Still not rerun (Chromium download blocked in this sandbox) |

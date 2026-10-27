@@ -22,7 +22,14 @@ test('Chunk cleanup disposes all owned buffers but never shared geometry or cach
  const {world}=generator();world.update(origin);const owned=new Set(),shared=new Set(),sharedMaterials=new Set();for(const i of world.islands)i.group.traverse(m=>{if(m.geometry)(m.geometry.userData.shared?shared:owned).add(m.geometry);if(m.material?.userData.shared)sharedMaterials.add(m.material);});let ownedDisposals=0,sharedDisposals=0;for(const g of owned)g.addEventListener('dispose',()=>ownedDisposals++);for(const g of shared)g.addEventListener('dispose',()=>sharedDisposals++);for(const m of sharedMaterials)m.addEventListener('dispose',()=>sharedDisposals++);world.update(new THREE.Vector3(1500,0,-1500));assert.ok(owned.size>0);assert.equal(ownedDisposals,owned.size);assert.equal(sharedDisposals,0);
 });
 test('Long sailing stress: 120 deterministic chunk crossings keep only nine chunks and bounded shared caches',()=>{
- const {world,scene}=generator();world.update(origin);const start=assetCounts();for(let i=1;i<=120;i++){world.update(new THREE.Vector3(i*110,0,-i*80));assert.equal(world.chunks.size,9);assert.equal(scene.children.length,world.islands.length);assert.ok(world.islands.length<=9);assert.equal(world.pending.length,0);}const end=assetCounts();assert.ok(end.geometries<=start.geometries+12);assert.ok(end.materials<=start.materials+12);world.update(origin);assert.equal(world.chunks.size,9);
+ const {world,scene}=generator();world.update(origin);const start=assetCounts();for(let i=1;i<=120;i++){world.update(new THREE.Vector3(i*110,0,-i*80));assert.equal(world.chunks.size,9);assert.equal(scene.children.length,world.islands.length);assert.ok(world.islands.length<=9);assert.equal(world.pending.length,0);}const end=assetCounts();assert.ok(end.geometries<=start.geometries+12);
+  // 240m streaming chunks expose more distinct biome palettes than the old 100m
+  // grid, so the one-off shared cache cost is higher. It must still plateau.
+  assert.ok(end.materials<=start.materials+28);
+  for(let i=121;i<=360;i++)world.update(new THREE.Vector3(i*110,0,-i*80));
+  const plateau=assetCounts();assert.equal(plateau.materials,end.materials,'shared material cache stops growing');
+  assert.equal(plateau.geometries,end.geometries,'shared geometry cache stops growing');
+  world.update(origin);assert.equal(world.chunks.size,9);
 });
 test('Budgeted streaming does at most one chunk decision per frame and discards obsolete queues',()=>{
  const {world}=generator();world.update(origin);world.update(new THREE.Vector3(1000,0,1000),1);assert.equal(world.chunks.size,1);assert.equal(world.pending.length,8);world.update(new THREE.Vector3(-1000,0,-1000),1);assert.ok([...world.chunks.keys()].every(k=>k.startsWith('-')));for(let i=0;i<8;i++)world.update(new THREE.Vector3(-1000,0,-1000),1);assert.equal(world.chunks.size,9);assert.equal(world.pending.length,0);

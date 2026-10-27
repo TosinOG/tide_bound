@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BIOMES, ISLAND_NAMES, WEATHER, STORY_BY_CHUNK, STORY_ISLANDS } from './data.js';
+import { BIOMES, ISLAND_NAMES, WEATHER, STORY_ISLANDS, STORY_AT_CHUNK, WORLD_CHUNK_SIZE, ISLAND_SIGHT_DISTANCE, worldChunkKey } from './data.js';
 import { hash2, seededRandom, ObjectPool, clamp } from './systems.js';
 import { box, cylinder, beam, sphere, material, createPalm, createRock, createDebris, createShark, createJellyfish, createBird, bakeStatic, disposeObject } from './assets.js';
 
@@ -82,9 +82,16 @@ export class Ocean {
 
 function mergeStatic(group){return bakeStatic(group);}
 export class WorldGenerator {
-  constructor(scene,bus,saved={},options={}){this.scene=scene;this.bus=bus;this.chunks=new Map();this.islands=[];this.chunkSize=100;this.collected=new Set(saved.collected||[]);this.discovered=new Set(saved.discovered||[]);this.palms=[];this.lastChunk='';this.pending=[];this.needed=new Set();this.quality=null;this.seed=Number.isSafeInteger(options.seed)?options.seed:0;this.biomesSeen=new Set(options.biomesSeen||[]);}
+  constructor(scene,bus,saved={},options={}){
+    this.scene=scene;this.bus=bus;this.chunks=new Map();this.islands=[];
+    this.chunkSize=WORLD_CHUNK_SIZE;this.sightDistance=ISLAND_SIGHT_DISTANCE;
+    this.sighted=new Set();this.visibleIslands=[];
+    this.collected=new Set(saved.collected||[]);this.discovered=new Set(saved.discovered||[]);
+    this.palms=[];this.lastChunk='';this.pending=[];this.needed=new Set();this.quality=null;
+    this.seed=Number.isSafeInteger(options.seed)?options.seed:0;this.biomesSeen=new Set(options.biomesSeen||[]);
+  }
   update(position,budget=Infinity) {
-    const cx=Math.floor(position.x/100),cz=Math.floor(position.z/100),key=`${cx},${cz}`;
+    const key=worldChunkKey(position.x,position.z),[cx,cz]=key.split(',').map(Number);
     if(key!==this.lastChunk) {
       this.lastChunk=key;this.needed=new Set();const pending=[];
       for(let x=cx-1;x<=cx+1;x++)for(let z=cz-1;z<=cz+1;z++){const k=`${x},${z}`;this.needed.add(k);if(!this.chunks.has(k))pending.push([x,z]);}
@@ -96,23 +103,49 @@ export class WorldGenerator {
     }
     let loaded=0;while(this.pending.length&&loaded<budget){const [x,z]=this.pending.shift();if(this.needed.has(`${x},${z}`)&&!this.chunks.has(`${x},${z}`)){this.loadChunk(x,z);loaded++;}}
     if(loaded)this.bus.emit('chunks',this.chunks.size);
-    for(const island of this.islands){const d=Math.hypot(position.x-island.x,position.z-island.z);if(d<island.radius+18&&!this.discovered.has(island.id)){this.discovered.add(island.id);if(island.biome?.id)this.biomesSeen.add(island.biome.id);this.bus.emit('islandDiscovered',island);}}
+    this.visibleIslands=this.sightings(position);
+  }
+  /*
+   * Land is discovered by sailing. `sighted` is the one-way latch used for the
+   * "land ho" moment; `visibleIslands` is the per-frame render horizon, also
+   * used for the ocean's shallow-water coast atlas so an unseen shore cannot
+   * leak onto the water at spawn.
+   */
+  sightings(position,horizon=this.sightDistance){
+    const visible=[];
+    for(const island of this.islands){
+      const d=Math.hypot(position.x-island.x,position.z-island.z);
+      if(d<horizon+island.radius)visible.push(island);
+      if(d<this.sightDistance+island.radius&&!this.sighted.has(island.id)){this.sighted.add(island.id);this.bus.emit('islandSpotted',island);}
+      if(d<island.radius+18&&!this.discovered.has(island.id)){this.discovered.add(island.id);if(island.biome?.id)this.biomesSeen.add(island.biome.id);this.bus.emit('islandDiscovered',island);}
+    }
+    return visible;
   }
   setDetail(position,quality) {
     this.quality=quality;
+    // A high graphics preset must not push land back onto the starting horizon.
+    const horizon=Math.min(quality.viewDistance??this.sightDistance,this.sightDistance);
+    const view={...quality,viewDistance:horizon};
+    this.visibleIslands=this.sightings(position,horizon);
     for(const island of this.islands) {
-      if(island.plan){setExplorationDetail(island,position,quality);continue;}
+      if(island.plan){setExplorationDetail(island,position,view);continue;}
       const distance=Math.hypot(position.x-island.x,position.z-island.z);
-      island.group.visible=distance<quality.viewDistance+island.radius;
+      island.group.visible=distance<horizon+island.radius;
       island.land.visible=distance<quality.detailDistance+island.radius;
       for(const r of island.resources)r.mesh.visible=!r.collected&&distance<quality.detailDistance+island.radius;
       for(const jelly of island.jellies)jelly.visible=distance<quality.entityDistance+island.radius*2;
     }
   }
-  loadChunk(cx,cz){const key=`${cx},${cz}`,story=STORY_BY_CHUNK[key];let island=null;
-    if(cx===0&&cz===-1)island=this.generateIsland('0,-1',28,-61,12.5,0,4281);
-    else if(story)island=this.generateIsland(key,story.x,story.z,story.radius,story.biome,90000+STORY_ISLANDS.indexOf(story),story);
-    else if(!(cx===0&&cz===0)&&hash2(cx,cz,7341+this.seed)>.37){const seed=Math.floor(hash2(cx,cz,9218+this.seed)*999999),random=seededRandom(seed);island=this.generateIsland(key,(cx+.5)*100+(random()-.5)*32,(cz+.5)*100+(random()-.5)*32,10+random()*6,(Math.floor(random()*3)+(hash2(cx,cz,6631+this.seed)>.55?3:0)),seed);}
+  loadChunk(cx,cz){
+    const key=`${cx},${cz}`,story=STORY_AT_CHUNK[key],span=this.chunkSize;let island=null;
+    // The first authored shore keeps its stable save id, but now sits over the
+    // horizon rather than 67 units from the starting raft.
+    if(cx===0&&cz===-1)island=this.generateIsland('0,-1',90,-185,12.5,0,4281);
+    else if(story)island=this.generateIsland(story.id,story.x,story.z,story.radius,story.biome,90000+STORY_ISLANDS.indexOf(story),story);
+    else if(!(cx===0&&cz===0)&&hash2(cx,cz,7341+this.seed)>.52){
+      const seed=Math.floor(hash2(cx,cz,9218+this.seed)*999999),random=seededRandom(seed),jitter=span*.16;
+      island=this.generateIsland(key,cx*span+(random()-.5)*jitter*2,cz*span+(random()-.5)*jitter*2,10+random()*6,(Math.floor(random()*3)+(hash2(cx,cz,6631+this.seed)>.55?3:0)),seed);
+    }
     this.chunks.set(key,{island});if(island){this.islands.push(island);this.scene.add(island.group);}}
   generateIsland(id,x,z,radius,biomeIndex,seed,story=null){return createExplorationIsland(this,id,x,z,radius,biomeIndex,seed,story);}
   localHeight(island,x,z){if(island.plan)return island.plan.sample(x,z);const a=Math.atan2(z,x),shape=1+Math.sin(a*3+island.seed)*.07+Math.cos(a*5+island.seed*.3)*.05;const r=Math.hypot(x,z)/(island.radius*shape);if(r>1.12)return -2;const profile=[[0,3.2],[.2,3.8],[.42,2.7],[.64,1.25],[.78,.38],[.94,.12],[1.02,-.2],[1.12,-1.5]];let h=-1;for(let i=1;i<profile.length;i++){if(r<=profile[i][0]){const [r0,h0]=profile[i-1],[r1,h1]=profile[i];h=THREE.MathUtils.lerp(h0,h1,(r-r0)/(r1-r0));break;}}return h+Math.sin(x*.7+island.seed)*Math.cos(z*.6)*.10*Math.max(0,1-r);}
