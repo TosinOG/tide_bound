@@ -103,6 +103,23 @@ try {
   check('Walkable workstation surfaces support the player without falling through', Math.abs(raftContacts.stationTopY - 1.27) < .08);
   check('Swimming beneath a foundation stays below its underside collision face', raftContacts.underDeckTop <= raftContacts.foundationBottom + .015);
 
+  const climbSetup = await page.evaluate(async () => {
+    const { waveHeight } = await import('/src/world.js');
+    const g=tidebound,p=g.player,V=p.position.constructor;
+    const foundations=[...g.grid.blocks.values()].filter(block=>block.type==='foundation'&&block.y===0),outerX=Math.max(...foundations.map(block=>block.x));
+    const edge=foundations.filter(block=>block.x===outerX&&!g.grid.at(block.x+1,0,block.z)&&!g.grid.at(block.x,1,block.z)).sort((a,b)=>Math.abs(a.z)-Math.abs(b.z))[0]||foundations[0];
+    const side=g.raft.localToWorld(new V(edge.x+.86,0,edge.z));
+    p.position.set(side.x,waveHeight(side.x,side.z,g.simTime,g.ocean.uniforms.amplitude.value)-1.05,side.z);
+    p.velocity.set(0,0,0);p.onRaft=false;p.grounded=false;p.swimming=true;p.diving=false;p.surfacing=false;p.jumpCooldown=0;g.ui.update(true);
+    return {sim:g.simTime,hint:document.querySelector('#action-prompt').textContent};
+  });
+  await page.keyboard.down('Space');
+  await page.waitForFunction(start=>tidebound.simTime>=start+.12,climbSetup.sim,{timeout:10000});
+  await page.keyboard.up('Space');
+  const raftClimb=await page.evaluate(()=>{const p=tidebound.player,local=tidebound.raft.worldToLocal(p.position.clone()),support=tidebound.raftGround(p.position);return {onRaft:p.onRaft,swimming:p.swimming,grounded:p.grounded,localY:local.y,support:support?.block?.type||null,hint:document.querySelector('#action-prompt').textContent};});
+  check('Space at the raft edge climbs the swimmer back onto a walkable deck',raftClimb.onRaft&&raftClimb.grounded&&!raftClimb.swimming&&!!raftClimb.support);
+  check('Swimming HUD explains how to board the raft again',/climb back aboard/i.test(climbSetup.hint));
+
   await page.evaluate(async () => {
     const { waveHeight } = await import('/src/world.js');
     const g = tidebound, p = g.player;
@@ -212,6 +229,21 @@ try {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await phone.waitForTimeout(120);
   check('Both joysticks release cleanly without leaving movement input stuck', await phone.evaluate(() => tidebound.touchMove.x === 0 && tidebound.touchMove.y === 0 && tidebound.ui.mobileControls.pointerStates.size === 0));
 
+  const mobileClimbSetup=await phone.evaluate(async()=>{
+    const {waveHeight}=await import('/src/world.js'),g=tidebound,p=g.player,V=p.position.constructor;
+    const foundations=[...g.grid.blocks.values()].filter(block=>block.type==='foundation'&&block.y===0),outerX=Math.max(...foundations.map(block=>block.x));
+    const edge=foundations.filter(block=>block.x===outerX&&!g.grid.at(block.x+1,0,block.z)&&!g.grid.at(block.x,1,block.z)).sort((a,b)=>Math.abs(a.z)-Math.abs(b.z))[0]||foundations[0];
+    const side=g.raft.localToWorld(new V(edge.x+.86,0,edge.z));p.position.set(side.x,waveHeight(side.x,side.z,g.simTime,g.ocean.uniforms.amplitude.value)-1.05,side.z);
+    p.velocity.set(0,0,0);p.onRaft=false;p.grounded=false;p.swimming=true;p.diving=false;p.surfacing=false;p.jumpCooldown=0;g.ui.update(true);return g.simTime;
+  });
+  await phone.waitForFunction(()=>!document.querySelector('[data-mobile-id="jump"]').hidden,null,{timeout:5000});
+  const jumpBox=await phone.locator('[data-mobile-id="jump"]').boundingBox(),jumpTouch={id:37,x:jumpBox.x+jumpBox.width/2,y:jumpBox.y+jumpBox.height/2,radiusX:5,radiusY:5,force:1};
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[jumpTouch]});
+  await phone.waitForFunction(start=>tidebound.simTime>=start+.12,mobileClimbSetup,{timeout:10000});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await phone.waitForFunction(()=>tidebound.player.onRaft&&!tidebound.player.swimming,null,{timeout:3000});
+  check('Mobile jump control also climbs the swimmer back onto the raft',await phone.evaluate(()=>tidebound.player.onRaft&&!tidebound.player.swimming&&tidebound.player.grounded));
+
   await phone.evaluate(async () => {
     const { waveHeight } = await import('/src/world.js'),g=tidebound,p=g.player;
     const candidates=[[180,0],[0,180],[-180,0],[0,-180],[150,100],[-150,100],[100,-150],[-100,-150]];
@@ -226,7 +258,7 @@ try {
   await phone.waitForFunction(()=>tidebound.player.diving,null,{timeout:5000});
   await phone.waitForFunction(start=>tidebound.simTime>=start+.55,mobileSimBeforeDive,{timeout:20000});
   const mobileDive=await phone.evaluate(()=>({diving:tidebound.player.diving,swimming:tidebound.player.swimming,oxygen:tidebound.player.oxygen,status:document.querySelector('#dive-status').textContent,hidden:document.querySelector('#dive-status').classList.contains('hidden'),paused:tidebound.paused,modal:tidebound.ui.modal,simTime:tidebound.simTime,capacity:tidebound.underwater.oxygenCapacity(tidebound.inventory),waterline:tidebound.player.position.y,uiDisposed:tidebound.ui.disposed,statsTimer:tidebound.statsTimer,frame:tidebound.frameCount,documentHidden:document.hidden}));
-  check('Touch dive button enters the same oxygen-limited water volume', mobileDive.diving&&mobileDive.swimming&&mobileDive.oxygen<mobileDive.capacity&&!mobileDive.hidden);
+  check('Touch dive button enters the same oxygen-metered water volume',mobileDive.diving&&mobileDive.swimming&&mobileDive.capacity===56&&/OXYGEN/.test(mobileDive.status)&&!mobileDive.hidden);
 
   await phone.locator('[data-mobile-id="pause"]').tap();
   await phone.waitForFunction(() => tidebound.ui.modal === 'pause', null, { timeout: 5000 });

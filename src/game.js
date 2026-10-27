@@ -458,6 +458,23 @@ export class Game {
     for(let y=0;y<9;y++){const block=this.grid.at(x,y,z);if(!block)continue;const localSurface=raftWalkSurface(block,local.x,local.z);if(localSurface===null)continue;const worldSurface=this.raft.localToWorld(new V3(local.x,localSurface,local.z)).y;if(worldSurface<=position.y+PLAYER_COLLISION.stepHeight&&(!highest||worldSurface>highest.height))highest={height:worldSurface,block};}
     return highest;
   }
+  tryClimbRaft(){
+    const p=this.player,local=this.raft.worldToLocal(p.position.clone()),reach=PLAYER_COLLISION.radius+.55;let best=null;
+    for(const block of this.grid.blocks.values()){
+      if(!['foundation','floor','armor','net','stairs'].includes(block.type))continue;
+      const x=clamp(local.x,block.x-.48,block.x+.48),z=clamp(local.z,block.z-.48,block.z+.48),distance=Math.hypot(local.x-x,local.z-z);
+      if(distance>reach)continue;
+      const surface=raftWalkSurface(block,x,z);if(surface===null)continue;
+      const target=this.raft.localToWorld(new V3(x,surface,z)),rise=target.y-p.position.y;
+      if(rise<-.18||rise>1.65)continue;
+      const clearance=resolveRaftHorizontal(x,z,this.raftCollisionCandidates(x,z),surface+.02,PLAYER_COLLISION.standingHeight,PLAYER_COLLISION.radius);
+      if(clearance.collided&&Math.hypot(clearance.x-x,clearance.z-z)>.04)continue;
+      const score=distance+Math.max(0,rise)*.16;if(!best||score<best.score)best={position:target,score};
+    }
+    if(!best)return false;
+    p.position.copy(best.position);p.velocity.y=0;p.grounded=true;p.onRaft=true;p.swimming=false;p.diving=false;p.surfacing=false;
+    return true;
+  }
   recoverPlayerAfterLoad(){
     const player=this.player;if(!player)return;const support=this.raftGround(player.position);
     if(player.onRaft&&support&&Math.abs(player.position.y-support.height)<.65){player.position.y=support.height;player.grounded=true;player.onRaft=true;player.swimming=false;player.diving=false;player.surfacing=false;}
@@ -487,12 +504,13 @@ export class Game {
     if(horizontal.collided){local.x=horizontal.x;local.z=horizontal.z;p.position.copy(this.raft.localToWorld(local));p.velocity.x*=.18;p.velocity.z*=.18;}
     const wreck=this.underwater?.wreck;let wreckOldLocal=null,wreckColliders=null;
     if(wreck&&Math.min(Math.hypot(old.x-wreck.position.x,old.z-wreck.position.z),Math.hypot(p.position.x-wreck.position.x,p.position.z-wreck.position.z))<24){wreck.group.updateWorldMatrix(true,false);wreckOldLocal=wreck.group.worldToLocal(old.clone());wreckColliders=wreck.colliders;const wreckLocal=wreck.group.worldToLocal(p.position.clone()),wreckHorizontal=resolveRaftHorizontal(wreckLocal.x,wreckLocal.z,wreckColliders,wreckLocal.y,swimmingMode?PLAYER_COLLISION.swimmingHeight:PLAYER_COLLISION.standingHeight,PLAYER_COLLISION.radius);if(wreckHorizontal.collided){wreckLocal.x=wreckHorizontal.x;wreckLocal.z=wreckHorizontal.z;p.position.copy(wreck.group.localToWorld(wreckLocal));p.velocity.x*=.2;p.velocity.z*=.2;}}
-    const jumpPressed=this.isActionDown('jump');let jumpedFromWater=false;
+    const jumpPressed=this.isActionDown('jump');let jumpedFromWater=false,climbedOntoRaft=false;
     if(jumpPressed&&p.jumpCooldown<=0&&(p.grounded||wasSwimming||wasDiving||wasSurfacing)){
       if(wasDiving){p.diving=false;p.surfacing=true;p.swimming=true;p.velocity.y=Math.max(p.velocity.y,1.35);}
+      else if(wasSwimming&&this.tryClimbRaft()){climbedOntoRaft=true;}
       else if(wasSwimming){p.diving=false;p.surfacing=false;p.swimming=false;p.velocity.y=3.45;jumpedFromWater=true;p.onRaft=false;}
       else{p.diving=false;p.surfacing=false;p.velocity.y=4.7;}
-      p.grounded=false;p.jumpCooldown=.62;this.audio.play('hook');
+      if(!climbedOntoRaft)p.grounded=false;p.jumpCooldown=.62;this.audio.play('hook');
     }
     const waterSurface=waveHeight(p.position.x,p.position.z,this.simTime,this.ocean.uniforms.amplitude.value),waterline=waterSurface-SWIM_FEET_OFFSET,seabedFoot=this.underwater.floorAt(p.position.x,p.position.z)+.48;
     const swimUp=this.isActionDown('swimUp')?1:0,swimDown=this.isActionDown('swimDown')?1:0;
@@ -511,7 +529,8 @@ export class Game {
       if(p.position.y<seabedFoot){p.position.y=seabedFoot;p.velocity.y=Math.max(0,p.velocity.y);}
       if(p.position.y>=waterline){p.position.y=waterline;p.velocity.y=0;p.surfacing=false;p.swimming=true;}
       else p.swimming=true;
-    }else if(wasSwimming&&!jumpedFromWater&&!p.grounded){
+    }else if(climbedOntoRaft){p.velocity.y=0;}
+    else if(wasSwimming&&!jumpedFromWater&&!p.grounded){
       const control=clamp(this.mobileVertical+swimUp-swimDown,-1,1);
       const buoyancy=control?control*2.15:clamp((waterline-p.position.y)*3.1,-1.15,1.15);
       p.velocity.y=THREE.MathUtils.lerp(p.velocity.y,buoyancy,1-Math.exp(-(control?3.8:2.8)*dt));p.position.y+=p.velocity.y*dt;
@@ -525,8 +544,8 @@ export class Game {
     const caveCeiling=this.world.ceilingAt(p.position,old.y);if(caveCeiling!==null){p.position.y=caveCeiling;p.velocity.y=Math.min(0,p.velocity.y);}
     local=this.raft.worldToLocal(p.position.clone());raftCandidates=this.raftCollisionCandidates(local.x,local.z);
     const collisionHeight=(p.swimming||p.diving||p.surfacing)?PLAYER_COLLISION.swimmingHeight:PLAYER_COLLISION.standingHeight;
-    const oldLocal=this.raft.worldToLocal(old.clone()),vertical=resolveRaftVertical(oldLocal.y,local.y,local.x,local.z,raftCandidates,collisionHeight,PLAYER_COLLISION.radius,wasOnRaft);
-    if(vertical.blocked){local.y=vertical.y;p.position.copy(this.raft.localToWorld(local));p.velocity.y=vertical.grounded?0:Math.min(0,p.velocity.y);}
+    const oldLocal=this.raft.worldToLocal(old.clone());
+    if(!climbedOntoRaft){const vertical=resolveRaftVertical(oldLocal.y,local.y,local.x,local.z,raftCandidates,collisionHeight,PLAYER_COLLISION.radius,wasOnRaft);if(vertical.blocked){local.y=vertical.y;p.position.copy(this.raft.localToWorld(local));p.velocity.y=vertical.grounded?0:Math.min(0,p.velocity.y);}}
     if(wreckOldLocal&&wreckColliders){const wreckLocal=this.underwater.wreck.group.worldToLocal(p.position.clone()),wreckHeight=(p.swimming||p.diving||p.surfacing)?PLAYER_COLLISION.swimmingHeight:PLAYER_COLLISION.standingHeight,wreckVertical=resolveRaftVertical(wreckOldLocal.y,wreckLocal.y,wreckLocal.x,wreckLocal.z,wreckColliders,wreckHeight,PLAYER_COLLISION.radius,false);if(wreckVertical.blocked){wreckLocal.y=wreckVertical.y;p.position.copy(this.underwater.wreck.group.localToWorld(wreckLocal));p.velocity.y=wreckVertical.grounded?0:Math.min(0,p.velocity.y);}}
     const raftGround=this.raftGround(p.position),islandGround=this.world.groundAt(p.position.x,p.position.z,p.position.y);
     let ground=raftGround?.height??-Infinity,onRaftGround=!!raftGround;
@@ -552,6 +571,7 @@ export class Game {
     if(p.swimming){this.avatar.rotation.x=p.diving?.72:p.surfacing?.08:.25;if(this.shark.mesh.visible&&p.position.distanceTo(this.shark.position)<2.7&&this.shark.biteCooldown<=0&&!this.settings.relaxed){this.stats.damage(10);this.shark.biteCooldown=5;this.ui.toast('Shark nearby! Get back to the raft.','spear','warning');}}else this.avatar.rotation.x=0;
     for(const island of this.world.islands)for(const jelly of island.jellies){jelly.position.y=-.28+Math.sin(this.simTime*1.5+jelly.position.x)*.1;const jpos=jelly.getWorldPosition(new V3());if(p.swimming&&p.position.distanceTo(jpos)<.7&&p.stingCooldown<=0){p.stingCooldown=10;this.stats.sting();}}
     if(p.position.distanceTo(this.raft.position)>230){p.position.copy(this.raft.position).add(new V3(.5,.5,.5));p.velocity.set(0,0,0);p.diving=false;p.surfacing=false;p.swimming=false;this.ui.toast('The current carried you home. Stay within sight of your raft.','anchor');}
+    if(climbedOntoRaft){this.ui.toast('Climbed back aboard your raft','anchor','success');this.ui.update(true);}
   }
   updateJobs(dt) {
     const byId=new Map([...this.grid.blocks.values()].map(b=>[b.id,b]));
