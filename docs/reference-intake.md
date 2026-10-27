@@ -4,18 +4,32 @@ How to get another game's build in front of the agent so its mechanics can be st
 
 ## 1. Best option: a link instead of an upload
 
-The sandbox can reach **GitHub, npm and PyPI** and nothing else. That decides the order:
+The sandbox can reach **github.com, codeload.github.com, api.github.com, npm and PyPI** and nothing else. These were tested here, not assumed:
 
-| Source | Works? | What to send |
+| Route | Works? | Detail |
 |---|---|---|
-| Public GitHub repo (source or release) | Yes | the repo URL; it is cloned inside the sandbox |
-| Private GitHub repo your account can see | Yes | the URL; `gh` is already authenticated as the repo owner |
-| Browser/WebGL build hosted anywhere | Usually | the play URL; pages are fetched and the JS is read |
-| itch.io / GameJolt free download | Sometimes | the page or direct download URL; gated or account-only links fail |
-| Steam / GOG / Epic | No | the sandbox cannot reach the stores; send notes, wiki numbers or a guide instead |
-| A file on your own PC | Only by attachment | see step 2 |
+| `git clone` / `git push` over github.com | **Yes** | any repo the authenticated account can see |
+| Repo tarball/zip via codeload | **Yes** | `https://codeload.github.com/OWNER/REPO/tar.gz/refs/heads/main` |
+| GitHub **Releases** download | **No** | assets are served from `release-assets.githubusercontent.com` → connection EOF |
+| GitHub **Git LFS** | **No** | objects come from `media.githubusercontent.com` → blocked |
+| `raw.githubusercontent.com`, gists | **No** | blocked |
+| itch.io / GameJolt / Steam / GOG / any CDN | **No** | outside the allow-list |
+| Page text of a hosted web game | Usually | the reader can fetch the page, then read the JS |
+| A file on your own PC | Only small ones | see step 2 |
 
-A GitHub repo is by far the most reliable path for anything larger than a few MB, and it keeps the reference build out of this repository's history.
+So for anything large the only working route is **a git repository**: files are committed, pushed to github.com, and cloned inside the sandbox. A repo is also the right place for a 100 MB reference build — it stays out of this project's history.
+
+### The 100 MB problem
+
+GitHub rejects any single file over **100 MiB** (it warns above 50 MiB). "About 100 MB" is right on that cliff, so pick one:
+
+1. **Slim it first (preferred).** A shipped build is mostly textures, audio and video; the mechanics live in scripts, data tables and configs. A 100 MB build usually shrinks to 5–20 MB once assets are dropped — small enough to attach directly. See the commands in §2.
+2. **Split it.** Raw byte-splitting is lossless and this tool rejoins the parts automatically:
+   - 7-Zip → *Split to volumes* → `90M`, or macOS/Linux `split -b 90m game.zip game.zip.part-`
+   - This repo's intake script globs `*.001`, `*.002`, … and `*.part-aa`, `*.part-ab`, … and concatenates them before unpacking.
+3. **Trim the git history.** One commit, no history, keeps the clone small: `git init && git add -A && git commit -m ref && git push`.
+
+If the game is a packed single blob (`data.win`, `*.pck`, a Unity `.assets` file), slimming will not help — those *are* the game. Split them instead.
 
 ## 2. If the file only exists on your machine
 
@@ -25,6 +39,36 @@ Attachment pickers usually filter by extension, not by magic bytes. Any of these
 2. **Attach the already-unpacked pieces** – if the build is loose files, attach the few that matter (scripts, data JSON, configs) rather than the whole tree.
 3. **Push it to GitHub** – a private repo, one commit, then send the URL. Best for a build with thousands of files.
 4. **Do not paste base64** – it bloats the conversation and loses the file.
+
+### Trimming a build down to its logic
+
+PowerShell (Windows):
+
+```powershell
+Expand-Archive game.zip -DestinationPath game
+$keep = '*.js','*.mjs','*.json','*.cs','*.lua','*.gd','*.gml','*.py','*.rb','*.xml',
+        '*.txt','*.cfg','*.ini','*.yaml','*.yml','*.ts','*.gd','*.yy','*.as','*.hx'
+$out = New-Item -ItemType Directory -Force out
+Get-ChildItem game -Recurse -File -Include $keep | ForEach-Object {
+  Copy-Item $_.FullName (Join-Path $out ($_.FullName -replace '[\\/:]','_'))
+}
+Compress-Archive (Join-Path $out '*') game-slim.zip -Force
+```
+
+macOS / Linux:
+
+```bash
+unzip -q game.zip -d game
+mkdir -p slim
+find game -type f \( -name '*.js' -o -name '*.json' -o -name '*.cs' -o -name '*.lua' \
+  -o -name '*.gd' -o -name '*.gml' -o -name '*.py' -o -name '*.rb' -o -name '*.xml' \
+  -o -name '*.txt' -o -name '*.cfg' -o -name '*.ini' -o -name '*.yaml' -o -name '*.yml' \
+  -o -name '*.ts' -o -name '*.as' -o -name '*.hx' \) -exec cp --parents {} slim/ \;
+(cd slim && zip -qr ../game-slim.zip .)
+du -sh game-slim.zip
+```
+
+Swap the keep-list for whatever the engine actually uses (§4): Godot also needs `.tscn`/`.tres`, RPG Maker needs `.json`, GameMaker needs `data.win` — and that one cannot be trimmed, because it *is* the game.
 
 Once the archive is in the workspace (for example `~/tide_bound/.intake/game.zip`), run:
 

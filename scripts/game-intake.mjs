@@ -33,8 +33,37 @@ const withStrings = flags.has('--strings');
 const input = path.resolve(args[0]);
 if (!fs.existsSync(input)) { console.error(`Not found: ${input}`); process.exit(1); }
 
-const slug = path.basename(input).replace(/\.(zip|tar|tar\.gz|tgz|7z|rar)$/i, '').replace(/[^\w.-]+/g, '-').toLowerCase();
+const slug = path.basename(input)
+  .replace(/(\.\d{3}|\.part-[A-Za-z0-9]{2,3})$/i, '')      // split-volume suffixes
+  .replace(/\.(zip|tar|tar\.gz|tgz|7z|rar)$/i, '')
+  .replace(/[^\w.-]+/g, '-').toLowerCase();
 const mb = n => n < 1024 * 1024 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1024 / 1024).toFixed(2)} MB`;
+
+/* ---------------------------------------------------------- split parts --- */
+
+// Accept a raw byte-split of a big archive: 7-Zip's game.zip.001/002, or
+// `split -b 90m game.zip game.zip.part-`. GitHub refuses files over 100 MiB,
+// so a 100 MB reference build normally has to arrive in pieces.
+function joinParts(file) {
+  const m = path.basename(file).match(/^(.*)\.(\d{3}|part-[A-Za-z0-9]{2,3})$/);
+  if (!m) return null;
+  const base = m[1];
+  const dir = path.dirname(file);
+  const parts = fs.readdirSync(dir)
+    .filter(n => n.startsWith(`${base}.`) && /\.(\d{3}|part-[A-Za-z0-9]{2,3})$/.test(n))
+    .sort();
+  if (parts.length < 2) return null;
+  fs.mkdirSync(intakeRoot, { recursive: true });
+  const joined = path.join(intakeRoot, `_joined-${slug}.zip`);
+  if (!fs.existsSync(joined)) {
+    const out = fs.openSync(joined, 'w');
+    try {
+      for (const name of parts) fs.writeSync(out, fs.readFileSync(path.join(dir, name)));
+    } finally { fs.closeSync(out); }
+  }
+  console.log(`Joined ${parts.length} parts -> ${path.relative(root, joined)}`);
+  return joined;
+}
 
 /* ---------------------------------------------------------------- unpack --- */
 
@@ -55,8 +84,10 @@ function unpack(zip) {
   return dest;
 }
 
-const target = fs.statSync(input).isDirectory() ? input : unpack(input);
-const archiveBytes = fs.statSync(input).isDirectory() ? 0 : fs.statSync(input).size;
+const joinedInput = fs.statSync(input).isDirectory() ? null : joinParts(input);
+const source = joinedInput || input;
+const target = fs.statSync(source).isDirectory() ? source : unpack(source);
+const archiveBytes = fs.statSync(source).isDirectory() ? 0 : fs.statSync(source).size;
 
 /* ---------------------------------------------------------------- walk ----- */
 
@@ -213,7 +244,7 @@ if (withStrings) {
 const q = s => '`' + s + '`';
 const lines = [];
 lines.push(`# Intake report — ${slug}`, '');
-lines.push(`- Input: ${q(input)}${archiveBytes ? ` (${mb(archiveBytes)})` : ''}`);
+lines.push(`- Input: ${q(input)}${archiveBytes ? ` (${mb(archiveBytes)})` : ''}${joinedInput ? ' — reassembled from split parts' : ''}`);
 lines.push(`- Analysed: ${q(target)}`);
 lines.push(`- Files: ${files.length}${truncated ? ` (capped at ${MAX_FILES})` : ''}, ${mb(totalBytes)} total`);
 lines.push(`- Date: ${new Date().toISOString().slice(0, 10)}`, '');
