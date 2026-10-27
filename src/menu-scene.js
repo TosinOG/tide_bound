@@ -56,8 +56,8 @@ export class MenuScene {
     this.createAtmosphere();
     this.setQuality(settings);
 
-    addEventListener('resize', () => this.resize(), { signal });
-    addEventListener('pointermove', event => {
+    window.addEventListener('resize', () => this.resize(), { signal });
+    window.addEventListener('pointermove', event => {
       this.pointer.set(event.clientX / innerWidth * 2 - 1, event.clientY / innerHeight * 2 - 1);
     }, { signal, passive: true });
     document.addEventListener('visibilitychange', () => {

@@ -149,3 +149,66 @@ shores, raft progress, inventory and all Voyager progress are unaffected.
 | Shared caches | `tests/world.test.js` recalibrated for the larger grid and strengthened: the shared material/geometry caches plateau after 120 chunk crossings and stay flat through 360 |
 | DOM/WebGL-stub harness | Zero runtime errors across constructor, hook cast, fishing, touch "use" on an upgraded hook, chart rendering and sailing into discovery |
 | Chromium suites | Still not rerun (Chromium download blocked in this sandbox) |
+
+
+---
+
+## 8. Code review pass — 1.3.1 (fixes for portal submission)
+
+A full review of every source file (static analysis, cross-reference of every
+method/icon/data-action/event, a 180-second randomised gameplay simulation, a
+content sweep of every block/recipe/station/tool/trade, a sandboxed "game
+portal" boot test, and a production-bundle audit). Version-only bump to
+**1.3.1**; save schema (2) and island generation (3) are unchanged, so existing
+saves keep working.
+
+### Fixed
+
+1. **Mobile landscape controls were invisible and untappable (the reported bug).**
+   `.joystick`, `.mobile-actions`, `.touch-action` and `.main-touch` were only
+   styled inside `@media(max-width:640px)`. A phone rotated to landscape
+   (e.g. 844×390) satisfied the landscape rule that *showed* `.mobile-controls`
+   but none of the children had positioning or `pointer-events`, so the pad
+   vanished into the top-left corner and could not be pressed. The layout is now
+   declared at the top level and always clickable; portrait keeps its tuned
+   offsets and landscape overrides them. Added safe-area padding, a compact
+   `max-height:420px` layout so the pads never collide with the quickbar, and a
+   coarse-pointer rule that keeps the controls on wide/foldable phones.
+2. **Touch-screen laptops were treated as phones.** `navigator.maxTouchPoints>0`
+   is true on many Windows laptops, which showed the phone pads *and hid the
+   desktop HUD panels*. Coarse-pointer detection now requires a genuinely coarse
+   primary pointer (or no fine pointer at all).
+3. **The mobile menu was unusable in landscape.** The desktop hero overflowed a
+   390 px-tall viewport and the footer covered the nav row. Added a dedicated
+   `max-height:520px` landscape layout (compact hero, hidden decorative footer,
+   scrollable panels) so **PLAY** is always reachable.
+4. **Fullscreen could throw.** `requestFullscreen?.().catch(...)` threw a
+   `TypeError` wherever the API is missing (embedded webviews). It now checks for
+   the function, tolerates a rejected promise, and explains itself.
+5. **Boot could fail without the Font Loading API.** `document.fonts.load` was
+   awaited unguarded, so an older embedded webview showed the "couldn't reach
+   the water" screen instead of the game. It is now optional and time-boxed.
+6. **Sandboxed iframes (many game portals) could break the menu.** `localStorage`
+   access throws in an iframe without `allow-same-origin`; two call sites read it
+   outside a guard. Added a safe accessor in `main.js` and `menu.js`.
+7. **Switching tools mid-cast left the hand empty.** A flying hook kept
+   `avatar.userData.tool.visible=false`. Changing slots now recalls the hook and
+   re-shows the equipped tool, and `equipVisual()` always resets visibility.
+8. **Pull-to-refresh could interrupt play on phones.** Added
+   `overscroll-behavior:none` and `touch-action:manipulation` on the document.
+9. **Rotation detection hardened.** An `orientationchange` listener re-measures
+   after Safari's late resize, and menu-scene listeners are explicitly bound to
+   `window`.
+
+### Verified
+
+| Check | Result |
+|---|---|
+| `npm test` | **93 / 93 passed** (7 new robustness regressions) |
+| Static analysis (ESLint: undefined vars, dupes, unreachable) | 0 errors; only unused imports remain |
+| Cross-reference | every `this.x()`/`g.x()` call exists on its class; every icon name is defined; every rendered `data-action` is handled; no data table has a dangling item, block, research or station reference |
+| Gameplay simulation | 180 simulated seconds of movement, tools, crafting, shark, weather, streaming: no exceptions, no NaN, valid save |
+| Content sweep | all 50 blocks place, all recipes craft, every station produces output, every tool equips, every trade applies |
+| Portal sandbox boot | blocked `localStorage` + missing Font API + missing fullscreen → menu still renders and PLAY is clickable |
+| Production bundle | no `eval`, no `alert`/`confirm`, no third-party network requests; fonts served locally |
+| Browser suites | still not runnable here (Chromium download blocked); unchanged tests remain |

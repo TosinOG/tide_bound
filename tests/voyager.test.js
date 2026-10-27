@@ -39,7 +39,7 @@ const legacy = () => ({
 });
 
 test('Voyager data is internally consistent and every unlock is real', () => {
-  assert.equal(META.version, '1.3.0');
+  assert.equal(META.version, '1.3.1');
   for (const [id, r] of Object.entries(RESEARCH)) {
     assert.ok(ITEMS[id], `research item ${id} exists`);
     assert.ok(BLOCKS[r.unlock], `research ${id} unlocks a block`);

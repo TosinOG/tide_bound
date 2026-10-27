@@ -343,7 +343,9 @@ export class MainMenu {
   }
 
   downloadRawSave() {
-    const raw = readRawSave(localStorage) ?? readRawSave(localStorage, RECOVERY_SAVE_KEY);
+    let store = null;
+    try { store = localStorage; } catch { return; }
+    const raw = readRawSave(store) ?? readRawSave(store, RECOVERY_SAVE_KEY);
     if (!raw) return;
     const blob = new Blob([raw], { type: 'application/json' });
     const url = URL.createObjectURL(blob);

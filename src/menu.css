@@ -39,3 +39,65 @@
 @media(max-width:760px){.menu-color-wash{background:linear-gradient(90deg,rgba(5,24,34,.87),rgba(7,28,37,.46)),linear-gradient(0deg,rgba(5,23,31,.88),transparent 55%,rgba(7,23,31,.4))}.menu-topbar{padding:20px 22px}.menu-brand-mark>span{font-size:6px;letter-spacing:1px}.menu-edition{display:none}.menu-home{overflow-y:auto}.menu-hero{position:relative;left:auto;top:auto;transform:none;width:auto;max-width:530px;margin:0 auto;padding:125px 25px 125px;min-height:100%;display:flex;flex-direction:column;justify-content:center}.menu-hero h1>span{font-size:clamp(42px,11vw,68px);letter-spacing:3px}.menu-hero h1>strong{font-size:20px;letter-spacing:11px;margin-top:16px}.menu-tagline{font-size:19px;margin-top:22px}.menu-intro{font-size:11px;max-width:390px}.menu-primary-row{margin-top:24px}.menu-play{width:185px;min-height:53px}.menu-nav{display:grid;grid-template-columns:1fr 1fr;width:100%;max-width:390px;margin-top:19px}.menu-nav-button{margin:0;padding:14px 10px 12px 0;min-height:43px}.menu-nav-button:after{right:15px}.menu-save-status{font-size:5.5px;max-width:360px}.menu-footer{position:absolute;left:22px;right:22px;min-height:66px;font:5px var(--mono)}.menu-footer>div{flex-wrap:wrap;gap:7px 10px}.menu-footer>span:last-child{margin-left:auto}.menu-panel-overlay{padding:10px}.menu-panel{max-height:calc(100dvh - 20px)}.menu-panel-header{padding:23px 21px 20px}.menu-panel-header h2{font-size:29px}.menu-panel-header p{font-size:10px}.menu-panel-eyebrow{font-size:6px}.menu-panel-footer{padding:14px 21px}.menu-panel-footer>span{display:none}.menu-panel-footer{justify-content:flex-end}.voyage-card{margin:20px 21px 14px;padding:17px;gap:14px}.voyage-compass{width:52px;height:52px;flex:0 0 52px}.voyage-compass .icon{width:34px}.voyage-card h3{font-size:20px}.voyage-card p{font-size:8px;line-height:1.6}.menu-choice-stack{padding:8px 21px 22px}.new-voyage-features{grid-template-columns:1fr;margin:20px 21px 12px}.new-voyage-features article{display:flex;gap:15px;padding:15px}.new-voyage-features article>.icon{margin:0}.new-voyage-features h3{font-size:18px}.new-voyage-features p{margin-top:4px}.full-width{width:calc(100% - 42px);margin:10px 21px 22px}.confirmation-note,.save-error-detail{margin:20px 21px 13px}.menu-settings-grid{grid-template-columns:1fr;padding:5px 21px 22px}.menu-settings-grid>section{padding:18px 0;border-right:0;border-bottom:1px solid #d8d9c9}.menu-settings-grid>section:last-child{grid-column:auto;border-top:0}.menu-guide-grid{grid-template-columns:1fr;padding:12px 21px 18px;gap:0}.menu-guide-grid article{padding:15px 0}.guide-extra{margin:0 21px 20px;font-size:6px}.credits-layout{grid-template-columns:1fr;gap:22px;padding:24px 21px 18px}.credits-mark{min-height:150px}.credits-note{grid-template-columns:1fr;margin:0 21px 22px;gap:12px}}
 @media(max-height:650px) and (min-width:761px){.menu-topbar{padding-top:18px;padding-bottom:18px}.menu-hero{top:49%;transform:translateY(-45%)}.menu-eyebrow{margin-bottom:12px}.menu-hero h1>span{font-size:58px}.menu-hero h1>strong{font-size:18px;margin-top:12px}.menu-tagline{margin-top:17px;font-size:18px}.menu-intro{margin-top:8px;font-size:10px}.menu-primary-row{margin-top:18px}.menu-play{min-height:48px}.menu-nav{margin-top:13px}.menu-nav-button{padding-top:12px;min-height:39px}.menu-save-status{margin-top:4px}.menu-footer{min-height:45px}.menu-quote{bottom:75px}}
 @media(prefers-reduced-motion:reduce){#main-menu *,#main-menu *:before,#main-menu *:after{animation:none!important;transition:none!important}}
+
+/* Phones held sideways: the desktop hero is too tall for a 300-430px viewport,
+   so it is compacted and the decorative footer/quote step aside. */
+@media (max-height:520px) and (orientation:landscape){
+  .menu-home{overflow-y:auto}
+  .menu-topbar{padding:8px 18px;font-size:6px}
+  .menu-brand-mark svg{width:19px;height:19px}
+  .menu-brand-mark>span{font-size:6px;letter-spacing:1px}
+  .menu-edition{display:none}
+  .menu-hero{position:relative;left:auto;top:auto;transform:none;width:auto;max-width:560px;margin:0 auto;padding:16px 22px 22px;min-height:calc(100% - 36px);display:flex;flex-direction:column;justify-content:center}
+  .menu-eyebrow{margin-bottom:7px;font-size:6px}
+  .menu-hero h1>span{font-size:clamp(30px,7.4vh,44px);letter-spacing:2px}
+  .menu-hero h1>strong{font-size:11px;letter-spacing:7px;margin-top:6px}
+  .menu-tagline{margin-top:8px;font-size:14px}
+  .menu-intro{display:none}
+  .menu-primary-row{margin-top:13px;gap:12px}
+  .menu-play{width:168px;min-height:40px;font-size:11px}
+  .menu-play-caption{font-size:5px;max-width:96px}
+  .menu-nav{margin-top:10px;border-top:0;display:flex;flex-wrap:wrap;gap:0 4px}
+  .menu-nav-button{padding:8px 12px 6px 0;margin-right:8px;min-height:32px;font-size:6.5px}
+  .menu-nav-button:after{bottom:1px;right:12px}
+  .menu-save-status{margin-top:2px;font-size:5px;max-width:420px}
+  .menu-quote,.menu-footer{display:none}
+  .menu-panel-overlay{padding:6px}
+  .menu-panel{max-height:calc(100dvh - 12px)}
+  .menu-panel-header{padding:14px 18px 12px}
+  .menu-panel-header h2{font-size:22px}
+  .menu-panel-header p{margin-top:6px;font-size:9px;line-height:1.5}
+  .menu-panel-footer{padding:9px 18px;min-height:38px}
+  .voyage-card{margin:12px 18px 10px;padding:12px;gap:12px}
+  .voyage-compass{width:44px;height:44px;flex:0 0 44px}
+  .voyage-card h3{margin-top:3px;font-size:17px}
+  .voyage-card p{margin-top:4px;font-size:8px}
+  .menu-choice-stack{padding:6px 18px 16px;gap:7px}
+  .menu-choice{min-height:40px;padding:9px 13px;font-size:8px}
+  .new-voyage-features{grid-template-columns:repeat(3,1fr);margin:12px 18px 8px}
+  .new-voyage-features article{padding:11px 12px}
+  .new-voyage-features article>.icon{margin-bottom:6px}
+  .new-voyage-features h3{font-size:14px}
+  .new-voyage-features p{margin-top:3px;font-size:8px;line-height:1.5}
+  .full-width{width:calc(100% - 36px);margin:8px 18px 16px}
+  .menu-settings-grid{grid-template-columns:repeat(3,1fr);padding:4px 18px 16px}
+  .menu-settings-grid>section{padding:10px 14px}
+  .menu-settings-grid h3{margin-bottom:6px;font-size:16px}
+  .menu-setting{padding:8px 0;gap:7px}
+  .menu-setting strong{font-size:10px}
+  .menu-setting small{font-size:7px;line-height:1.4}
+  .menu-guide-grid{grid-template-columns:1fr 1fr;padding:8px 18px 12px;gap:0 18px}
+  .menu-guide-grid article{padding:9px 0}
+  .menu-guide-grid h3{font-size:14px}
+  .menu-guide-grid p{margin-top:4px;font-size:8px;line-height:1.5}
+  .guide-extra{margin:0 18px 14px;padding:9px;font-size:6px}
+  .credits-layout{grid-template-columns:1fr 1.2fr;gap:16px;padding:14px 18px 10px}
+  .credits-mark{min-height:100px}
+  .credits-mark>svg{width:32px;height:32px;margin-bottom:8px}
+  .credits-mark>span{font-size:15px}
+  .credits-mark strong{font-size:10px}
+  .credits-layout dl>div{padding:6px 0}
+  .credits-layout dd{font-size:14px}
+  .credits-note{margin:0 18px 14px;padding-top:10px;gap:12px}
+  .confirmation-note,.save-error-detail{margin:12px 18px 8px;padding:12px}
+}

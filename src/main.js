@@ -31,12 +31,18 @@ function changeSettings(next) {
   return settings;
 }
 
+function storage() {
+  // Sandboxed iframes (many game portals) throw on localStorage access itself.
+  try { return localStorage; } catch { return null; }
+}
+
 function restoreBackup(queryOnly = false) {
-  const backup = readBackup(localStorage);
+  const store = storage();
+  const backup = store ? readBackup(store) : null;
   if (queryOnly) return backup?.data || null;
   if (!backup) throw new Error('No valid local backup was found. Your current save was not changed.');
-  if (localStorage.getItem(SAVE_KEY) !== null) quarantineUnreadableSave(localStorage);
-  writeStoredSave(localStorage, backup.data, { importing: true });
+  if (store.getItem(SAVE_KEY) !== null) quarantineUnreadableSave(store);
+  writeStoredSave(store, backup.data, { importing: true });
   return refreshSave();
 }
 
@@ -93,7 +99,7 @@ async function startVoyage({ mode, confirmed }) {
   if (mode === 'new' && status.error && !status.unavailable) {
     if (!confirmed) { menu.openPanel('confirm-new'); return false; }
     try {
-      quarantineUnreadableSave(localStorage);
+      quarantineUnreadableSave(storage());
       status = refreshSave();
     } catch (error) {
       menu.saveStatus = { data: null, error: `The unreadable save could not be backed up, so it was left untouched. ${error.message}` };
@@ -173,7 +179,14 @@ Object.defineProperty(window, 'tideboundApp', {
 
 async function boot() {
   try {
-    await Promise.all([document.fonts.load('400 14px Outfit'), document.fonts.load('400 30px Fraunces')]);
+    // The Font Loading API is missing in some older embedded webviews. Fonts
+    // are only embedded for looks, so never let that block the game booting.
+    if (document.fonts?.load) {
+      await Promise.race([
+        Promise.all([document.fonts.load('400 14px Outfit'), document.fonts.load('400 30px Fraunces')]),
+        new Promise(resolve => setTimeout(resolve, 2500)),
+      ]).catch(() => {});
+    }
     showMenu();
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const loading = document.getElementById('loading');

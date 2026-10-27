@@ -402,13 +402,19 @@ export class Game {
   applyQuality(preset=this.activeQuality) {this.quality?.apply(preset);}
   persistSettings(){try{return writePreferences(localStorage,this.settings);}catch{return false;}}
   mainMenu(){if(this.disposed)return;if(this.onMainMenu)this.onMainMenu(this);else{this.save();this.suppressUnloadSave=true;location.reload();}}
-  selectSlot(index){this.selectedSlot=(index+8)%8;if(this.hook?.state==='charging')this.hook.state='idle';this.cancelFishing();this.equipVisual();this.ui.renderQuickbar();this.ui.renderBuildBar();this.audio.play('click');}
+  selectSlot(index){this.selectedSlot=(index+8)%8;
+    // Switching tools mid-cast must reel the hook home, otherwise the hand
+    // stays hidden (castHook hides it) until the cast happens to finish.
+    if(this.hook?.state==='charging'||this.hook?.state==='flying'||this.hook?.state==='floating')this.hook.state='idle';
+    this.cancelFishing();this.equipVisual();this.ui.renderQuickbar();this.ui.renderBuildBar();this.audio.play('click');}
   get equipped(){return this.quickbar[this.selectedSlot];}
-  equipVisual(){this.updateViewModel();if(!this.avatar)return;const hand=this.avatar.userData.tool;hand.clear();if(this.toolVisuals.has(this.equipped)){hand.add(this.toolVisuals.get(this.equipped));return;}let m;switch(this.equipped){case'hook':case'scrapHook':case'chainHook':m=createHook();m.rotation.z=.4;if(this.equipped!=='hook')m.scale.setScalar(1.12);break;case'hammer':m=new THREE.Group();m.add(cylinder(.025,.025,.4,0x9d744c),box(.22,.13,.11,0x7e9286,0,.2,0));break;case'spear':case'metalSpear':m=createSpear();m.scale.setScalar(this.equipped==='metalSpear'?.8:.7);m.rotation.x=.6;break;case'paddle':m=createPaddle();m.scale.setScalar(.7);m.rotation.x=.2;break;case'fishingRod':m=new THREE.Group();m.add(cylinder(.012,.02,1.35,0xbba174,0,.5,0));m.rotation.x=.5;m.userData.tip=new THREE.Object3D();m.userData.tip.position.set(0,1.17,0);m.add(m.userData.tip);break;case'axe':m=new THREE.Group();m.add(cylinder(.022,.022,.44,0x9d744c),box(.19,.13,.09,0x93a19a,0,.24,0));m.scale.setScalar(.75);break;case'paintBrush':m=new THREE.Group();m.add(cylinder(.015,.015,.38,0xb58b61),box(.1,.1,.035,0xd98a63,0,.23,0));m.scale.setScalar(.8);break;case'water':m=cylinder(.065,.065,.19,0x83b1ae);break;case'cookedFish':case'seaStew':case'spicedFish':m=createFish(true);m.scale.setScalar(.45);break;case'coconut':case'reefSalad':m=sphere(.12,0xa28559);break;}if(m){this.toolVisuals.set(this.equipped,m);hand.add(m);}}
+  equipVisual(){this.updateViewModel();if(!this.avatar)return;const hand=this.avatar.userData.tool;hand.clear();hand.visible=true;if(this.toolVisuals.has(this.equipped)){hand.add(this.toolVisuals.get(this.equipped));return;}let m;switch(this.equipped){case'hook':case'scrapHook':case'chainHook':m=createHook();m.rotation.z=.4;if(this.equipped!=='hook')m.scale.setScalar(1.12);break;case'hammer':m=new THREE.Group();m.add(cylinder(.025,.025,.4,0x9d744c),box(.22,.13,.11,0x7e9286,0,.2,0));break;case'spear':case'metalSpear':m=createSpear();m.scale.setScalar(this.equipped==='metalSpear'?.8:.7);m.rotation.x=.6;break;case'paddle':m=createPaddle();m.scale.setScalar(.7);m.rotation.x=.2;break;case'fishingRod':m=new THREE.Group();m.add(cylinder(.012,.02,1.35,0xbba174,0,.5,0));m.rotation.x=.5;m.userData.tip=new THREE.Object3D();m.userData.tip.position.set(0,1.17,0);m.add(m.userData.tip);break;case'axe':m=new THREE.Group();m.add(cylinder(.022,.022,.44,0x9d744c),box(.19,.13,.09,0x93a19a,0,.24,0));m.scale.setScalar(.75);break;case'paintBrush':m=new THREE.Group();m.add(cylinder(.015,.015,.38,0xb58b61),box(.1,.1,.035,0xd98a63,0,.23,0));m.scale.setScalar(.8);break;case'water':m=cylinder(.065,.065,.19,0x83b1ae);break;case'cookedFish':case'seaStew':case'spicedFish':m=createFish(true);m.scale.setScalar(.45);break;case'coconut':case'reefSalad':m=sphere(.12,0xa28559);break;}if(m){this.toolVisuals.set(this.equipped,m);hand.add(m);}}
   listen(target,type,handler,options={}){target.addEventListener(type,handler,{...options,signal:this.lifecycle.signal});}
   bindInput(){
     const canvas=this.renderer.domElement;
     this.listen(window,'resize',()=>this.resize());
+    // Safari reports the new size late on rotation; re-measure on the next frame.
+    this.listen(window,'orientationchange',()=>{setTimeout(()=>this.resize(),180);this.resize();});
     this.listen(window,'blur',()=>this.suspend());
     this.listen(document,'visibilitychange',()=>{if(document.hidden)this.suspend();else{this.clock.reset();this.lastFrame=null;}});
     this.listen(canvas,'webglcontextlost',e=>{e.preventDefault();this.contextLost=true;this.suspend();this.ui.openModal('context-lost');});
@@ -448,8 +454,15 @@ export class Game {
     this.listen(window,'beforeunload',()=>this.save());
   }
   updatePointer(e){this.pointerScreen={x:e.clientX,y:e.clientY};if(this.firstPerson){this.pointer.set(0,0);return;}this.pointer.set(e.clientX/innerWidth*2-1,-e.clientY/innerHeight*2+1);}
+  // `navigator.maxTouchPoints > 0` is true on touch-screen laptops, which used
+  // to put the phone controls over a desktop HUD. Only treat a device as touch
+  // when its *primary* pointer is coarse, or when it has no fine pointer at all.
+  isCoarsePointer(){
+    const coarse=matchMedia('(pointer:coarse)'),fine=matchMedia('(any-pointer:fine)');
+    return coarse.matches||((navigator.maxTouchPoints||0)>0&&!fine.matches);
+  }
   resize(){this.camera.aspect=innerWidth/innerHeight;this.camera.updateProjectionMatrix();this.renderer.setSize(innerWidth,innerHeight);
-    const coarse=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0;
+    const coarse=this.isCoarsePointer();
     document.body.classList.toggle('touch-landscape',!!(coarse&&innerWidth>innerHeight));
     document.body.classList.toggle('touch-device',!!coarse);this.touchDevice=!!coarse;
     this.renderNeeded=true;this.ui?.resize();}

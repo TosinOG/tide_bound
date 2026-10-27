@@ -1,6 +1,6 @@
 # Tidebound Gold
 
-A single-player, browser-based Three.js ocean-survival adventure. Gather salvage, build a connected raft, stay fed and watered, explore procedural islands, and follow the keepers' coded route to the last light. Version **1.3.0** ("Voyager"), save schema **2**, island generation **3**.
+A single-player, browser-based Three.js ocean-survival adventure. Gather salvage, build a connected raft, stay fed and watered, explore procedural islands, and follow the keepers' coded route to the last light. Version **1.3.1** ("Voyager"), save schema **2**, island generation **3**.
 
 **New in 1.3:** upgraded tools, a 13-branch research tree, advanced stations (smelter, cooking pot, recycler, engine, crop plots, storage, paint mill, trading post, charting table), meals with real buffs, three authored story shores with four-digit codes and a boss finale, 23 Voyage Log achievements, difficulty presets, shareable world seeds, first-person view, photo mode, camera shake / hit-stop / floating numbers, layered audio, interactive first-steps guidance, cosmetic building and paint, and fixed touch controls in landscape. Land now starts beyond the horizon (240 m streaming chunks, 170 m sight line) and is discovered by sailing; a post-release fix also repaired the salvage hook and moved the fishing line to the rod tip — see section 7 of `VOYAGER-UPDATE.md`.
 

@@ -111,7 +111,13 @@ export class UI {
     if(action.startsWith('course:')){const island=g.world.islands.find(i=>i.id===action.slice(7));if(!g.player.onRaft){this.toast('Return to your raft before setting sail','sail','warning');return;}if(island)g.setCourse(island);return;}
     if(action.startsWith('note:')){const n=g.notebook[+action.slice(5)];return this.showLore(n,n.island);}
     switch(action){case'begin':g.start();break;case'close':case'resume':this.closeModal();break;case'pause':case'help':case'inventory':case'map':case'journal':case'settings':this.openModal(action);break;case'sound':g.audio.toggle();document.getElementById('sound-button').innerHTML=icon(g.audio.enabled?'sound':'mute');this.toast(g.audio.enabled?'Ocean ambience on':'Ocean ambience muted',g.audio.enabled?'sound':'mute');break;
-      case'fullscreen':if(!document.fullscreenElement)document.documentElement.requestFullscreen?.().catch(()=>this.toast('Fullscreen is not allowed in this preview. Open the game in a new tab.','fullscreen'));else document.exitFullscreen?.();break;
+      case'fullscreen':{
+        const root=document.documentElement,blocked=()=>this.toast('Fullscreen is not allowed in this window. Open the game in a new tab.','fullscreen');
+        if(document.fullscreenElement){Promise.resolve(document.exitFullscreen?.()).catch(blocked);break;}
+        if(typeof root.requestFullscreen!=='function'){blocked();break;}
+        try{Promise.resolve(root.requestFullscreen()).catch(blocked);}catch{blocked();}
+        break;
+      }
       case'craft':{const r=RECIPES.find(r=>r.id===this.recipeId);if(r.block){g.chooseBuild(r.block);g.start();break;}const result=g.beginCraft(r);if(result.ok){g.start();this.closeModal();this.toast(`Making ${r.name.toLowerCase()} · ${r.seconds}s`,'workbench');}else this.toast(result.reason,'info','warning');break;}
       case'cancel-craft':g.crafting.cancel();this.renderInventory();this.toast('Crafting cancelled · materials returned','backpack');break;
       case'equip':{const id=this.selectedItem;const existing=g.quickbar.indexOf(id);if(existing>=0)g.selectSlot(existing);else{g.quickbar[7]=id;g.selectSlot(7);}this.closeModal();g.start();this.toast(`${ITEMS[id].name} equipped`,ITEMS[id].icon);break;}
