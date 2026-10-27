@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BIOMES, ISLAND_NAMES, WEATHER } from './data.js';
+import { BIOMES, ISLAND_NAMES, WEATHER, STORY_BY_CHUNK, STORY_ISLANDS } from './data.js';
 import { hash2, seededRandom, ObjectPool, clamp } from './systems.js';
 import { box, cylinder, beam, sphere, material, createPalm, createRock, createDebris, createShark, createJellyfish, createBird, bakeStatic, disposeObject } from './assets.js';
 
@@ -82,7 +82,7 @@ export class Ocean {
 
 function mergeStatic(group){return bakeStatic(group);}
 export class WorldGenerator {
-  constructor(scene,bus,saved={}){this.scene=scene;this.bus=bus;this.chunks=new Map();this.islands=[];this.chunkSize=100;this.collected=new Set(saved.collected||[]);this.discovered=new Set(saved.discovered||[]);this.palms=[];this.lastChunk='';this.pending=[];this.needed=new Set();this.quality=null;}
+  constructor(scene,bus,saved={},options={}){this.scene=scene;this.bus=bus;this.chunks=new Map();this.islands=[];this.chunkSize=100;this.collected=new Set(saved.collected||[]);this.discovered=new Set(saved.discovered||[]);this.palms=[];this.lastChunk='';this.pending=[];this.needed=new Set();this.quality=null;this.seed=Number.isSafeInteger(options.seed)?options.seed:0;this.biomesSeen=new Set(options.biomesSeen||[]);}
   update(position,budget=Infinity) {
     const cx=Math.floor(position.x/100),cz=Math.floor(position.z/100),key=`${cx},${cz}`;
     if(key!==this.lastChunk) {
@@ -96,7 +96,7 @@ export class WorldGenerator {
     }
     let loaded=0;while(this.pending.length&&loaded<budget){const [x,z]=this.pending.shift();if(this.needed.has(`${x},${z}`)&&!this.chunks.has(`${x},${z}`)){this.loadChunk(x,z);loaded++;}}
     if(loaded)this.bus.emit('chunks',this.chunks.size);
-    for(const island of this.islands){const d=Math.hypot(position.x-island.x,position.z-island.z);if(d<island.radius+18&&!this.discovered.has(island.id)){this.discovered.add(island.id);this.bus.emit('islandDiscovered',island);}}
+    for(const island of this.islands){const d=Math.hypot(position.x-island.x,position.z-island.z);if(d<island.radius+18&&!this.discovered.has(island.id)){this.discovered.add(island.id);if(island.biome?.id)this.biomesSeen.add(island.biome.id);this.bus.emit('islandDiscovered',island);}}
   }
   setDetail(position,quality) {
     this.quality=quality;
@@ -109,8 +109,12 @@ export class WorldGenerator {
       for(const jelly of island.jellies)jelly.visible=distance<quality.entityDistance+island.radius*2;
     }
   }
-  loadChunk(cx,cz){let island=null;if(cx===0&&cz===-1)island=this.generateIsland('0,-1',28,-61,12.5,0,4281);else if(!(cx===0&&cz===0)&&hash2(cx,cz)>.37){const seed=Math.floor(hash2(cx,cz,9218)*999999),random=seededRandom(seed);island=this.generateIsland(`${cx},${cz}`,(cx+.5)*100+(random()-.5)*32,(cz+.5)*100+(random()-.5)*32,10+random()*6,(Math.floor(random()*3)+(hash2(cx,cz,6631)>.55?3:0)),seed);}this.chunks.set(`${cx},${cz}`,{island});if(island){this.islands.push(island);this.scene.add(island.group);}}
-  generateIsland(id,x,z,radius,biomeIndex,seed){return createExplorationIsland(this,id,x,z,radius,biomeIndex,seed);}
+  loadChunk(cx,cz){const key=`${cx},${cz}`,story=STORY_BY_CHUNK[key];let island=null;
+    if(cx===0&&cz===-1)island=this.generateIsland('0,-1',28,-61,12.5,0,4281);
+    else if(story)island=this.generateIsland(key,story.x,story.z,story.radius,story.biome,90000+STORY_ISLANDS.indexOf(story),story);
+    else if(!(cx===0&&cz===0)&&hash2(cx,cz,7341+this.seed)>.37){const seed=Math.floor(hash2(cx,cz,9218+this.seed)*999999),random=seededRandom(seed);island=this.generateIsland(key,(cx+.5)*100+(random()-.5)*32,(cz+.5)*100+(random()-.5)*32,10+random()*6,(Math.floor(random()*3)+(hash2(cx,cz,6631+this.seed)>.55?3:0)),seed);}
+    this.chunks.set(key,{island});if(island){this.islands.push(island);this.scene.add(island.group);}}
+  generateIsland(id,x,z,radius,biomeIndex,seed,story=null){return createExplorationIsland(this,id,x,z,radius,biomeIndex,seed,story);}
   localHeight(island,x,z){if(island.plan)return island.plan.sample(x,z);const a=Math.atan2(z,x),shape=1+Math.sin(a*3+island.seed)*.07+Math.cos(a*5+island.seed*.3)*.05;const r=Math.hypot(x,z)/(island.radius*shape);if(r>1.12)return -2;const profile=[[0,3.2],[.2,3.8],[.42,2.7],[.64,1.25],[.78,.38],[.94,.12],[1.02,-.2],[1.12,-1.5]];let h=-1;for(let i=1;i<profile.length;i++){if(r<=profile[i][0]){const [r0,h0]=profile[i-1],[r1,h1]=profile[i];h=THREE.MathUtils.lerp(h0,h1,(r-r0)/(r1-r0));break;}}return h+Math.sin(x*.7+island.seed)*Math.cos(z*.6)*.10*Math.max(0,1-r);}
   groundAt(x,z,feet=-Infinity){for(const island of this.islands){const extent=island.plan?.extent??island.radius*1.12;if(Math.abs(x-island.x)>extent||Math.abs(z-island.z)>extent)continue;const px=x-island.x,pz=z-island.z,h=this.localHeight(island,px,pz);if(h>-.15)return {height:island.plan?Math.max(h,obstacleTop(island,px,pz,feet)):h,island};}return null;}
   nearestResource(position,max=2.4,diving=false){let nearest=null,best=max;for(const island of this.islands)for(const r of island.resources){if(!r.collected&&(!r.requiresDive||diving)){const dx=position.x-r.position.x,dz=position.z-r.position.z,dy=position.y-r.position.y,d=Math.hypot(dx,dz,dy*.65);if(d<best&&Math.abs(dy)<1.8&&this.interactionClear(island,position,r.position,r.id)){best=d;nearest={...r,island,original:r};if(r.type==='treasure'&&r.gate&&island.puzzle.sequence.every(k=>this.collected.has(`${island.id}:explore:rune${k}`))){nearest.name='Keeper’s provision chest';nearest.action='open';}}}}return nearest;}
@@ -159,7 +163,7 @@ export class WorldGenerator {
 }
 
 export class DebrisSpawner {
-  constructor(scene){this.scene=scene;this.pools={};this.active=[];this.spawnTimer=0;this.frustum=new THREE.Frustum();this.matrix=new THREE.Matrix4();const sizes={wood:22,leaf:15,plastic:12,scrap:8,barrel:7};for(const[type,size]of Object.entries(sizes)){this.pools[type]=new ObjectPool(()=>{const m=createDebris(type);m.visible=false;scene.add(m);return m;},size);}this.entityDistance=65;this.types=['wood','wood','wood','leaf','leaf','plastic','plastic','scrap','barrel'];}
+  constructor(scene){this.scene=scene;this.pools={};this.active=[];this.spawnTimer=0;this.frustum=new THREE.Frustum();this.matrix=new THREE.Matrix4();const sizes={wood:22,leaf:15,plastic:12,scrap:8,barrel:7,crate:6};for(const[type,size]of Object.entries(sizes)){this.pools[type]=new ObjectPool(()=>{const m=createDebris(type);m.visible=false;scene.add(m);return m;},size);}this.entityDistance=65;this.types=['wood','wood','wood','leaf','leaf','plastic','plastic','scrap','barrel','crate'];}
   spawn(type,x,z){const mesh=this.pools[type].acquire();const d={type,mesh,x,z,phase:Math.random()*6.28,rotation:Math.random()*6.28,hooked:false};mesh.position.set(x,0,z);this.active.push(d);return d;}
   seed(position){for(let i=0;i<43;i++){const a=i*2.39996,r=5+Math.sqrt(i/43)*29;this.spawn(this.types[i%this.types.length],position.x+Math.cos(a)*r,position.z+Math.sin(a)*r);}this.spawn('barrel',position.x+2.6,position.z+4.7);this.spawn('wood',position.x-1.7,position.z+4.3);}
   update(dt,t,position,camera,amp=1){
@@ -174,10 +178,11 @@ export class DebrisSpawner {
 }
 
 export class SharkAI {
-  constructor(scene,bus){this.pool=new ObjectPool(()=>{const m=createShark();scene.add(m);return m;},1);this.mesh=this.pool.acquire();this.bus=bus;this.state='circling';this.timer=0;this.angle=1.8;this.health=100;this.target=null;this.attackCooldown=65;this.position=this.mesh.position;this.position.set(12,0,12);this.biteCooldown=0;}
+  constructor(scene,bus){this.pool=new ObjectPool(()=>{const m=createShark();scene.add(m);return m;},1);this.mesh=this.pool.acquire();this.bus=bus;this.state='circling';this.timer=0;this.angle=1.8;this.health=100;this.maxHealth=100;this.target=null;this.attackCooldown=65;this.baseCooldown=65;this.position=this.mesh.position;this.position.set(12,0,12);this.biteCooldown=0;this.boss=false;this.armored=false;}
+  setVariant({boss=false,armored=false,cooldown=65}={}){this.boss=!!boss;this.armored=!!armored;this.baseCooldown=cooldown;this.attackCooldown=Math.min(this.attackCooldown,cooldown);this.maxHealth=boss?240:100;if(this.mesh.visible)this.health=Math.min(this.health,this.maxHealth);this.mesh.scale.setScalar(boss?1.45:1);}
   update(dt,t,raft,grid,relaxed){
     if(relaxed&&['targeting','attacking'].includes(this.state)){this.state='circling';this.timer=0;this.target=null;}
-    this.timer+=dt;this.biteCooldown=Math.max(0,this.biteCooldown-dt);if(!this.mesh.visible){if(this.timer>55){this.mesh=this.pool.acquire();this.position=this.mesh.position;this.position.copy(raft.position).add(new THREE.Vector3(14,0,14));this.health=100;this.state='circling';this.timer=0;this.target=null;}return;}
+    this.timer+=dt;this.biteCooldown=Math.max(0,this.biteCooldown-dt);if(!this.mesh.visible){if(this.timer>55){this.mesh=this.pool.acquire();this.position=this.mesh.position;this.position.copy(raft.position).add(new THREE.Vector3(14,0,14));this.health=this.maxHealth;this.state='circling';this.timer=0;this.target=null;}return;}
     this.mesh.userData.tail.rotation.y=Math.sin(t*4.5)*.32;
     const targetPos=new THREE.Vector3();let speed=2.4;
     if(this.state==='circling'){
@@ -189,24 +194,49 @@ export class SharkAI {
     }else if(this.state==='attacking'){
       if(!this.target||grid.at(this.target.x,this.target.y,this.target.z)!==this.target){this.state='circling';this.timer=0;return;}
       targetPos.set(this.target.x,.1,this.target.z);raft.localToWorld(targetPos);targetPos.y=0;speed=6;
-      if(this.position.distanceTo(targetPos)<1){const plate=grid.at(this.target.x,this.target.y+1,this.target.z);this.lastBiteDamage=plate?.type==='armor'?10:20;grid.damage(this.target,this.lastBiteDamage);if(plate?.type==='armor')grid.damage(plate,4);this.bus.emit('sharkBite',this.target);this.state='fleeing';this.timer=0;}
+      if(this.position.distanceTo(targetPos)<1){const plate=grid.at(this.target.x,this.target.y+1,this.target.z);this.lastBiteDamage=(plate?.type==='armor'?10:20)*(this.boss?1.35:1);grid.damage(this.target,this.lastBiteDamage);if(plate?.type==='armor')grid.damage(plate,4);this.bus.emit('sharkBite',this.target);this.state='fleeing';this.timer=0;}
     }else if(this.state==='fleeing'||this.state==='stunned'){
-      const dir=this.position.clone().sub(raft.position).setY(0);if(dir.lengthSq()<1e-6)dir.set(1,0,0);else dir.normalize();targetPos.copy(raft.position).addScaledVector(dir,28);speed=this.state==='stunned'?.5:5;if(this.state==='stunned'&&this.timer>.7){this.state='fleeing';this.timer=0;}if(this.timer>10){this.state='circling';this.timer=0;this.attackCooldown=38;}
+      const dir=this.position.clone().sub(raft.position).setY(0);if(dir.lengthSq()<1e-6)dir.set(1,0,0);else dir.normalize();targetPos.copy(raft.position).addScaledVector(dir,28);speed=this.state==='stunned'?.5:5;if(this.state==='stunned'&&this.timer>.7){this.state='fleeing';this.timer=0;}if(this.timer>10){this.state='circling';this.timer=0;this.attackCooldown=Math.max(18,this.baseCooldown*.58);}
     }
     targetPos.y=waveHeight(this.position.x,this.position.z,t);const dir=targetPos.sub(this.position);dir.y=0;const distance=dir.length();if(distance>.1){const heading=Math.atan2(dir.x,dir.z);this.mesh.rotation.y+=THREE.MathUtils.euclideanModulo(heading-this.mesh.rotation.y+Math.PI,Math.PI*2)-Math.PI;this.position.addScaledVector(dir.normalize(),Math.min(speed*dt,distance));}this.position.y=waveHeight(this.position.x,this.position.z,t);
   }
-  hit(){if(!this.mesh.visible||this.health<=0||(this.state==='stunned'&&this.timer<.3))return false;this.health-=15;this.state='stunned';this.timer=0;this.bus.emit('sharkHit');if(this.health<=0){this.pool.release(this.mesh);this.timer=0;this.bus.emit('sharkDefeated');}return true;}
+  hit(damage=15){if(!this.mesh.visible||this.health<=0||(this.state==='stunned'&&this.timer<.3))return false;this.health-=Math.max(1,Math.round(damage*(this.armored?.6:1)));this.state='stunned';this.timer=0;this.bus.emit('sharkHit');if(this.health<=0){this.pool.release(this.mesh);this.timer=0;this.bus.emit('sharkDefeated',{boss:this.boss});}return true;}
   toJSON(grid) {
     const target=this.target&&grid.at(this.target.x,this.target.y,this.target.z)===this.target?this.target:null;
     const state=!this.mesh.visible?'defeated':(!target&&['targeting','attacking'].includes(this.state)?'circling':this.state);
-    return {state,position:this.position.toArray(),health:this.mesh.visible?Math.max(0,this.health):0,timer:this.timer,angle:this.angle,attackCooldown:this.attackCooldown,biteCooldown:this.biteCooldown,targetKey:target?`${target.x},${target.y},${target.z}`:null};
+    return {state,position:this.position.toArray(),health:this.mesh.visible?Math.max(0,this.health):0,timer:this.timer,angle:this.angle,attackCooldown:this.attackCooldown,biteCooldown:this.biteCooldown,targetKey:target?`${target.x},${target.y},${target.z}`:null,boss:this.boss,armored:this.armored};
   }
   restore(saved,grid) {
-    if(!saved)return;for(const key of ['state','health','timer','angle','attackCooldown','biteCooldown'])this[key]=saved[key];
+    if(!saved)return;for(const key of ['state','health','timer','angle','attackCooldown','biteCooldown'])this[key]=saved[key];this.boss=!!saved.boss;this.armored=!!saved.armored;this.maxHealth=this.boss?240:100;this.mesh.scale.setScalar(this.boss?1.45:1);
     this.position.fromArray(saved.position);this.target=saved.targetKey?grid.blocks.get(saved.targetKey):null;
     if(saved.state==='defeated')this.pool.release(this.mesh);
   }
 
+}
+
+export class SeagullAI {
+  constructor(scene,bus){this.bus=bus;this.bird=createBird();this.bird.scale.setScalar(.75);this.bird.visible=false;scene.add(this.bird);this.position=this.bird.position;this.state='away';this.timer=0;this.angle=0;this.cooldown=35;this.stolen=0;}
+  update(dt,t,raft,grid,cropPlots=[]){
+    this.timer+=dt;
+    if(this.state==='away'){
+      if(this.timer>this.cooldown&&cropPlots.length){this.state='approaching';this.timer=0;this.bird.visible=true;this.position.copy(raft.position).add(new THREE.Vector3(Math.cos(this.angle)*18,5.5,Math.sin(this.angle)*18));this.bus.emit('gullWarning');}
+      return;
+    }
+    if(this.state==='approaching'){
+      const target=raft.position.clone().add(new THREE.Vector3(0,2.1,0));
+      this.position.lerp(target,1-Math.exp(-dt*.9));
+      if(this.position.distanceTo(target)<2.2){this.state='circling';this.timer=0;this.angle=Math.atan2(this.position.z-raft.position.z,this.position.x-raft.position.x);}
+    }else if(this.state==='circling'){
+      this.angle+=dt*1.15;this.position.set(raft.position.x+Math.cos(this.angle)*2.6,2.3+Math.sin(t*2)*.25,raft.position.z+Math.sin(this.angle)*2.6);
+      if(this.timer>6){this.state='away';this.timer=0;this.cooldown=55+Math.random()*40;this.bird.visible=false;this.stolen++;this.bus.emit('gullStole');}
+    }else if(this.state==='fleeing'){
+      if(this.timer>4){this.state='away';this.timer=0;this.cooldown=70;this.bird.visible=false;}
+    }
+    this.bird.userData.wings?.forEach((w,i)=>{w.rotation.z=Math.sin(t*11+i*Math.PI)*.55;});
+    this.bird.rotation.y=-this.angle+Math.PI/2;
+  }
+  scare(){if(this.state==='away')return false;this.state='fleeing';this.timer=0;this.bird.visible=false;this.position.y+=6;this.cooldown=70;return true;}
+  dispose(scene){scene.remove(this.bird);disposeObject(this.bird);}
 }
 
 export class ParticlePool {

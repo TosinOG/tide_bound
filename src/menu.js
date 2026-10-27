@@ -1,6 +1,6 @@
 import { MenuScene } from './menu-scene.js';
 import { icon, logoMark } from './icons.js';
-import { META } from './data.js';
+import { META, DIFFICULTIES } from './data.js';
 import { readRawSave, RECOVERY_SAVE_KEY } from './persistence.js';
 
 const esc = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
@@ -92,7 +92,7 @@ export class MainMenu {
       if (event.target.matches('input[type="range"][data-preference]')) this.changePreference(event.target);
     }, { signal });
     this.root.addEventListener('change', event => {
-      if (event.target.matches('select[data-preference],input[type="checkbox"][data-preference]')) this.changePreference(event.target);
+      if (event.target.matches('select[data-preference],input[type="checkbox"][data-preference],input[type="number"][data-preference]')) this.changePreference(event.target);
     }, { signal });
     document.addEventListener('keydown', event => this.handleKey(event), { signal });
   }
@@ -259,6 +259,10 @@ export class MainMenu {
       </section><section><h3>Controls & survival</h3>
         <label class="menu-setting menu-setting-range"><span><strong>Mouse sensitivity</strong><small>Right-drag and touch camera speed.</small></span><div><input type="range" data-preference="mouseSensitivity" min="0.25" max="2.5" step="0.05" value="${s.mouseSensitivity}" aria-label="Mouse sensitivity"><output data-preference-value="mouseSensitivity">${s.mouseSensitivity.toFixed(2)}×</output></div></label>
         <label class="menu-setting"><span><strong>Calm seas mode</strong><small>No hunger, thirst, or shark damage in gameplay.</small></span><input class="menu-toggle" type="checkbox" data-preference="relaxed" ${s.relaxed ? 'checked' : ''} aria-label="Calm seas mode"></label>
+        <label class="menu-setting"><span><strong>Difficulty</strong><small>Drifter is gentler; Stormchaser is harsher. Castaway is the original balance.</small></span><select data-preference="difficulty" aria-label="Difficulty">${Object.entries(DIFFICULTIES).map(([id,d]) => `<option value="${id}" ${s.difficulty === id ? 'selected' : ''}>${d.label} — ${d.description}</option>`).join('')}</select></label>
+        <label class="menu-setting"><span><strong>First-person view</strong><small>See through your own eyes. V toggles in game.</small></span><input class="menu-toggle" type="checkbox" data-preference="firstPerson" ${s.firstPerson ? 'checked' : ''} aria-label="First person view"></label>
+        <label class="menu-setting"><span><strong>Interactive first steps</strong><small>One prompt at a time until you have your sea legs.</small></span><input class="menu-toggle" type="checkbox" data-preference="interactiveGuide" ${s.interactiveGuide ? 'checked' : ''} aria-label="Interactive guide"></label>
+        <label class="menu-setting"><span><strong>World seed</strong><small>Whole number 0–999999. Applies to a new voyage; share it with a friend.</small></span><input type="number" min="0" max="999999" step="1" data-preference="worldSeed" value="${s.worldSeed}" aria-label="World seed"></label>
         <p class="settings-footnote">Low disables shadows and reduces scenery, particles, view distance, ocean detail, and resolution. All gathering, landmarks, puzzles, and survival interactions remain available.</p>
       </section></div>${this.panelFooter()}`;
   }
@@ -271,6 +275,9 @@ export class MainMenu {
       ['04', 'Build & upgrade your raft', `Equip the hammer with ${key('2')}. Choose a module above the quickbar; green means valid placement. Right-click builds, ${key('R')} rotates, ${key('T')} repairs, and holding ${key('X')} dismantles. Structures must retain support from a core foundation. Research unlocks nets, rain collection, plating, and windcatchers.`],
       ['05', 'Health, hunger & thirst', `Thirst drains faster than hunger. Eat and drink from the quickbar; purify seawater and cook fish at stations. Warnings appear before critical states. Storms, reefs, jellyfish, fire, and sharks are telegraphed hazards—not offline penalties.`],
       ['06', 'Sail & navigate', `${key('G')} / gamepad B takes or leaves the helm; WASD steers. ${key('M')} opens the ocean chart for automatic courses and anchor control. Wind and upgraded navigation affect sailing. Automatic approaches stop offshore so you can swim ashore.`],
+      ['07', 'Grow, upgrade & make it yours', `Hook keeper crates to find research discoveries, then craft better hooks, a metal spear, an axe, and a paint brush. Smelt copper ingots, cook meals with real buffs, grow food in crop plots, stow supplies in a shared hold, recycle salvage into tokens, and trade with the keeper. Paint your raft in eight colours and add flags, lanterns, and furniture.`],
+      ['08', 'Follow the keeper codes', `Build a charting table and read the four-digit codes on story shores. Each code charts a course to an authored destination with its own keeper, rewards, and story. The last light is guarded — keep your spear ready. ${key('B')} opens your Voyage Log of achievements.`],
+      ['09', 'Views, photos & phone play', `${key('V')} switches between first- and third-person. ${key('P')} hides the HUD for photo mode and ${key('F9')} saves a postcard. Touch controls now stay visible in landscape: joystick left, actions right, chart and view buttons included. Hold the hook button to charge a cast.`],
       ['07', 'Islands, treasure & ruins', `Every shore has finite supplies and environmental stories. Follow trails to journals and landmarks. Read clues with ${key('F')}, revisit them with ${key('J')}, and activate carved waystones in the journal’s order. Hidden chests reward exploration once. Each coast also has one finite sunken cache on a real reef shelf: press C while swimming, then F nearby to recover it. The three-fragment rescue objective remains your main route home.`],
       ['08', 'Save, continue & recover', `The game autosaves every 20 simulated seconds and when you return to the menu. Export or import from Settings. CONTINUE validates and restores the local V2 voyage. New Game always asks before replacing an existing one; unreadable saves are protected and can be downloaded or quarantined.`],
     ];
@@ -288,7 +295,8 @@ export class MainMenu {
   changePreference(control) {
     const id = control.dataset.preference;
     let value = control.type === 'checkbox' ? control.checked : control.value;
-    if (control.type === 'range' || id === 'pixelRatio') value = Number(value);
+    if (control.type === 'range' || id === 'pixelRatio' || id === 'worldSeed') value = Number(value);
+    if (id === 'worldSeed') value = Number.isSafeInteger(value) && value >= 0 && value <= 999999 ? value : 0;
     this.settings = this.onSettings({ ...this.settings, [id]: value });
     const output = this.panelElement.querySelector(`[data-preference-value="${id}"]`);
     if (output) output.textContent = id === 'mouseSensitivity' ? `${this.settings.mouseSensitivity.toFixed(2)}×` : `${Math.round(this.settings[id] * 100)}%`;

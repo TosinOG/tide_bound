@@ -67,6 +67,7 @@ export class SeaAudio {
       // An original, restrained three-note ambient score. Continuous oscillators
       // avoid timers and duplicate music when moving between menu and gameplay.
       const chord = [110, 164.81, 220];
+      this.chordNodes = [];
       chord.forEach((frequency, index) => {
         const oscillator = c.createOscillator();
         const gain = c.createGain();
@@ -85,7 +86,15 @@ export class SeaAudio {
         oscillator.start();
         drift.start();
         this.nodes.push(oscillator, drift);
+        this.chordNodes.push({ oscillator, base: frequency, index });
       });
+      // A quiet tension layer that swells only when a shark is close.
+      const tension = c.createOscillator(), tensionGain = c.createGain();
+      tension.type = 'sawtooth'; tension.frequency.value = 55;
+      tensionGain.gain.value = 0;
+      const tensionFilter = c.createBiquadFilter(); tensionFilter.type = 'lowpass'; tensionFilter.frequency.value = 180;
+      tension.connect(tensionFilter); tensionFilter.connect(tensionGain); tensionGain.connect(this.ambience);
+      tension.start(); this.nodes.push(tension); this.tensionGain = tensionGain;
       this.applySettings(this.settings);
       this.setScene(this.scene);
     } catch {
@@ -114,6 +123,35 @@ export class SeaAudio {
 
   setUnderwater(active) {
     if (this.context && this.oceanFilter) this.oceanFilter.frequency.setTargetAtTime(active ? 310 : 850, this.context.currentTime, .18);
+  }
+
+  /** Retune the ambient drone for weather and raise a low tension bed near danger. */
+  setMood(weather = 'clear', threat = 0) {
+    if (!this.context) return;
+    const t = this.context.currentTime;
+    const shift = weather === 'storm' ? .94 : weather === 'rain' ? .97 : weather === 'fog' ? 1.03 : 1;
+    for (const node of this.chordNodes || []) node.oscillator.frequency.setTargetAtTime(node.base * shift, t, 1.5);
+    if (this.tensionGain) this.tensionGain.gain.setTargetAtTime(Math.max(0, Math.min(1, threat)) * .045, t, .6);
+  }
+
+  /** Short surface-aware footstep. Callers throttle this to a few times a second. */
+  footstep(surface = 'wood') {
+    if (!this.context || !this.enabled) return;
+    const t = this.context.currentTime, c = this.context;
+    const osc = c.createOscillator(), gain = c.createGain();
+    osc.type = 'triangle';
+    osc.frequency.value = surface === 'water' ? 150 + Math.random() * 40 : surface === 'sand' ? 95 + Math.random() * 25 : 175 + Math.random() * 35;
+    gain.gain.setValueAtTime(.0001, t);
+    gain.gain.linearRampToValueAtTime(surface === 'water' ? .05 : .035, t + .008);
+    gain.gain.exponentialRampToValueAtTime(.0001, t + .09);
+    osc.connect(gain); gain.connect(this.effects); osc.start(t); osc.stop(t + .1);
+    osc.onended = () => { osc.disconnect(); gain.disconnect(); };
+  }
+
+  /** Two low thumps when health is critical. */
+  heartbeat() {
+    this.tone(62, .13, 'sine', .075);
+    this.tone(58, .17, 'sine', .06, .17);
   }
 
   setVolume(value) { this.applySettings({ volume: value }); }
@@ -169,6 +207,28 @@ export class SeaAudio {
       this.tone(185, .5, 'triangle', .08, .4);
     } else if (name === 'rescue') {
       [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 1.2, 'sine', .08, i * .18));
+    } else if (name === 'bite') {
+      this.tone(110, .3, 'sawtooth', .2); this.tone(72, .38, 'square', .12, .05);
+    } else if (name === 'shark') {
+      this.tone(88, .7, 'sawtooth', .09); this.tone(66, .85, 'sine', .08, .12);
+    } else if (name === 'levelup') {
+      [392, 523, 659, 880].forEach((f, i) => this.tone(f, .45, 'triangle', .07, i * .08));
+    } else if (name === 'achievement') {
+      [523, 659, 784].forEach((f, i) => this.tone(f, .55, 'sine', .06, i * .1));
+    } else if (name === 'coin' || name === 'trade') {
+      this.tone(880, .1, 'triangle', .08); this.tone(1175, .18, 'sine', .06, .07);
+    } else if (name === 'paint') {
+      this.tone(330, .1, 'triangle', .06); this.tone(494, .14, 'sine', .05, .06);
+    } else if (name === 'engine') {
+      this.tone(70, .5, 'sawtooth', .07); this.tone(105, .35, 'triangle', .045, .06);
+    } else if (name === 'crate' || name === 'code') {
+      [440, 554, 659, 880].forEach((f, i) => this.tone(f, .35, 'sine', .055, i * .07));
+    } else if (name === 'boss') {
+      [98, 92, 87, 82].forEach((f, i) => this.tone(f, .8, 'sawtooth', .09, i * .16));
+    } else if (name === 'buff') {
+      [523, 784, 1047].forEach((f, i) => this.tone(f, .6, 'sine', .05, i * .09));
+    } else if (name === 'photo') {
+      this.tone(1200, .06, 'sine', .05); this.tone(700, .1, 'sine', .04, .05);
     }
   }
 }

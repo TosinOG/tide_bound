@@ -14,6 +14,10 @@ export const DEFAULT_PREFERENCES = Object.freeze({
   relaxed: false,
   dynamicWeather: true,
   showHints: true,
+  difficulty: 'castaway',
+  firstPerson: false,
+  worldSeed: 0,
+  interactiveGuide: true,
 });
 
 const finite = (value, fallback, min, max) => typeof value === 'number' && Number.isFinite(value)
@@ -40,6 +44,10 @@ export function normalizePreferences(input = {}) {
     relaxed: flag(input.relaxed, d.relaxed),
     dynamicWeather: flag(input.dynamicWeather, d.dynamicWeather),
     showHints: flag(input.showHints, d.showHints),
+    difficulty: ['drifter', 'castaway', 'stormchaser'].includes(input.difficulty) ? input.difficulty : d.difficulty,
+    firstPerson: flag(input.firstPerson, d.firstPerson),
+    worldSeed: Number.isSafeInteger(input.worldSeed) && input.worldSeed >= 0 && input.worldSeed <= 999999 ? input.worldSeed : d.worldSeed,
+    interactiveGuide: flag(input.interactiveGuide, d.interactiveGuide),
   };
 }
 

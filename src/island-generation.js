@@ -112,7 +112,7 @@ function waterfall(island){
   const a=new Float32Array(18*3);for(let i=0;i<18;i++){a[i*3]=pool.x+Math.sin(i*2.4)*.65;a[i*3+1]=poolY+.1+(i%5)*.10;a[i*3+2]=pool.z+Math.cos(i*2.4)*.6;}const mistGeo=new THREE.BufferGeometry();mistGeo.setAttribute('position',new THREE.BufferAttribute(a,3));const mist=new THREE.Points(mistGeo,new THREE.PointsMaterial({color:0xcdeede,size:.12,transparent:true,opacity:.3,depthWrite:false}));island.effects.add(mist);island.mist=mist;
 }
 
-export function createExplorationIsland(world,id,x,z,baseRadius,biomeIndex,seed){
+export function createExplorationIsland(world,id,x,z,baseRadius,biomeIndex,seed,storyInfo=null){
   const biome=BIOMES[biomeIndex]||BIOMES[0],family=biome.legacyIndex??(biomeIndex%3),legacy=BIOMES[family],plan=createTerrainPlan(seed,baseRadius,biome,id),group=new THREE.Group();group.position.set(x,0,z);
   const island={id,x,z,radius:plan.radius,baseRadius,seed,biome,legacyBiome:legacy,group,plan,land:new THREE.Group(),structures:new THREE.Group(),pickups:new THREE.Group(),reef:new THREE.Group(),effects:new THREE.Group(),resources:[],colliders:[],jellies:[],name:id==='0,-1'?'Pelican Cay':ISLAND_NAMES[(seed%(ISLAND_NAMES.length-1))+1]};
   group.name='island-'+id;island.land.name='foliage';island.structures.name='landmarks';island.pickups.name='finite-supplies';island.effects.name='island-atmosphere';group.add(island.structures,island.land,island.pickups,island.reef,island.effects);
@@ -135,7 +135,7 @@ export function createExplorationIsland(world,id,x,z,baseRadius,biomeIndex,seed)
   const specialPoint=offset(plan.routes[0][3],.6,-.2,plan.angle);makeResource(world,island,{id:`${id}:special`,type:legacy.special,name:legacy.special==='resin'?'Amber palm resin':legacy.special==='coral'?'Sea glass coral':'Navigator’s lens',point:specialPoint,mesh:itemModel(legacy.special),amount:legacy.special==='relic'?1:2});
   const puzzle=seed%3===0||id==='0,-1',sequence=puzzleSequence(seed);
   island.puzzle={enabled:puzzle,sequence};
-  const journalPoint=offset(plan.viewpoint,0,.75,plan.angle),story=`${biome.id==='pirate'?'The quartermaster hid a share for whoever followed the headland trail.':biome.id==='volcano'?'The black terraces were here long before our camp. The sheltered shore still has vines and copper.':biome.id==='ruins'?'The old stone gateway frames the same stars we steered by. No ruin is silent if you know where to look.':'Follow the worn path past the overlook. A sheltered opening lies beyond the last bend.'} ${puzzle?`The latch answers three carved stones: ${sequence.map(k=>RUNE_NAMES[k]).join(', then ')}. Read them in that order. Their light will lead you back to the grotto.`:'The keeper left a provision chest in the grotto beyond the overlook. There is no lock, only a path easy to miss.'} Three signal fragments still carry the rescue frequency: 104.8.`;
+  const journalPoint=offset(plan.viewpoint,0,.75,plan.angle),story=`${biome.id==='pirate'?'The quartermaster hid a share for whoever followed the headland trail.':biome.id==='volcano'?'The black terraces were here long before our camp. The sheltered shore still has vines and copper.':biome.id==='ruins'?'The old stone gateway frames the same stars we steered by. No ruin is silent if you know where to look.':'Follow the worn path past the overlook. A sheltered opening lies beyond the last bend.'} ${puzzle?`The latch answers three carved stones: ${sequence.map(k=>RUNE_NAMES[k]).join(', then ')}. Read them in that order. Their light will lead you back to the grotto.`:'The keeper left a provision chest in the grotto beyond the overlook. There is no lock, only a path easy to miss.'} Three signal fragments still carry the rescue frequency: 104.8.${id==='0,-1'?' The first keeper’s chart ends with four digits: 4821.':''}`;
   makeResource(world,island,{id:`${id}:explore:journal`,type:'journal',name:biome.id==='pirate'?'Quartermaster’s journal':'Keeper’s trail journal',point:journalPoint,mesh:journalModel(),story,icon:'book',action:'read'});
   if(puzzle)for(let k=0;k<3;k++){
     const node=plan.routes[0][1+k*2],point=offset(node,k%2?1.25:-1.25,.2,plan.angle),rune=runeModel(k),y=plan.sample(point.x,point.z);rune.group.position.set(point.x,y,point.z);rune.group.rotation.y=plan.angle;island.pickups.add(rune.group);
@@ -206,6 +206,36 @@ export function createExplorationIsland(world,id,x,z,baseRadius,biomeIndex,seed)
   for(let d=3;d<=12;d+=.5){const p={x:plan.landing.x+radial.x*d,z:plan.landing.z+radial.z*d};if(plan.sample(p.x,p.z)<-1.2){dock=p;break;}}
   island.dock={x:x+dock.x,z:z+dock.z,radius:2.3};
   for(let i=0;i<5;i++){const a=i*2.39996+seed,px=Math.cos(a)*plan.radius*1.32,pz=Math.sin(a)*plan.radius*1.32,j=createJellyfish();j.position.set(px,-.3,pz);group.add(j);island.jellies.push(j);}
+  // --- Voyager update: authored story shores, island hazards, and a keeper with a voice ---
+  const hazardPoints = [];
+  for(let i=0;i<plan.routes[0].length-1;i+=2){
+    const a=plan.routes[0][i],p={x:THREE.MathUtils.lerp(a.x,plan.routes[0][i+1].x,.5),z:THREE.MathUtils.lerp(a.z,plan.routes[0][i+1].z,.5)};
+    const y=plan.sample(p.x,p.z);if(y<.2)continue;
+    hazardPoints.push({x:p.x,z:p.z,y,radius:1.05});
+    const tuft=new THREE.Group();
+    for(let k=0;k<5;k++){const ang=k*1.26;tuft.add(beam([Math.cos(ang)*.22,0,Math.sin(ang)*.22],[Math.cos(ang)*.5,.5,Math.sin(ang)*.5],.014,k%2?0x6b7f4e:0x8a9a58));}
+    tuft.position.set(p.x,y,p.z);island.structures.add(tuft);
+  }
+  island.hazards=hazardPoints.map(h=>({x:x+h.x,z:z+h.z,y:h.y,radius:h.radius}));
+
+  if(storyInfo){
+    island.story=storyInfo;island.name=storyInfo.name;island.storyCode=storyInfo.code;
+    const keeper=new THREE.Group();
+    keeper.add(cylinder(.15,.17,.58,0x64796f,0,.38,0),sphere(.14,0xc9a47d,0,.83,0,10),cylinder(.19,.19,.04,0xd9b96e,0,.97,0,10));
+    keeper.add(box(.4,.16,.16,0x8a7356,.2,.6,0));
+    keeper.position.set(plan.landmark.x,plan.sample(plan.landmark.x,plan.landmark.z),plan.landmark.z);
+    keeper.rotation.y=plan.angle+.45;island.structures.add(keeper);
+    const codePoint=offset(plan.viewpoint,-1.05,.55,plan.angle);
+    makeResource(world,island,{id:`${id}:story:code`,type:'code',name:'Keeper’s four-digit code',point:codePoint,mesh:journalModel(),story:`${storyInfo.title}. ${storyInfo.story}`,icon:'map',action:'read',loot:storyInfo.reward});
+    const cachePoint=offset(plan.landing,-1.25,-.55,plan.angle);
+    makeResource(world,island,{id:`${id}:story:cache`,type:'storyCache',name:'Keeper’s supply cache',point:cachePoint,mesh:treasureChest(.72),loot:{scrap:3,rope:2,copperIngot:1,lanternFish:1},story:'A dry locker, a folded chart, and a jar of something pickled. The keeper expected company.',icon:'backpack',action:'open'});
+    if(storyInfo.finale){
+      const lamp=new THREE.Group();
+      lamp.add(cylinder(.22,.3,1.5,0xb9b39a,0,.75,0),cylinder(.34,.34,.12,0x7c8a80,0,1.55,0,10));
+      const glow=sphere(.19,0xe9b557,0,1.75,0,10);glow.material=material(0xe9b557,{emissive:0xe9b557,emissiveIntensity:1.6});lamp.add(glow);
+      makeResource(world,island,{id:`${id}:story:keeper`,type:'finaleBeacon',name:'The cold lighthouse lamp',point:offset(plan.viewpoint,1.15,-.7,plan.angle),mesh:lamp,story:'The lamp is cold, but the mechanism is sound. A beacon built on this shore would carry farther than any signal yet.',icon:'beacon',action:'inspect'});
+    }
+  }
   bakeStatic(island.structures);return island;
 }
 

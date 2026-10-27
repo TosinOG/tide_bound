@@ -1,6 +1,8 @@
 # Tidebound Gold
 
-A single-player, browser-based Three.js ocean-survival adventure. Gather salvage, build a connected raft, stay fed and watered, explore procedural islands, and assemble a rescue beacon. Version **1.2.0**, save schema **2**, island generation **3**.
+A single-player, browser-based Three.js ocean-survival adventure. Gather salvage, build a connected raft, stay fed and watered, explore procedural islands, and assemble a rescue beacon. Version **1.3.0**, save schema **2**, island generation **3**.
+
+> **Voyager update (1.3):** See [`VOYAGER-UPDATE.md`](VOYAGER-UPDATE.md) for upgraded tools, 13 research branches, advanced stations, buff meals, three story shores with codes and a boss finale, achievements, difficulty presets, first-person and photo modes, and fixed mobile landscape controls. The original rescue route, Calm Seas mode and no-durability tools are unchanged.
 
 This upgrades Tosin’s Tidebound / the original Tidebreak project **in place**. It is the playable game, not a separate island demo. The vanilla ESM / Three.js / Vite architecture, old controls, rescue route, development scripts, and offline deployment remain. No new runtime dependencies were added.
 

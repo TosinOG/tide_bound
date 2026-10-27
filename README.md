@@ -1,6 +1,8 @@
 # Tidebound Gold
 
-A single-player, browser-based Three.js ocean-survival adventure. Gather salvage, build a connected raft, stay fed and watered, explore procedural islands, and assemble a rescue beacon. Version **1.2.0**, save schema **2**, island generation **3**.
+A single-player, browser-based Three.js ocean-survival adventure. Gather salvage, build a connected raft, stay fed and watered, explore procedural islands, and follow the keepers' coded route to the last light. Version **1.3.0** ("Voyager"), save schema **2**, island generation **3**.
+
+**New in 1.3:** upgraded tools, a 13-branch research tree, advanced stations (smelter, cooking pot, recycler, engine, crop plots, storage, paint mill, trading post, charting table), meals with real buffs, three authored story shores with four-digit codes and a boss finale, 23 Voyage Log achievements, difficulty presets, shareable world seeds, first-person view, photo mode, camera shake / hit-stop / floating numbers, layered audio, interactive first-steps guidance, cosmetic building and paint, and fixed touch controls in landscape.
 
 This upgrades Tosin’s Tidebound / the original Tidebreak project **in place**. It is the playable game, not a separate island demo. The vanilla ESM / Three.js / Vite architecture, original core controls, rescue route, development scripts, and offline deployment remain. The cinematic menu and C/touch shallow-dive controls are additive. No new runtime dependencies were added.
 
@@ -44,6 +46,11 @@ For a slower PC, start with **Low**, a **0.50–0.75 pixel-ratio limit**, and ad
 | J | Voyage journal and optional quests |
 | H | Hide/show HUD |
 | ? or F1 | Field guide |
+| **V** | Toggle first-person / third-person camera |
+| **P** | Photo mode (hide HUD); **F9** saves a PNG postcard |
+| **B** | Voyage Log (achievements) |
+| **Hold R + drag** | Smoothly rotate the build ghost; tap R for 90° |
+| Touch chart / V buttons | Ocean chart and camera view on any coarse-pointer screen, including landscape |
 | **F3** | Toggle hidden-by-default performance monitor |
 | + / −, Shift + wheel | Camera zoom |
 
@@ -137,6 +144,34 @@ Global menu/gameplay preferences live separately in `tidebound.settings.v1`; cha
 
 In-flight hook casts and fishing animations reset on reload. Ordinary procedural debris is reseeded; reclaimed bundles are saved, but abandoned bundles can still drift out of range and be lost to the sea. The death screen itself is not a checkpoint; the latest living save remains until revival is saved.
 
+## Voyager update (1.3)
+
+### Mobile / touch
+
+Touch controls no longer disappear when a phone is rotated. The old stylesheet only displayed `.mobile-controls` under `max-width:640px`, so a typical 844×390 landscape screen showed no joystick and no action pad. `Game.resize()` now marks coarse-pointer landscape with `body.touch-landscape`, and the stylesheet gives that mode its own layout: joystick left, action pad right, compact vitals, a centred quickbar, safe-area insets, and no overlapping side panels. The pad also includes chart and camera buttons, and holding the hook button charges a cast before release. Modals still hide the pad.
+
+### Progression that changes the verbs
+
+- **Tool tiers:** `scrapHook` and `chainHook` extend range, casting speed and haul size (up to three pieces per cast); `metalSpear` nearly doubles damage; `axe` speeds dismantling and gathers extra island timber.
+- **Research:** 13 branches. Keeper crates (a new floating debris type) drop discovery items: torn sea chart, brass gear, steam core, pigment, recipe book, recycler blueprint, brass hinge, palm seed. Each unlocks a real station and respects prerequisites.
+- **Stations:** `smelter` (copper → ingots), `cookingPot` (three buff meals), `recycler` (surplus → trade tokens), `tradingPost` (ten trades), `storageChest` (shared hold), `cropPlot` (grows coconuts/leaves every 90 s), `paintMill`, `engine` (five minutes of wind-independent sailing), `chartTable` (keeper codes).
+- **Building:** 8 cosmetic pieces (flag, lantern, hammock, planter, painted wall, rug, table, chair) and a `paintBrush` with eight colours. The build bar now has Raft / Workstations / Decorations tabs.
+- **Fishing:** bites still yield a raw fish, plus a weighted chance of mackerel, reef puffer or lantern fish for recipes.
+
+### Survival with choices
+
+`SurvivalStats` now supports food buffs (`stormShield`, `swiftSwim`, `spearMight`) and bounded difficulty rates. Three presets — Drifter, Castaway, Stormchaser — scale thirst/hunger drain, damage, salvage yield and shark patience. Meals add +hunger/+thirst plus an ability; buffs are saved and expire after 180 simulated seconds. Island razorvine patches, a crop-stealing gull and an armoured boss shark add variety without removing Calm Seas or the no-durability kindness.
+
+### A story with a destination
+
+Three fixed story chunks (Radio Reef, The Vasagatan, Lighthouse Key) are authored shorelines with a keeper figure, a four-digit code, a supply cache and lore. The starter cove's journal reveals the first code (4821). Build a charting table, enter codes, and the ocean chart sails you to the next shore. At the last light, interact with the cold lamp to summon a great shark; defeat it and the finale plays with credits, a Voyage Log summary and an optional endless voyage with escalating storms. The original three-fragment beacon rescue still works unchanged.
+
+### Feel, feedback and meta
+
+Camera shake and hit-stop on bites/lightning/landing, floating pickup and damage numbers, wake particles behind a moving raft, footsteps by surface, low-health heartbeat, weather-retuned ambient music, shark tension bed, distinct swing/thrust/chop/eat poses, first-person viewmodel with crosshair, photo mode with PNG export, a 3D objective beam for the interactive six-step tutorial, 23 saved achievements that each grant a trade token, shareable world seeds, difficulty presets, and post-finale endless mode.
+
+Everything new is data-driven in `src/data.js`, validated in `src/persistence.js`, and covered by `tests/voyager.test.js`. Old v1/v2 saves load with bounded defaults; no migration or re-grind is required.
+
 ## Develop and test
 
 Paths below refer to the extracted source folder.
@@ -155,7 +190,7 @@ npm run build                 # production web build in dist/
 npm run preview               # serve the production build
 npm run build:standalone      # Gold standalone + both identical legacy-name copies
 npx playwright install chromium
-npm test                      # 71 pure-system / world / quality / island / preference tests
+npm test                      # 80 pure-system / world / quality / island / Voyager tests
 npm run test:menu             # 21 current menu/save/lifecycle browser checks; dev server required
 npm run test:exploration      # 14 current shallow-dive/save/touch browser checks; dev server required
 npm run test:browser          # additional legacy end-to-end scripts; not part of the current 35-check result
@@ -169,7 +204,7 @@ node tests/island-views-profile.mjs       # actual Low on-shore rendering profil
 node tests/release-smoke.mjs              # local static web-build smoke
 ```
 
-Keep the dev server running in another terminal for browser tests and profiling. For the current menu/diving update, the verified set is `npm test`, `npm run build`, `npm run test:menu`, `npm run test:exploration`, and standalone packaging plus `tests/standalone.mjs`: **71/71 unit tests, 35/35 menu/exploration Chromium checks, and 2/2 offline standalone scenarios**. The older `test:browser` / `test:all` aggregates were not rerun and are not included in those counts. Machine-readable results are in `reports/gold2-menu-smoke.json` and `reports/gold2-exploration-smoke.json`; see `reports/GOLD-2-VERIFICATION.md` for scope and limitations.
+Keep the dev server running in another terminal for browser tests and profiling. For the current menu/diving update, the verified set is `npm test`, `npm run build`, `npm run test:menu`, `npm run test:exploration`, and standalone packaging plus `tests/standalone.mjs`: **80/80 unit tests (v1.3), 35/35 menu/exploration Chromium checks, and 2/2 offline standalone scenarios**. The older `test:browser` / `test:all` aggregates were not rerun and are not included in those counts. Machine-readable results are in `reports/gold2-menu-smoke.json` and `reports/gold2-exploration-smoke.json`; see `reports/GOLD-2-VERIFICATION.md` for scope and limitations.
 
 The tests use headless Chromium/SwiftShader because a hardware GPU is not available here. Some test scenarios deliberately advance timers/positions or dispatch focus/visibility events. Native WebGL loss/restoration, actual save/import reloads, real keyboard hold/tap input, original mouse gameplay, mobile layout, and offline/opaque-origin boot are also exercised. See the report for actual run outcomes, not just available scripts.
 
@@ -197,7 +232,7 @@ The tests use headless Chromium/SwiftShader because a hardware GPU is not availa
 
 ## Limits and licensing
 
-This is a playable procedural prototype, not a production survival release. It is single-player, has one active shark plus jellyfish, simplified collisions/boat motion, reusable procedural architectural/vegetation modules, and focused shallow reef diving rather than a free-roam deep-sea simulation. There is no multiplayer, manual world seed UI, or external service. A raft is limited to 2,000 structures and save/import payloads to 2 MB; world/journal history is also validated to finite bounds. Very large rafts/long histories and real low-end GPUs need further hardware testing. **GT710-class hardware has not been verified.** Low keeps nearby solid scenery and all interactions, with reduced foliage density, lower canopy/terrain LOD, no shadows and a pixel cap. In the software-renderer profile it draws fewer calls/triangles than 1.1, but measured FPS is lower; this is not claimed as a GPU speedup. Coral, submerged rocks and stranded wrecks remain scenery/hazards; only the finite reef caches use the new shallow-dive interaction. There is no oxygen system, deep-sea terrain, or separate underwater world. Context recovery depends on the browser; a persistently lost context may require reloading. Physical gamepads and Firefox/Safari have not been verified here.
+This is a playable procedural prototype, not a production survival release. It is single-player, has one active shark plus jellyfish, simplified collisions/boat motion, reusable procedural architectural/vegetation modules, and focused shallow reef diving rather than a free-roam deep-sea simulation. There is still no true multiplayer (single-player by design) and no external service; world seeds and difficulty are now configurable in Settings, and the Voyage Log is an asynchronous substitute for shared goals. A raft is limited to 2,000 structures and save/import payloads to 2 MB; world/journal history is also validated to finite bounds. Very large rafts/long histories and real low-end GPUs need further hardware testing. **GT710-class hardware has not been verified.** Low keeps nearby solid scenery and all interactions, with reduced foliage density, lower canopy/terrain LOD, no shadows and a pixel cap. In the software-renderer profile it draws fewer calls/triangles than 1.1, but measured FPS is lower; this is not claimed as a GPU speedup. Coral, submerged rocks and stranded wrecks remain scenery/hazards; only the finite reef caches use the new shallow-dive interaction. There is no oxygen system, deep-sea terrain, or separate underwater world. Context recovery depends on the browser; a persistently lost context may require reloading. Physical gamepads and Firefox/Safari have not been verified here.
 
 Source is MIT licensed. Original attribution is retained in `LICENSE.txt`; font and Three.js redistribution notices are in `public/licenses/` and embedded in standalone HTML. Bundled fonts and original third-party notices were not replaced.
 

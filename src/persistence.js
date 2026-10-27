@@ -1,5 +1,5 @@
 // Pure save boundary: whitelist, validate, migrate, then (and only then) write storage.
-import { META, ITEMS, BLOCKS, RESEARCH, RECIPES, QUESTS, QUICKBAR, WEATHER } from './data.js';
+import { META, ITEMS, BLOCKS, RESEARCH, RECIPES, QUESTS, QUICKBAR, WEATHER, BUFFS, DIFFICULTIES, ACHIEVEMENTS, STORY_ISLANDS, TUTORIAL_STEPS, PALETTE, BIOMES } from './data.js';
 import { EventBus, GridManager, gridKey } from './systems.js';
 
 import {validExplorationProgress} from './exploration.js';
@@ -23,7 +23,7 @@ const text=(v,name,max=2000)=>{if(typeof v!=='string'||v.length>max)fail(`Invali
 const array=(v,name,max=20000)=>{if(!Array.isArray(v)||v.length>max)fail(`Invalid ${name}.`);return v;};
 const vector=(v,name,limit=1e7)=>{array(v,name,3);if(v.length!==3)fail(`Invalid ${name}.`);return v.map(n=>number(n,name,-limit,limit));};
 const islandId=/^-?\d{1,7},-?\d{1,7}$/;
-const collectedId=/^-?\d{1,7},-?\d{1,7}:(cache|resource\d{1,3}|special|poi:(spring|wreck|observatory)|explore:(journal|treasure|reef|rune[0-2]))$/;
+const collectedId=/^-?\d{1,7},-?\d{1,7}:(cache|resource\d{1,3}|special|poi:(spring|wreck|observatory)|explore:(journal|treasure|reef|rune[0-2]|lantern|ruin)|story:(code|journal|cache|keeper|lantern))$/;
 const cellId=/^-?\d{1,2},[0-8],-?\d{1,2}$/;
 const unique=(v,name,valid,max)=>{const a=array(v,name,max);if(a.some(id=>typeof id!=='string'||!valid(id))||new Set(a).size!==a.length)fail(`Invalid ${name}.`);return [...a];};
 
@@ -51,11 +51,15 @@ function settings(input={}) {
   boolean(input.relaxed??false,'calm seas setting');
   boolean(input.dynamicWeather??true,'dynamic weather');
   boolean(input.showHints??true,'hint setting');
+  if(input.difficulty!==undefined&&!own(DIFFICULTIES,input.difficulty))fail('Unknown difficulty preset.');
+  boolean(input.firstPerson??false,'first person setting');
+  boolean(input.interactiveGuide??true,'interactive guide setting');
+  if(input.worldSeed!==undefined)integer(input.worldSeed,'world seed',0,999999);
   return normalizePreferences(input);
 }
 function progress(input) {
   object(input,'progress');const p={};
-  for(const id of ['salvaged','built','crafted','water','islands','caches','poi','secrets','journals','puzzles','sharks','reefs'])p[id]=integer(input[id]??0,`${id} progress`);
+  for(const id of ['salvaged','built','crafted','water','islands','caches','poi','secrets','journals','puzzles','sharks','reefs','cooked','courses','trades','painted','upgrades','codes','finale','endless'])p[id]=integer(input[id]??0,`${id} progress`);
   p.rescued=boolean(input.rescued??false,'rescue progress');return p;
 }
 export function reservedRecipe(job) {
@@ -81,18 +85,19 @@ export function normalizeSave(input) {
   if(raw.version!==1&&raw.version!==META.saveVersion)fail(raw.version>META.saveVersion?'This save is from a newer version. Your current voyage was not changed.':'Unsupported save version. Your current voyage was not changed.');
   const legacy=raw.version===1;
   const s={version:META.saveVersion,game:'tosins-tidebound',savedAt:number(raw.savedAt??0,'save date',0,1e15),simTime:number(raw.simTime??0,'simulation time',0,1e12),inventory:validateInventory(raw.inventory)};
-  const stats=object(raw.stats,'survival statistics');s.stats={health:number(stats.health,'health',Number.MIN_VALUE,100),hunger:number(stats.hunger,'hunger',0,100),thirst:number(stats.thirst,'thirst',0,100),stung:number(stats.stung??0,'sting timer',0,10),alive:true};
+  const stats=object(raw.stats,'survival statistics');s.stats={health:number(stats.health,'health',Number.MIN_VALUE,100),hunger:number(stats.hunger,'hunger',0,100),thirst:number(stats.thirst,'thirst',0,100),stung:number(stats.stung??0,'sting timer',0,10),alive:true,buffs:{}};
+  for(const [id,seconds] of Object.entries(object(stats.buffs??{},'active meal buffs'))){if(!own(BUFFS,id))fail('Unknown meal buff.');s.stats.buffs[id]=number(seconds,`${id} buff`,0,BUFFS[id].seconds);}
   if(stats.alive!==undefined&&stats.alive!==true)fail('This save has no living player.');
   s.blocks=array(raw.blocks,'raft structures',2000).map(b=>{
     object(b,'structure');if(!own(BLOCKS,b.type))fail('Unknown structure type.');
-    const out={type:b.type,x:integer(b.x,'grid X',-35,35),y:integer(b.y,'grid height',0,8),z:integer(b.z,'grid Z',-35,35),hp:number(b.hp,'structure health',Number.MIN_VALUE,BLOCKS[b.type].hp),core:boolean(b.core??false,'core marker'),rotation:integer(b.rotation??0,'structure rotation',0,3),production:number(b.production??0,'production timer',0,35)};
+    const out={type:b.type,x:integer(b.x,'grid X',-35,35),y:integer(b.y,'grid height',0,8),z:integer(b.z,'grid Z',-35,35),hp:number(b.hp,'structure health',Number.MIN_VALUE,BLOCKS[b.type].hp),core:boolean(b.core??false,'core marker'),rotation:integer(b.rotation??0,'structure rotation',0,3),production:number(b.production??0,'production timer',0,35),paint:b.paint===null||b.paint===undefined?null:integer(b.paint,'structure paint',0,PALETTE.length-1)};
     if(out.core&&(out.type!=='foundation'||out.y!==0||![0,1].includes(out.x)||![0,1].includes(out.z)))fail('Invalid core foundation.');
     if(BLOCKS[out.type].buoyant&&out.y!==0)fail('A floating foundation must be at sea level.');
     return out;
   });
   if(!s.blocks.length||!s.blocks.some(b=>b.core))fail('A raft needs at least one original core foundation.');
   const grid=new GridManager(new EventBus());
-  for(const b of s.blocks) {if(grid.at(b.x,b.y,b.z))fail('Two structures occupy the same grid cell.');grid.add(b.type,b.x,b.y,b.z,b.core,b.hp,{rotation:b.rotation,production:b.production});}
+  for(const b of s.blocks) {if(grid.at(b.x,b.y,b.z))fail('Two structures occupy the same grid cell.');grid.add(b.type,b.x,b.y,b.z,b.core,b.hp,{rotation:b.rotation,production:b.production,paint:b.paint});}
   const supported=grid.connectedKeys();
   if(supported.size!==s.blocks.length) {
     // V1 used undirected adjacency, so a legitimate old raft could leave a station
@@ -140,17 +145,35 @@ export function normalizeSave(input) {
   const busy=new Set();for(const j of [s.crafting,...s.stationJobs].filter(Boolean)){if(busy.has(j.stationKey))fail('A workstation has duplicate reservations.');busy.add(j.stationKey);}
   s.fires=legacy?[]:array(raw.fires??[],'fires',2000).map(f=>{object(f,'fire');if(!cellId.test(f.key)||!blockMap.has(f.key)||!BLOCKS[blockMap.get(f.key).type].wooden)fail('A fire is missing its wooden structure.');return {key:f.key,timer:number(f.timer,'fire timer',0,60)};});
   if(new Set(s.fires.map(f=>f.key)).size!==s.fires.length)fail('Duplicate fires.');
-  s.salvage=legacy?[]:array(raw.salvage??[],'reclaimed salvage',2000).map(d=>{object(d,'salvage');if(!['wood','leaf','plastic','scrap','barrel'].includes(d.type))fail('Unknown salvage type.');return {type:d.type,x:number(d.x,'salvage X'),z:number(d.z,'salvage Z'),loot:validateInventory(d.loot)};});
+  s.salvage=legacy?[]:array(raw.salvage??[],'reclaimed salvage',2000).map(d=>{object(d,'salvage');if(!['wood','leaf','plastic','scrap','barrel','crate'].includes(d.type))fail('Unknown salvage type.');return {type:d.type,x:number(d.x,'salvage X'),z:number(d.z,'salvage Z'),loot:validateInventory(d.loot)};});
   const completed=legacy?QUESTS.filter(q=>(q.research?s.research.includes(q.research)?1:0:Number(s.progress[q.counter]||0))>=q.target).map(q=>q.id):(raw.quests?.completed??[]);
   s.quests={completed:unique(completed,'quest completions',id=>QUESTS.some(q=>q.id===id),100)};
   s.shark=null;
   if(!legacy&&raw.shark) {
     const a=object(raw.shark,'shark state');if(!['circling','targeting','attacking','fleeing','stunned','defeated'].includes(a.state))fail('Unknown shark behavior.');
     const targetKey=a.targetKey??null;if(targetKey!==null&&!blockMap.has(targetKey))fail('The shark targets a missing structure.');
-    s.shark={state:a.state,position:vector(a.position,'shark position'),health:number(a.health,'shark health',0,100),timer:number(a.timer,'shark timer',0,10000),angle:number(a.angle,'shark angle',-1e9,1e9),attackCooldown:number(a.attackCooldown,'shark cooldown',0,600),biteCooldown:number(a.biteCooldown,'swim bite cooldown',0,10),targetKey};
+    s.shark={state:a.state,position:vector(a.position,'shark position'),health:number(a.health,'shark health',0,300),timer:number(a.timer,'shark timer',0,10000),angle:number(a.angle,'shark angle',-1e9,1e9),attackCooldown:number(a.attackCooldown,'shark cooldown',0,600),biteCooldown:number(a.biteCooldown,'swim bite cooldown',0,10),targetKey,boss:boolean(a.boss??false,'boss shark'),armored:boolean(a.armored??false,'armored shark')};
     if(['targeting','attacking'].includes(a.state)&&targetKey===null)fail('The shark is missing its target.');
     if((a.state==='defeated')!==(a.health<=0))fail('Inconsistent shark health.');
   }
+  // Voyager update state. Every field has a bounded default so older v2 saves load unchanged.
+  const v=object(raw.voyage??{},'voyage state');
+  if(v.difficulty!==undefined&&!own(DIFFICULTIES,v.difficulty))fail('Unknown difficulty preset.');
+  const codes=unique(v.codes??[],'keeper codes',id=>typeof id==='string'&&STORY_ISLANDS.some(i=>i.code===id),3);
+  const storyVisited=unique(v.storyVisited??[],'visited story shores',id=>typeof id==='string'&&STORY_ISLANDS.some(i=>i.id===id),3);
+  s.voyage={
+    achievements:unique(v.achievements??[],'voyage log',id=>ACHIEVEMENTS.some(a=>a.id===id),ACHIEVEMENTS.length),
+    tutorial:{step:integer(v.tutorial?.step??0,'tutorial step',0,TUTORIAL_STEPS.length),done:boolean(v.tutorial?.done??false,'tutorial completion')},
+    codes,storyVisited,
+    difficulty:v.difficulty??'castaway',
+    worldSeed:integer(v.worldSeed??0,'world seed',0,999999),
+    endless:boolean(v.endless??false,'endless voyage'),
+    bossDefeated:boolean(v.bossDefeated??false,'finale boss'),
+    engineFuel:number(v.engineFuel??0,'engine fuel',0,600),
+    paintCharges:integer(v.paintCharges??0,'paint charges',0,999),
+    storage:validateInventory(v.storage??{}),
+    biomesSeen:unique(v.biomesSeen??[],'biomes seen',id=>BIOMES.some(b=>b.id===id),BIOMES.length),
+  };
   return s;
 }
 

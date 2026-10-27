@@ -28,3 +28,122 @@
 /* Gold island-expedition edition; the original layout and controls are unchanged. */
 .gold-edition{display:inline-block;vertical-align:middle;margin-left:7px;padding:4px 5px 3px;border:1px solid #c8ac76b0;border-radius:2px;color:#a68148;font:8px/1 var(--mono);letter-spacing:1.3px}.journey-totals{row-gap:18px}
 @media(max-width:640px){.gold-edition{font-size:6px;padding:3px;margin-left:4px;letter-spacing:.5px}}
+
+/* =====================================================================
+   Voyager update — feedback, new panels, first-person and mobile landscape
+   ===================================================================== */
+.float-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:38}
+.float-number{position:absolute;transform:translate(-50%,-50%);font:700 15px var(--mono);letter-spacing:.5px;color:#f4e7c2;text-shadow:0 2px 8px #103b40cc,0 0 2px #103b40;animation:floatUp 1.15s ease-out forwards;white-space:nowrap}
+.float-number.gain{color:#d9edb7}.float-number.hurt{color:#f3b1a0}.float-number.buff{color:#e7cf8c}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,0) scale(.85)}18%{opacity:1;transform:translate(-50%,-12px) scale(1.05)}100%{opacity:0;transform:translate(-50%,-72px) scale(.95)}}
+.crosshair{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border:1px solid #f5ecd299;border-radius:50%;display:none;pointer-events:none;z-index:36;box-shadow:0 0 0 1px #1d444880}
+.crosshair:before,.crosshair:after{content:'';position:absolute;background:#f5ecd2cc}.crosshair:before{left:6px;top:-5px;width:1px;height:5px}.crosshair:after{left:-5px;top:6px;width:5px;height:1px}
+body.first-person .crosshair{display:block}
+.buff-strip{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);display:flex;gap:8px;z-index:33;pointer-events:none}
+.buff-chip{display:flex;align-items:center;gap:6px;background:#204b4ecc;border:1px solid #e7d7a555;color:#f4ecd4;border-radius:20px;padding:5px 10px;font:600 9px var(--mono);letter-spacing:.7px;backdrop-filter:blur(6px)}
+.buff-chip b{color:#e7c67e;font-weight:700}
+.guide-card{position:absolute;left:24px;bottom:150px;width:250px;background:#f5efdce8;border:1px solid #244c4c33;border-radius:4px;padding:16px 17px 14px;color:#244c4c;box-shadow:0 14px 34px #123c3c33;z-index:35;backdrop-filter:blur(8px)}
+.guide-card .guide-eyebrow{font:600 6px var(--mono);letter-spacing:1.5px;color:#8a7445;display:block;margin-bottom:9px}
+.guide-card strong{display:block;font:500 21px/1.15 var(--serif);letter-spacing:-.3px;margin-bottom:7px}
+.guide-card p{font:400 9px/1.7 var(--sans);margin:0 0 11px;color:#4a5d57}
+.guide-steps{display:flex;gap:5px;margin-bottom:8px}.guide-steps i{width:14px;height:3px;background:#b9b098;border-radius:2px}.guide-steps i.done{background:#7ba58b}.guide-steps i.active{background:#d9a75f}
+.guide-card small{display:block;font:600 6px var(--mono);letter-spacing:1px;color:#8a7445;margin-bottom:8px}
+.guide-skip{background:none;border:0;font:600 6px var(--mono);letter-spacing:1px;color:#6f8179;cursor:pointer;text-decoration:underline;padding:0}
+.photo-hint{position:absolute;left:50%;top:24px;transform:translateX(-50%);z-index:60;background:#173f43d9;color:#f4ecd4;border:1px solid #e7d7a566;border-radius:3px;padding:8px 14px;font:600 8px var(--mono);letter-spacing:1.6px}
+.photo-hint i{color:#e7c67e;font-style:normal;margin:0 5px}
+body.photo-mode .game-header,body.photo-mode .vitals-panel,body.photo-mode .resources-panel,body.photo-mode .navigation-panel,body.photo-mode .quest-panel,body.photo-mode .quickbar-dock,body.photo-mode .bottom-right,body.photo-mode .bottom-left,body.photo-mode .toasts,body.photo-mode .guide-card,body.photo-mode .buff-strip,body.photo-mode .action-prompt,body.photo-mode .mobile-controls{opacity:0!important;pointer-events:none!important}
+/* Build bar with categories */
+.build-categories{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.build-cat{background:#204b4e9c;border:1px solid #d9d0ad55;color:#e9e2c9;border-radius:3px;padding:4px 9px;font:600 7px var(--mono);letter-spacing:.9px;cursor:pointer}
+.build-cat.active{background:#e7c67e;color:#244c4c;border-color:#e7c67e}
+.build-rotate-hint{margin-left:auto;font:600 6px var(--mono);letter-spacing:1px;color:#d9d0ad99}
+.build-options{display:flex;gap:6px;overflow-x:auto;max-width:min(78vw,900px);padding-bottom:4px;scrollbar-width:thin}
+.build-options .build-option{flex:0 0 auto}
+/* New modal panels */
+.voyage-log,.cookbook,.chart-codes{padding:22px 26px 26px;max-height:70dvh;overflow-y:auto}
+.log-intro h3,.cookbook-intro,.chart-codes p{font:400 13px/1.7 var(--sans);color:#4b5d57;margin:8px 0 18px}
+.log-intro .panel-eyebrow,.cookbook .panel-eyebrow{font:600 6px var(--mono);letter-spacing:1.5px;color:#a3864f}
+.log-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px}
+.log-card{display:flex;gap:11px;align-items:center;background:#f4efdf;border:1px solid #244c4c22;border-radius:4px;padding:12px;opacity:.55}
+.log-card.earned{opacity:1;border-color:#b9a76a77;background:#fbf6e6}
+.log-icon{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;background:#e6e0c9;border-radius:50%;color:#5c6f66}
+.log-card.earned .log-icon{background:#e7c67e;color:#244c4c}
+.log-card h4{font:500 14px var(--serif);margin:0 0 3px;color:#244c4c}
+.log-card p{font:400 8px/1.5 var(--sans);margin:0;color:#69786f}
+.log-card strong{margin-left:auto;color:#7ba58b;font-size:15px}
+.cookbook-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.cookbook-card,.trade-card,.code-card{background:#f7f2e2;border:1px solid #244c4c22;border-radius:4px;padding:16px;text-align:center;color:#244c4c}
+.cookbook-card.selected{border-color:#d9a75f;box-shadow:0 0 0 2px #d9a75f33}
+.cookbook-card.locked{opacity:.55}
+.cookbook-art{display:block;color:#b78351;margin-bottom:8px}
+.cookbook-card h3,.trade-card h3,.code-card h3{font:500 19px var(--serif);margin:5px 0 6px}
+.cookbook-card p,.trade-card p,.code-card p{font:400 9px/1.6 var(--sans);color:#5c6f66;margin:0 0 12px}
+.cookbook-card .ingredients{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-bottom:12px}
+.cookbook-card .ingredient{font:600 7px var(--mono);letter-spacing:.4px;background:#e9e2c9;border-radius:20px;padding:4px 7px;display:flex;align-items:center;gap:4px;color:#4b5d57}
+.cookbook-card .ingredient.missing{background:#f0cfc6;color:#a0503c}
+.code-entry{display:flex;gap:10px;align-items:center;margin-bottom:18px}
+.code-entry input{flex:1;background:#f4efdf;border:1px solid #244c4c44;border-radius:3px;padding:11px 13px;font:600 14px var(--mono);letter-spacing:5px;color:#244c4c;text-align:center}
+.code-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px}
+.code-card.known{border-color:#b9a76a}
+.trade-grid,.storage-grid{padding:22px 26px;max-height:70dvh;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.trade-art{display:block;color:#a3864f;margin-bottom:6px}
+.storage-row{display:flex;align-items:center;gap:10px;background:#f7f2e2;border:1px solid #244c4c22;border-radius:4px;padding:10px 12px;color:#244c4c}
+.storage-icon{width:30px;height:30px;display:grid;place-items:center}
+.storage-row div{flex:1;min-width:0}.storage-row strong{display:block;font:500 14px var(--serif)}
+.storage-row small{font:600 6px var(--mono);letter-spacing:.8px;color:#7b8a80}
+.storage-row small i{color:#c3ae7c;margin:0 4px;font-style:normal}
+.button.small{padding:7px 9px;font:600 7px var(--mono);letter-spacing:.8px;min-height:0}
+.seed-row{display:flex;gap:6px;align-items:center}
+.seed-row input{width:86px;background:#f4efdf;border:1px solid #244c4c44;border-radius:3px;padding:8px;font:600 11px var(--mono);color:#244c4c;text-align:center}
+.settings-shortcuts{display:flex;gap:8px;margin:14px 0}
+.settings-shortcuts .button{flex:1}
+.journal-log-link{padding:0 20px 18px}
+.victory-numbers{grid-template-columns:repeat(4,1fr)}
+/* Touch buttons */
+.small-touch{width:34px;height:34px;font-size:9px;opacity:.9}
+/* ---------------------------------------------------------------------
+   Mobile landscape: keep the joystick and action pad visible and usable.
+   The original build only displayed .mobile-controls under max-width:640px,
+   so a phone rotated to 844x390 lost every touch control. This fixes it.
+   --------------------------------------------------------------------- */
+@media (pointer:coarse) and (orientation:landscape){.mobile-controls{display:block}}
+body.touch-landscape .mobile-controls{display:block!important}
+body.touch-landscape.menu-open .mobile-controls{display:none!important}
+body.touch-landscape .joystick{bottom:calc(74px + env(safe-area-inset-bottom));left:calc(20px + env(safe-area-inset-left));width:88px;height:88px}
+body.touch-landscape .joystick>span{width:36px;height:36px}
+body.touch-landscape .mobile-actions{bottom:calc(78px + env(safe-area-inset-bottom));right:calc(18px + env(safe-area-inset-right));gap:7px}
+body.touch-landscape .touch-action{width:38px;height:38px;font-size:12px}
+body.touch-landscape .main-touch{width:54px;height:54px}
+body.touch-landscape .main-touch>.icon{width:28px;height:28px}
+body.touch-landscape .quickbar-dock{bottom:8px;width:auto;max-width:min(50vw,430px);left:50%;right:auto;transform:translateX(-50%)}
+body.touch-landscape .quickbar{gap:2px;padding:3px}
+body.touch-landscape .quick-slot{width:clamp(30px,5.4vw,46px);height:38px}
+body.touch-landscape .quick-slot .slot-icon>.icon{width:20px;height:20px}
+body.touch-landscape .equipped-label{margin-bottom:3px;font-size:5px}
+body.touch-landscape .quickbar-hint{display:none}
+body.touch-landscape .bottom-right,body.touch-landscape .bottom-left,body.touch-landscape .quest-panel,body.touch-landscape .resources-panel,body.touch-landscape .navigation-panel,body.touch-landscape .movement-hints{display:none!important}
+body.touch-landscape .vitals-panel{left:calc(14px + env(safe-area-inset-left));top:12px;width:120px;padding:8px 9px 4px}
+body.touch-landscape .vital{margin-bottom:5px;padding-top:0}
+body.touch-landscape .vital-icon,body.touch-landscape .vitals-panel>.panel-eyebrow,body.touch-landscape .vitals-status{display:none}
+body.touch-landscape .vital-label{font-size:7px;margin-bottom:3px}
+body.touch-landscape .vital-label strong{font-size:7px}
+body.touch-landscape .vital-label em{display:none}
+body.touch-landscape .welcome-card{left:calc(14px + env(safe-area-inset-left));bottom:calc(148px + env(safe-area-inset-bottom));width:230px;padding:12px 14px 10px}
+body.touch-landscape .welcome-card h1{font-size:26px;margin:6px 0}
+body.touch-landscape .welcome-card>p{font-size:8px;margin:7px 0 9px}
+body.touch-landscape .welcome-coordinate{display:none}
+body.touch-landscape .toasts,body.touch-landscape.voyage-started .toasts{bottom:calc(140px + env(safe-area-inset-bottom));right:calc(18px + env(safe-area-inset-right));max-width:min(40vw,300px)}
+body.touch-landscape .toast{font-size:8px;padding:7px 9px}
+body.touch-landscape .action-prompt{bottom:calc(126px + env(safe-area-inset-bottom));font-size:6px;max-width:46vw}
+body.touch-landscape .interaction-prompt{bottom:calc(154px + env(safe-area-inset-bottom));max-width:44vw;font-size:8px}
+body.touch-landscape .build-bar{bottom:calc(140px + env(safe-area-inset-bottom));max-width:min(54vw,620px);left:50%;transform:translateX(-50%)}
+body.touch-landscape .build-options{max-width:52vw}
+body.touch-landscape .buff-strip{bottom:calc(110px + env(safe-area-inset-bottom))}
+body.touch-landscape .guide-card{left:calc(14px + env(safe-area-inset-left));bottom:calc(180px + env(safe-area-inset-bottom));width:210px;padding:10px 12px}
+body.touch-landscape .guide-card strong{font-size:16px}
+body.touch-landscape .guide-card p{font-size:8px}
+body.touch-landscape #hud{overflow:hidden}
+@media (max-width:1100px){.guide-card{width:216px}.buff-strip{bottom:104px}}
+:root{--sans:'Outfit',Arial,sans-serif}
+.build-bar{flex-direction:column;align-items:stretch;max-width:min(78vw,880px)}
+.build-bar .build-options{max-width:100%}

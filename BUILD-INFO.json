@@ -1,42 +1,49 @@
 {
   "title": "Tidebound Gold",
-  "version": "1.2.0",
-  "releaseDate": "2026-10-22",
+  "version": "1.3.0",
+  "releaseDate": "2026-10-27",
   "saveSchema": 2,
   "islandGeneration": 3,
   "dependenciesAdded": [],
   "deployment": "Not performed; remains paused",
   "verification": {
-    "units": 68,
+    "units": 80,
     "browserGroups": 57,
     "offlineChecks": 2,
     "additionalSeedLayouts": 360,
     "staticProductionSmokeChecks": 5,
-    "hardwareGPU": "Not available; GT710 frame-rate claims are not verified"
+    "hardwareGPU": "Not available; GT710 frame-rate claims are not verified",
+    "browserRerun": "Not rerun: Chromium download blocked in this sandbox. A jsdom + WebGL-stub harness instantiated the game, exercised all new modals/systems, story shores, boss finale, save/reload and landscape resize with zero runtime errors.",
+    "domHarnessScenarios": 3
   },
   "standalone": {
-    "bytes": 1414530,
-    "sha256": "17381d78a8c11e5a9484c52d87238b8b011eaf3b3791629e0375a7a355623402"
+    "bytes": 1567440,
+    "sha256": "15993a256b55205227bb9ffea292d18f54275c0d63dfdcb646ca60861da29170"
   },
   "sourceSha256": {
-    "src/assets.js": "5c098447af3a8aa0132ec14e1cce84e7ad200f9e91444583e1f8c4178ef099da",
-    "src/audio.js": "d0a44dd84e2392bb4c88ad736f63c7e5b3f6ae51e872f9fdd1b34f923a052d22",
+    "src/assets.js": "c5018bca27a6e7c1ba2c810eb3e7a25a09ed4ee03e90c568b55068295d248b9c",
+    "src/audio.js": "778206b8f3351430e0067dbb1e4e0882e99ee87c6b874c9d953211d215af1872",
     "src/coastal-navigation.js": "9349ecd3afc71f50786503b8e596224af91b8f1bdb136ba684ee740dd47156c6",
-    "src/data.js": "4b8c5c55a30e04ae474bb630aca27698963c744af0348ee14cf23bae7dc8a723",
+    "src/config.js": "4b2d6ef25ccb0c2f3338e1770a456ceb74d7b0114afe136ba9b240764012c48d",
+    "src/data.js": "5bf0ea5db5f146d20c9e2ab23965ffcfc26c408b148a15eef7ed9278e8e816d5",
+    "src/exploration.css": "b320dde1c1a5dae17c1d76da6c0f8d008dee36de1337c843caf14316a790f9cd",
     "src/exploration.js": "f1f1a3d0b8cdb2364c0ad45026ad3b3d868850fa1083183f52cf273f6200af67",
-    "src/game.js": "dad763a947a2dd848e3efb81fbe689fb79ff6b5ece2e5ee3e9195f57265219d3",
+    "src/game.js": "1151bb9396049aa2e45f29d3a2048b5193bb74afcb9c2b5d95cedcc8fd33bf1b",
     "src/icons.js": "a807dbd50342f183dd1013e92ba6e215bec4efa315c4b285f472ad2e8d87c8ef",
     "src/island-assets.js": "b9bbb623a43af5997340fc65cc890986964e8cce5d901feb208ac4f15c3569dc",
-    "src/island-generation.js": "376680761cc884d3d2ce991146c82d8793c4aa828da7e09161b18e0531e8a7d0",
+    "src/island-generation.js": "249876798e4f81c6f035e04ea4594a265b0a0ad70dbcfa495995ea9b54b0fa35",
     "src/island-terrain.js": "76ad1412a20a34b0176aa166558b7c4db8cd6c9f1f44b2ef51e836cec66ca9ff",
-    "src/main.js": "492e6e5170c3f3115c5b6a498e6efe33ef6da49d8d3803839b5f69c7140c282d",
+    "src/main.js": "36b1e54019ccdc1741375f9f22bf05bdc6ef6616bd896a74a61a58a8cf5f32b7",
+    "src/menu-scene.js": "d5c76325c892d05369b7f17da9d68c6e73ca3fe8ec4dc5165b220176b406172e",
+    "src/menu.css": "d35061edd0497b2b8972c6c978fe609c996396273327fce681bb1831d582de40",
+    "src/menu.js": "2e8a12a0da32e56bb2c7f1028c9c7d6a511d464dda5aeccc6603794e1413c91f",
     "src/performance.js": "c1f39d1844f8dddada478e452d160b53e3c31c02c47d2a5152808180b44bf380",
-    "src/persistence.js": "d8539df0cccbb6c574b4e9fad20a616cb1042d518b11c19949d410865dc428ed",
-    "src/progression.js": "4530443a267d7353589a870f63e5584cd8f02d59d9f0e3a2d4cbd7ee57bd21e6",
-    "src/style.css": "86d7b5547636f752846a1aa4546b7694aeb1fdf6ac6895a18a764d859affbcbc",
-    "src/systems.js": "122c6ef64ba48ef2cb7901cac7991e5049dc4e244bdaa0d95d846ca0de24c6fd",
-    "src/ui.js": "4dcff184996878cce9ed8863d6674728edeeef06ad5a61c1c63acc2d652e9bbc",
-    "src/world.js": "5340adfb1b1c8d1841355319c2ea272d65e6c7ad9b44683a3919b2c4d6919a61"
+    "src/persistence.js": "6d01a3eeb24876e7957f906cdb38fbf3a8338018b0203b0666192bc00f10e8f8",
+    "src/progression.js": "59832f8683b429acc1e7a52e1bfbc8932d06c46f52bf5698e08330e1240c980a",
+    "src/style.css": "4fc67c7dcd59d0247a4e386b8a459761e527a2a899a3f3940e555b8a438c5353",
+    "src/systems.js": "e22fc6a82a7b8c190b837d56995741c523ea91268d5427f60beca27a7171b221",
+    "src/ui.js": "62e09d8457c74b6687ae03f049506672e9d7a22ba10c370105e8fab48bb21a8c",
+    "src/world.js": "cd837ad732826f0e06c2f03d911ce3a6003ec8fdfd944771e7c1d1cc52bcbff2"
   },
   "productionAssets": {
     "assets/index-Bclfw-U9.css": "8a439af2df16ac5ee8f6385bf344450ff277172301303b0d60ff98814ff5c841",
@@ -55,5 +62,7 @@
     "licenses/fraunces-OFL.txt": "bdf4c22802eaf804f998195871c6b8938aac2ac14b2d78a8bd66a6f1eced833b",
     "licenses/outfit-OFL.txt": "c676351bf8576b9aba743cd5eaa8c0e7ee0d51f805d720447b4df4ddb6a2e416",
     "licenses/three-MIT.txt": "4c40a1ef62450b857c3b2aaf294936304cd552d965fbcd9d32d4c5bcf4ba4454"
-  }
+  },
+  "codename": "Voyager",
+  "changelog": "VOYAGER-UPDATE.md"
 }

@@ -115,6 +115,92 @@ function buildBlock(type){
     for(const y of [.8,1.25,1.8])g.add(beam([-.45,y,0],[.45,y,0],.018,0x80968d));
     const glow=sphere(.09,0xe9b557,0,2.6,0);glow.material=material(0xe9b557,{emissive:0xe9b557,emissiveIntensity:2});g.add(glow);
   }
+  // --- Voyager update: advanced stations and decorations ---
+  if(type==='chartTable'){
+    for(const [x,z] of [[-.36,-.26],[.36,-.26],[-.36,.26],[.36,.26]])g.add(box(.09,.55,.09,0x8e6542,x,.27,z));
+    g.add(box(.94,.09,.7,0xc79b6b,0,.58,0));
+    const map=box(.7,.012,.48,0xe7dcb6,0,.635,0);map.rotation.y=.12;g.add(map);
+    g.add(cylinder(.075,.075,.03,0x9c7f4e,-.24,.66,.13,10),cylinder(.055,.055,.02,0x6f8f8b,.26,.655,-.1,10));
+    g.add(beam([-.2,.66,.16],[.2,.66,-.16],.006,0x9a6a4c));
+  }
+  if(type==='smelter'){
+    g.add(box(.8,.5,.72,0x6b716c,0,.26,0),box(.84,.1,.76,0x505a57,0,.55,0));
+    g.add(cylinder(.17,.21,.5,0x59635e,0,.82,-.06,10));
+    const coals=box(.42,.04,.34,0xd9773f,0,.19,.19);g.add(coals);
+    g.add(box(.46,.26,.05,0x3d4643,0,.27,.375),cylinder(.035,.035,.24,0xa49a7c,.28,.72,.2,8));
+  }
+  if(type==='cookingPot'){
+    for(const [x,z] of [[-.25,-.2],[.25,-.2],[0,.26]])g.add(beam([x,0,z],[x*.7,.46,z*.7],.028,0x655f52));
+    g.add(cylinder(.35,.28,.34,0x4e5a56,0,.6,0,14),cylinder(.33,.33,.025,0xd9a45f,0,.77,0,14));
+    g.add(sphere(.075,0xe3dcc0,-.06,.88,0,8),sphere(.06,0xe3dcc0,.09,.94,.04,8));
+    g.add(beam([-.42,.62,0],[.42,.62,0],.02,0x8a8069));
+  }
+  if(type==='cropPlot'){
+    g.add(box(.96,.22,.96,0x8a6a45,0,.11,0),box(.82,.035,.82,0x5a4b34,0,.23,0));
+    for(const [x,z] of [[-.24,-.18],[.2,-.2],[-.1,.22],[.26,.2]])g.add(box(.05,.28,.05,0x6f9a58,x,.4,z),sphere(.12,0x7fb268,x,.56,z,6));
+  }
+  if(type==='recycler'){
+    g.add(box(.86,.42,.72,0x667a73,0,.21,0),box(.9,.12,.76,0x4a5a55,0,.48,0));
+    g.add(box(.5,.12,.4,0xa9b6a7,0,.58,0),cylinder(.045,.045,.6,0x8e7c56,.34,.72,0,8));
+    g.add(beam([.34,1.0,0],[.34,.72,-.3],.025,0xb9ae8c),sphere(.07,0xd9c485,.34,.72,-.3,8));
+    g.add(box(.3,.16,.03,0xd9b96e,0,.28,.37));
+  }
+  if(type==='storageChest'){
+    g.add(box(.9,.5,.66,0xa07a4c,0,.25,0),box(.94,.1,.7,0x7d5c39,0,.53,0));
+    g.add(box(.96,.05,.7,0x6d5234,0,.06,0),box(.14,.14,.05,0xd6b871,0,.3,.35));
+    for(const x of [-.4,.4])g.add(box(.05,.52,.05,0x5f6b64,x,.26,-.34),box(.05,.52,.05,0x5f6b64,x,.26,.34));
+  }
+  if(type==='engine'){
+    g.add(box(.92,.16,.72,0x5d6b66,0,.08,0),cylinder(.28,.28,.66,0x8c9387,-.12,.5,0,12));
+    g.add(cylinder(.1,.1,.5,0x6e7872,.28,.62,0,10),cylinder(.075,.075,.34,0xa3a38c,.28,.98,0,8));
+    const wheel=new THREE.Mesh(new THREE.TorusGeometry(.22,.035,8,16),material(0xb9a274));wheel.position.set(.28,.42,.26);g.add(wheel);
+    g.add(box(.34,.1,.03,0xd98a4f,-.12,.5,.3));
+  }
+  if(type==='paintMill'){
+    g.add(box(.72,.3,.72,0x8a7356,0,.15,0),cylinder(.3,.24,.16,0x6f7d6b,0,.38,0,12));
+    g.add(cylinder(.23,.23,.025,0xcf8f72,0,.47,0,12),cylinder(.045,.045,.5,0x9c8257,.2,.62,0,8));
+    g.add(sphere(.07,0x79b7a8,.2,.86,0,8));
+  }
+  if(type==='tradingPost'){
+    for(const [x,z] of [[-.38,-.26],[.38,-.26],[-.38,.26],[.38,.26]])g.add(box(.08,.7,.08,0x8a6b48,x,.35,z));
+    g.add(box(.94,.09,.7,0xb98d5d,0,.72,0),box(.98,.05,.76,0xcfae78,0,1.48,0));
+    g.add(box(.5,.3,.05,0x5d7d7d,0,1.06,-.2),cylinder(.11,.11,.03,0xd9b96e,-.28,.82,.16,10),sphere(.08,0x79b7a8,.28,.82,.16,8));
+    g.add(box(.3,.2,.25,0x8a6b48,.2,.84,.05));
+  }
+  if(type==='flag'){
+    g.add(cylinder(.028,.032,1.5,0x8a7250,0,.75,0,8));
+    const cloth=box(.62,.36,.02,0xd98a63,.31,1.28,0);g.add(cloth);
+    g.add(sphere(.055,0xd9b96e,0,1.53,0,8));
+  }
+  if(type==='lantern'){
+    g.add(box(.34,.06,.34,0x6b5c45,0,.03,0),cylinder(.026,.026,.62,0x7d6b4e,0,.34,0,8));
+    const glow=sphere(.15,0xe9b557,0,.68,0,10);glow.material=material(0xe9b557,{emissive:0xe9b557,emissiveIntensity:1.4});g.add(glow);
+    g.add(cylinder(.1,.13,.06,0x8b7654,0,.85,0,8));
+  }
+  if(type==='hammock'){
+    for(const x of [-.42,.42])g.add(cylinder(.035,.035,.9,0x8a6b48,x,.46,0,8));
+    const cloth=box(.8,.06,.5,0xc9b58a,0,.34,0);cloth.rotation.z=.06;g.add(cloth);
+    for(const x of [-.3,-.1,.1,.3])g.add(beam([x,.38,-.24],[x,.6,-.4],.006,0xd8c9a4));
+  }
+  if(type==='planter'){
+    g.add(box(.5,.28,.5,0xa07a4c,0,.14,0),box(.42,.03,.42,0x5a4b34,0,.29,0));
+    for(const [x,z] of [[-.12,-.1],[.12,-.06],[0,.14]])g.add(box(.035,.22,.035,0x6f9a58,x,.42,z),sphere(.09,0xd98a8b,x,.55,z,8));
+  }
+  if(type==='paintedWall'){
+    for(let i=0;i<5;i++)g.add(box(.18,.94,.07,i%2?0x79b7a8:0x8a7356,(i-2)*.196,.48,-.43));
+    g.add(box(.98,.08,.1,0x70523a,0,.12,-.43),box(.98,.08,.1,0x70523a,0,.83,-.43));
+  }
+  if(type==='rug'){
+    g.add(box(.92,.035,.7,0xc07d6a,0,.02,0),box(.7,.038,.5,0xd9b96e,0,.04,0),box(.46,.04,.3,0x79b7a8,0,.06,0));
+  }
+  if(type==='table'){
+    for(const [x,z] of [[-.34,-.24],[.34,-.24],[-.34,.24],[.34,.24]])g.add(box(.07,.5,.07,0x8a6b48,x,.25,z));
+    g.add(box(.94,.08,.7,0xc79b6b,0,.54,0));
+  }
+  if(type==='chair'){
+    for(const [x,z] of [[-.2,-.18],[.2,-.18],[-.2,.18],[.2,.18]])g.add(box(.06,.42,.06,0x8a6b48,x,.21,z));
+    g.add(box(.52,.07,.46,0xc79b6b,0,.45,0),box(.52,.42,.06,0xa8875c,0,.66,-.2));
+  }
   return g;
 }
 
@@ -136,6 +222,11 @@ function buildDebris(type){const g=new THREE.Group();
   if(type==='leaf'){const l=createPalmLeaf(.88,.23,0x7d9d68);l.rotation.x=Math.PI/2;l.position.z=-.4;g.add(l);}
   if(type==='plastic'){const bottle=cylinder(.09,.1,.4,0x99c9c4,0,0,0,8);bottle.rotation.z=1.3;g.add(bottle);const top=cylinder(.045,.045,.12,0xd0dfca,.22,.06,0,7);top.rotation.z=1.3;g.add(top);}
   if(type==='scrap'){const a=box(.45,.07,.36,0x8e9d94);a.rotation.z=.1;g.add(a,box(.13,.1,.14,0xb6ac85,.1,.05,.07));}
+  if(type==='crate'){
+    g.add(box(.62,.46,.48,0xb18a5c),box(.66,.06,.52,0x8a6a45,0,.24,0),box(.66,.06,.52,0x8a6a45,0,-.24,0));
+    for(const z of [-.24,.24])g.add(box(.06,.48,.04,0x6f6147,-.28,0,z),box(.06,.48,.04,0x6f6147,.28,0,z));
+    g.add(box(.2,.12,.02,0xd9b96e,0,0,.25));g.rotation.y=.4;
+  }
   if(type==='barrel'){
     g.add(cylinder(.29,.27,.63,0xab774d,0,0,0,12));for(const y of [-.22,.22])g.add(cylinder(.305,.305,.055,0x576b62,0,y,0,12));
     for(let i=0;i<6;i++){const a=i*Math.PI/3;g.add(beam([Math.cos(a)*.281,-.27,Math.sin(a)*.281],[Math.cos(a)*.281,.27,Math.sin(a)*.281],.006,0x805d3f,4));}

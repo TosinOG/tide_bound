@@ -1,4 +1,4 @@
-import { ITEMS, BLOCKS, RESEARCH, STARTER_ITEMS } from './data.js';
+import { ITEMS, BLOCKS, RESEARCH, STARTER_ITEMS, BUFFS } from './data.js';
 
 export class EventBus {
   constructor() { this.listeners = new Map(); }
@@ -46,32 +46,37 @@ export class Inventory {
 }
 
 export class SurvivalStats {
-  constructor(bus, saved = {}) { this.bus = bus; this.health = saved.health ?? 100; this.hunger = saved.hunger ?? 92; this.thirst = saved.thirst ?? 88; this.stung = saved.stung ?? 0; this.alive = this.health > 0; this._tick = 0; }
-  update(dt, relaxed = false) {
+  constructor(bus, saved = {}) { this.bus = bus; this.health = saved.health ?? 100; this.hunger = saved.hunger ?? 92; this.thirst = saved.thirst ?? 88; this.stung = saved.stung ?? 0; this.alive = this.health > 0; this._tick = 0; this.buffs = {}; for (const [id, seconds] of Object.entries(saved.buffs || {})) if (BUFFS[id] && Number.isFinite(seconds) && seconds > 0) this.buffs[id] = Math.min(BUFFS[id].seconds, seconds); }
+  update(dt, relaxed = false, rates = null) {
     if (!this.alive) return;
     this.stung = Math.max(0, this.stung - dt);
+    const drain = rates?.drain ?? 1, harm = rates?.damage ?? 1;
+    for (const id of Object.keys(this.buffs)) { this.buffs[id] = Math.max(0, this.buffs[id] - dt); if (this.buffs[id] <= 0) { delete this.buffs[id]; this.bus.emit('buffEnded', id); } }
     if (!relaxed) {
-      this.thirst = Math.max(0, this.thirst - .5 * dt);
-      this.hunger = Math.max(0, this.hunger - .2 * dt);
+      this.thirst = Math.max(0, this.thirst - .5 * drain * dt);
+      this.hunger = Math.max(0, this.hunger - .2 * drain * dt);
       let damage = (this.thirst <= 0 ? 2 : 0) + (this.hunger <= 0 ? .5 : 0);
-      if (damage) this.damage(damage * dt);
+      if (damage) this.damage(damage * harm * dt);
       else if (this.thirst > 80 && this.hunger > 80) this.health = Math.min(100, this.health + dt);
     }
     this._tick += dt;
     if (this._tick > .2) { this._tick = 0; this.bus.emit('stats', this); }
   }
+  hasBuff(id) { return (this.buffs[id] || 0) > 0; }
+  grantBuff(id) { if (!BUFFS[id]) return false; this.buffs[id] = BUFFS[id].seconds; this.bus.emit('buffStarted', id); return true; }
   consume(id, inventory) {
     const item = ITEMS[id];
     if (!item?.consumable || !inventory.remove(id)) return false;
     this.hunger = Math.min(100, Math.max(0, this.hunger + (item.hunger || 0)));
     this.thirst = Math.min(100, Math.max(0, this.thirst + (item.thirst || 0)));
     this.health = Math.min(100, Math.max(0, this.health + (item.health || 0)));
+    if (item.buff) this.grantBuff(item.buff);
     this.bus.emit('stats', this); this.checkDeath(); return true;
   }
   damage(amount) { if(!Number.isFinite(amount)||amount<0)return; this.health = Math.max(0, this.health - amount); if (amount >= 2) this.bus.emit('damage', amount); this.checkDeath(); }
   checkDeath() { if (this.health <= 0 && this.alive) { this.alive = false; this.bus.emit('death'); } }
   sting() { this.damage(5); this.stung = 10; this.bus.emit('sting'); }
-  toJSON() { return { health: this.health, hunger: this.hunger, thirst: this.thirst, stung: this.stung, alive: this.alive }; }
+  toJSON() { return { health: this.health, hunger: this.hunger, thirst: this.thirst, stung: this.stung, alive: this.alive, buffs: { ...this.buffs } }; }
 }
 
 // Shared 1 m grid. Foundation + a station occupy distinct vertical cells.
@@ -106,7 +111,7 @@ export class GridManager {
   }
   add(type,x,y,z,core=false,hp=null,extra={}) {
     if(!Object.hasOwn(BLOCKS,type)||![x,y,z].every(Number.isInteger)||this.at(x,y,z)) throw new TypeError('Invalid or occupied grid cell');
-    const b={id:++this.sequence,type,x,y,z,core:!!core,hp:hp??BLOCKS[type].hp,rotation:extra.rotation||0,production:extra.production||0};
+    const b={id:++this.sequence,type,x,y,z,core:!!core,hp:hp??BLOCKS[type].hp,rotation:extra.rotation||0,production:extra.production||0,paint:extra.paint??null};
     this.blocks.set(gridKey(x,y,z),b); this.bus.emit('blockAdded',b); return b;
   }
   // Directed structural support, not generic adjacency: stations cannot suspend a deck.
