@@ -68,5 +68,20 @@
     "licenses/three-MIT.txt": "4c40a1ef62450b857c3b2aaf294936304cd552d965fbcd9d32d4c5bcf4ba4454"
   },
   "codename": "Voyager",
-  "changelog": "VOYAGER-UPDATE.md"
+  "changelog": "VOYAGER-UPDATE.md",
+  "itch": {
+    "file": "Tidebound-Gold-itch.zip",
+    "bytes": 544988,
+    "sha256": "dbd5c6b3cadbb9739743e8b39d193ab60e0daccf4b67583190ce204b73655f9e",
+    "files": 19,
+    "layout": "index.html at the archive root (itch.io requirement)",
+    "base": "Vite base './' so every asset reference is relative",
+    "verified": [
+      "all asset references relative and present on disk",
+      "unzipped archive served from /html/9876543/ — 11 resources returned 200 (html, js, css, fonts)",
+      "packaged build booted in a sandboxed iframe-like context with localStorage throwing, no Font API and no fullscreen: menu, PLAY, game canvas and HUD created with 0 runtime errors"
+    ],
+    "rebuild": "npm run package:itch",
+    "guide": "ITCH-IO-UPLOAD.md"
+  }
 }

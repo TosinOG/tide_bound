@@ -1,7 +1,9 @@
 # Dependencies and generated build output
 node_modules/
 dist/
+dist-itch/
 build/
+build-itch/
 coverage/
 test-results/
 playwright-report/
